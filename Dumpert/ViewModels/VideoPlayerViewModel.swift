@@ -11,6 +11,7 @@ final class VideoPlayerViewModel {
     let sharePlayService = SharePlayService()
     private var timeObserver: Any?
     private var endObserver: NSObjectProtocol?
+    private var failedEndObserver: NSObjectProtocol?
     private var statusObservation: NSKeyValueObservation?
 
     let video: Video
@@ -221,12 +222,25 @@ final class VideoPlayerViewModel {
                 self?.onVideoFinished()
             }
         }
+        failedEndObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemFailedToPlayToEndTime,
+            object: player?.currentItem,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.onVideoFinished()
+            }
+        }
     }
 
     private func removeEndObserver() {
         if let observer = endObserver {
             NotificationCenter.default.removeObserver(observer)
             endObserver = nil
+        }
+        if let observer = failedEndObserver {
+            NotificationCenter.default.removeObserver(observer)
+            failedEndObserver = nil
         }
     }
 
@@ -271,9 +285,14 @@ final class VideoPlayerViewModel {
         if remaining <= 30 && currentIndex + 1 >= playlist.count
             && relatedVideos.isEmpty && !isFetchingRelated {
             isFetchingRelated = true
-            Task {
-                relatedVideos = await repository.fetchRelatedVideos(for: currentVideo.id)
-                isFetchingRelated = false
+            let videoId = currentVideo.id
+            Task { [weak self] in
+                guard let self else { return }
+                self.relatedVideos = await self.repository.fetchRelatedVideos(for: videoId)
+                self.isFetchingRelated = false
+                if self.preloadedItem == nil, let url = self.nextVideo?.streamURL {
+                    self.preloadedItem = AVPlayerItem(url: url)
+                }
             }
         }
 
@@ -298,12 +317,24 @@ final class VideoPlayerViewModel {
 
     private func onVideoFinished() {
         saveProgress(force: true)
+        showUpNext = false
 
-        if autoplayEnabled && hasNextVideo && !upNextCancelled {
-            showUpNext = false
+        guard autoplayEnabled && !upNextCancelled else { return }
+
+        if hasNextVideo {
             playNext()
-        } else {
-            showUpNext = false
+        } else if isFetchingRelated {
+            // Related videos worden nog opgehaald — wacht max 2 seconden
+            Task { [weak self] in
+                for _ in 0..<20 {
+                    try? await Task.sleep(for: .milliseconds(100))
+                    guard let self, self.player != nil else { return }
+                    if !self.isFetchingRelated || self.hasNextVideo { break }
+                }
+                if let self, self.player != nil, self.hasNextVideo {
+                    self.playNext()
+                }
+            }
         }
     }
 

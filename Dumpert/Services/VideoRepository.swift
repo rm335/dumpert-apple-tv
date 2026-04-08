@@ -186,7 +186,7 @@ final class VideoRepository {
             case "UserSettings":
                 let remoteSettings = UserSettingsSnapshot(
                     minimumKudos: record["minimumKudos"] as? Int ?? 0,
-                    autoplayEnabled: (record["autoplayEnabled"] as? Int ?? 0) == 1,
+                    autoplayEnabled: (record["autoplayEnabled"] as? Int ?? 1) == 1,
                     hideWatched: (record["hideWatched"] as? Int ?? 0) == 1,
                     showNegativeKudos: (record["showNegativeKudos"] as? Int ?? 0) == 1,
                     nsfwEnabled: (record["nsfwEnabled"] as? Int ?? 1) == 1,
