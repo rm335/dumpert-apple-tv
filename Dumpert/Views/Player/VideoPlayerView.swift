@@ -136,10 +136,15 @@ private struct PlayerRepresentable: UIViewControllerRepresentable {
         /// while controls are hidden; once visible, native handling takes over.
         /// Swipe gestures also require controls hidden + no interactive overlay + setting enabled.
         func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-            // Swipe gestures: always allowed (independent of transport bar state)
-            if gestureRecognizer === swipeLeftGesture || gestureRecognizer === swipeRightGesture {
+            // Swipe gestures: allowed when no overlay is active, setting is enabled,
+            // and there is actually a next/previous video to skip to.
+            if gestureRecognizer === swipeRightGesture {
                 let noOverlay = !viewModel.showUpNext && !viewModel.showResumeOverlay
-                return noOverlay && viewModel.isSwipeSkipEnabled
+                return noOverlay && viewModel.isSwipeSkipEnabled && viewModel.hasNextVideo
+            }
+            if gestureRecognizer === swipeLeftGesture {
+                let noOverlay = !viewModel.showUpNext && !viewModel.showResumeOverlay
+                return noOverlay && viewModel.isSwipeSkipEnabled && viewModel.hasPreviousVideo
             }
 
             // Select gesture: only when controls hidden (to reveal them)

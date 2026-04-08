@@ -339,28 +339,36 @@ final class VideoPlayerViewModel {
     }
 
     func playNext() {
-        // Save progress for the current video and reset tracking state
-        // BEFORE changing currentVideo. Otherwise, when replaceCurrentItem
-        // triggers a status observation, saveProgress would write the old
-        // video's completion state onto the new video's ID — marking it
-        // as watched immediately.
-        saveProgress(force: true)
-        repository.markAsWatched(videoId: currentVideo.id)
-        currentTime = 0
-        duration = 0
-
+        // Determine the target video BEFORE mutating any state. This avoids
+        // incrementing currentIndex or marking the current video as watched
+        // when no valid next video exists.
         let targetVideo: Video?
+        var newIndex = currentIndex
         if currentIndex + 1 < playlist.count {
-            currentIndex += 1
-            targetVideo = playlist[currentIndex]
+            newIndex = currentIndex + 1
+            targetVideo = playlist[newIndex]
         } else if let related = relatedVideos.first {
             targetVideo = related
-            relatedVideos.removeFirst()
         } else {
             return
         }
 
         guard let video = targetVideo, let url = video.streamURL else { return }
+
+        // Save progress and mark current video as watched BEFORE changing
+        // currentVideo. Otherwise, when replaceCurrentItem triggers a status
+        // observation, saveProgress would write the old video's completion
+        // state onto the new video's ID — marking it as watched immediately.
+        saveProgress(force: true)
+        repository.markAsWatched(videoId: currentVideo.id)
+        currentTime = 0
+        duration = 0
+
+        if newIndex != currentIndex {
+            currentIndex = newIndex
+        } else {
+            relatedVideos.removeFirst()
+        }
 
         upNextCancelled = false
         showUpNext = false
@@ -392,15 +400,16 @@ final class VideoPlayerViewModel {
     func playPrevious() {
         guard currentIndex > 0 else { return }
 
+        let newIndex = currentIndex - 1
+        let video = playlist[newIndex]
+        guard let url = video.streamURL else { return }
+
         saveProgress(force: true)
         repository.markAsWatched(videoId: currentVideo.id)
         currentTime = 0
         duration = 0
 
-        currentIndex -= 1
-        let video = playlist[currentIndex]
-
-        guard let url = video.streamURL else { return }
+        currentIndex = newIndex
 
         upNextCancelled = false
         showUpNext = false
