@@ -15,6 +15,10 @@ struct ToppersSectionView: View {
         Array(repository.filteredItems(repository.hotshiz).prefix(5))
     }
 
+    private var safeHeroIndex: Int {
+        heroItems.isEmpty ? 0 : heroIndex % heroItems.count
+    }
+
     var body: some View {
         ZStack {
             if repository.isLoading && repository.hotshiz.isEmpty {
@@ -128,7 +132,7 @@ struct ToppersSectionView: View {
         .toast(message: $toastMessage)
         .task {
             if !heroItems.isEmpty {
-                backgroundState.update(for: heroItems[heroIndex])
+                backgroundState.update(for: heroItems[safeHeroIndex])
             }
         }
         .onChange(of: heroIndex) { _, newIndex in
@@ -147,7 +151,7 @@ struct ToppersSectionView: View {
                         backgroundState.update(for: item)
                     }
                 } else if !heroItems.isEmpty {
-                    backgroundState.update(for: heroItems[heroIndex])
+                    backgroundState.update(for: heroItems[safeHeroIndex])
                 }
             }
         }
@@ -192,7 +196,7 @@ struct ToppersSectionView: View {
 
     private var heroCarousel: some View {
         Button {
-            heroItems[heroIndex].present(selectedVideo: $selectedVideo, selectedPhoto: $selectedPhoto)
+            heroItems[safeHeroIndex].present(selectedVideo: $selectedVideo, selectedPhoto: $selectedPhoto)
         } label: {
             ZStack(alignment: .bottomLeading) {
                 // All hero thumbnails stacked, crossfading via opacity
@@ -203,13 +207,13 @@ struct ToppersSectionView: View {
                             useIntrinsicAspectRatio: false
                         )
                         .clipped()
-                        .opacity(index == heroIndex ? 1 : 0)
+                        .opacity(index == safeHeroIndex ? 1 : 0)
                     }
                 }
 
                 // Info overlay crossfades with the thumbnail
-                heroInfoOverlay(for: heroItems[heroIndex])
-                    .id(heroItems[heroIndex].id)
+                heroInfoOverlay(for: heroItems[safeHeroIndex])
+                    .id(heroItems[safeHeroIndex].id)
                     .transition(.asymmetric(
                         insertion: .offset(y: 12).combined(with: .opacity),
                         removal: .opacity
@@ -222,7 +226,7 @@ struct ToppersSectionView: View {
             }
             .aspectRatio(16/6, contentMode: .fit)
             .cornerRadius(24)
-            .animation(.spring(duration: 0.7, bounce: 0.15), value: heroIndex)
+            .animation(.spring(duration: 0.7, bounce: 0.15), value: safeHeroIndex)
         }
         .buttonStyle(.card)
         .onMoveCommand { direction in
@@ -244,7 +248,7 @@ struct ToppersSectionView: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(heroItems[heroIndex].title), item \(heroIndex + 1) van \(heroItems.count)")
+        .accessibilityLabel("\(heroItems[safeHeroIndex].title), item \(safeHeroIndex + 1) van \(heroItems.count)")
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment:
@@ -280,7 +284,7 @@ struct ToppersSectionView: View {
                     .foregroundStyle(.white.opacity(0.6))
                     .transition(.scale.combined(with: .opacity))
             }
-            Text("\(heroIndex + 1) / \(heroItems.count)")
+            Text("\(safeHeroIndex + 1) / \(heroItems.count)")
                 .font(.caption)
                 .fontWeight(.semibold)
                 .monospacedDigit()
