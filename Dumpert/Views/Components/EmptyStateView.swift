@@ -16,6 +16,7 @@ struct EmptyStateView: View {
                 .symbolEffect(.pulse.byLayer, options: .repeating.speed(0.5), isActive: iconPulse)
                 .onAppear { iconPulse = true }
                 .onDisappear { iconPulse = false }
+                .accessibilityHidden(true)
 
             VStack(spacing: 8) {
                 Text(title)

@@ -61,6 +61,7 @@ extension SearchView {
                                 Image(systemName: "clock.arrow.circlepath")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
+                                    .accessibilityHidden(true)
                                 Text(entry.query)
                                     .lineLimit(1)
                             }
@@ -68,6 +69,7 @@ extension SearchView {
                             .padding(.vertical, 12)
                         }
                         .buttonStyle(.card)
+                        .accessibilityLabel(Text("Recente zoekopdracht: \(entry.query)", comment: "Accessibility: recent search button"))
                         .contextMenu {
                             Button(String(localized: "Verwijder", comment: "Delete context menu action"), role: .destructive) {
                                 repository.deleteSearchEntry(entry)
@@ -99,6 +101,7 @@ extension SearchView {
                                 Image(systemName: "flame.fill")
                                     .font(.caption)
                                     .foregroundStyle(.orange)
+                                    .accessibilityHidden(true)
                                 Text(tag.capitalized)
                                     .lineLimit(1)
                             }
@@ -106,6 +109,7 @@ extension SearchView {
                             .padding(.vertical, 12)
                         }
                         .buttonStyle(.card)
+                        .accessibilityLabel(Text("Populaire zoekopdracht: \(tag.capitalized)", comment: "Accessibility: popular tag button"))
                     }
                 }
                 .padding(.horizontal, 50)
@@ -139,6 +143,7 @@ extension SearchView {
                             Image(systemName: category.icon)
                                 .font(.body)
                                 .frame(width: 40)
+                                .accessibilityHidden(true)
                             Text(category.name)
                                 .font(.callout)
                                 .fontWeight(.medium)
@@ -148,6 +153,7 @@ extension SearchView {
                         .padding(.vertical, 16)
                     }
                     .buttonStyle(.card)
+                    .accessibilityLabel(Text("Categorie: ", comment: "Accessibility: search category button prefix") + Text(category.name))
                 }
             }
             .padding(.horizontal, 50)

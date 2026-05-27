@@ -17,7 +17,7 @@ struct KudosBadgeView: View {
         .padding(.vertical, 4)
         .background(kudosColor)
         .cornerRadius(6)
-        .accessibilityLabel("\(formattedKudos) kudos")
+        .accessibilityLabel(Text("\(formattedKudos) kudos", comment: "Kudos count label"))
     }
 
     private var formattedKudos: String {
@@ -29,7 +29,7 @@ struct KudosBadgeView: View {
 
     private var kudosColor: Color {
         if kudos >= 100 { return .dumpiGreen }
-        if kudos >= 0 { return .gray.opacity(0.7) }
-        return .red
+        if kudos >= 0 { return Color(.systemGray).opacity(0.7) }
+        return Color(.systemRed)
     }
 }

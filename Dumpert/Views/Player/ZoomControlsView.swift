@@ -55,7 +55,7 @@ extension FullScreenImageView {
                         .accessibilityLabel(Text("Zoom resetten", comment: "Accessibility: reset zoom to default"))
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(ZoomIconButtonStyle())
                 .padding(16)
                 .modifier(GlassControlsModifier())
                 .focusSection()
@@ -74,6 +74,35 @@ struct GlassControlsModifier: ViewModifier {
                 .glassEffect(in: RoundedRectangle(cornerRadius: 12))
         } else {
             content
+        }
+    }
+}
+
+/// Icon-only button style with a clear tvOS focus state (scale + circular
+/// highlight + soft glow). `.plain` would leave the zoom controls without any
+/// visible focus indication — the viewer cannot tell which button Select
+/// will activate from the couch.
+private struct ZoomIconButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        StyleBody(configuration: configuration)
+    }
+
+    private struct StyleBody: View {
+        let configuration: Configuration
+        @Environment(\.isFocused) private var isFocused
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            configuration.label
+                .background(
+                    Circle()
+                        .fill(.white.opacity(isFocused ? 0.18 : 0))
+                )
+                .foregroundStyle(isEnabled ? .primary : .tertiary)
+                .scaleEffect(configuration.isPressed ? 0.9 : (isFocused ? 1.15 : 1.0))
+                .shadow(color: .white.opacity(isFocused ? 0.3 : 0), radius: 12)
+                .animation(.spring(duration: 0.25, bounce: 0.2), value: isFocused)
+                .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
         }
     }
 }

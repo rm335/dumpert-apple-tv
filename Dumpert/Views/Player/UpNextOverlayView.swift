@@ -149,23 +149,32 @@ private struct GlassCardModifier: ViewModifier {
 
 private struct UpNextButtonStyle: ButtonStyle {
     let isPrimary: Bool
-    @Environment(\.isFocused) private var isFocused
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
-            .background {
-                if isPrimary {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.white)
-                } else {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(.white.opacity(0.15))
-                }
-            }
-            .foregroundStyle(isPrimary ? .black : .white)
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+        StyleBody(configuration: configuration, isPrimary: isPrimary)
+    }
+
+    private struct StyleBody: View {
+        let configuration: Configuration
+        let isPrimary: Bool
+        @Environment(\.isFocused) private var isFocused
+
+        var body: some View {
+            let shape = RoundedRectangle(cornerRadius: 8)
+            configuration.label
+                .padding(.horizontal, 20)
+                .padding(.vertical, 10)
+                .background(shape.fill(isPrimary ? Color.white : Color.white.opacity(0.15)))
+                .foregroundStyle(isPrimary ? .black : .white)
+                .overlay(
+                    shape
+                        .stroke(isPrimary ? Color.black : Color.white,
+                                lineWidth: isFocused ? 3 : 0)
+                )
+                .scaleEffect(configuration.isPressed ? 0.95 : (isFocused ? 1.08 : 1.0))
+                .shadow(color: .white.opacity(isFocused ? 0.3 : 0), radius: 14)
+                .animation(.spring(duration: 0.25, bounce: 0.2), value: isFocused)
+                .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+        }
     }
 }

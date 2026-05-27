@@ -272,8 +272,8 @@ struct VideoCardView: View {
 
     private var kudosColor: Color {
         if item.kudosTotal >= 100 { return .dumpiGreen }
-        if item.kudosTotal >= 0 { return .gray }
-        return .red
+        if item.kudosTotal >= 0 { return Color(.systemGray) }
+        return Color(.systemRed)
     }
 
 }

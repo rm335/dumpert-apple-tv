@@ -955,6 +955,9 @@
         }
       }
     },
+    "Categorie: " : {
+      "comment" : "Accessibility: search category button prefix"
+    },
     "Categorieën" : {
       "comment" : "Categories section header\nCategories tab title",
       "localizations" : {
@@ -2485,6 +2488,9 @@
         }
       }
     },
+    "Populaire zoekopdracht: %@" : {
+      "comment" : "Accessibility: popular tag button"
+    },
     "Razendsnel (6 woorden/sec)" : {
       "comment" : "Reading speed - ultra fast",
       "localizations" : {
@@ -2535,6 +2541,9 @@
           }
         }
       }
+    },
+    "Recente zoekopdracht: %@" : {
+      "comment" : "Accessibility: recent search button"
     },
     "Reeten" : {
       "comment" : "Accessibility: Reeten sub-tab",
@@ -3351,6 +3360,9 @@
           }
         }
       }
+    },
+    "Vraagt om bevestiging voordat actie wordt uitgevoerd" : {
+      "comment" : "Accessibility hint for destructive Settings actions that show a confirmation dialog"
     },
     "VrijMiCo" : {
       "comment" : "Accessibility: VrijMiCo sub-tab\nCategory name for Friday/Saturday/Sunday content",

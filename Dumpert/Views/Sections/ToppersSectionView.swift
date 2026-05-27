@@ -248,7 +248,10 @@ struct ToppersSectionView: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(heroItems[safeHeroIndex].title), item \(safeHeroIndex + 1) van \(heroItems.count)")
+        .accessibilityLabel(Text(
+            "\(heroItems[safeHeroIndex].title), item \(safeHeroIndex + 1) van \(heroItems.count)",
+            comment: "Accessibility label for hero carousel item position"
+        ))
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment:

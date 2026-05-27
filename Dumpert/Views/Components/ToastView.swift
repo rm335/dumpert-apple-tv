@@ -12,6 +12,7 @@ struct ToastModifier: ViewModifier {
                     HStack(spacing: 10) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.dumpiGreen)
+                            .accessibilityHidden(true)
                         Text(message)
                             .font(.callout)
                             .fontWeight(.medium)
@@ -33,11 +34,11 @@ struct ToastModifier: ViewModifier {
             }
             .animation(.spring(duration: 0.4, bounce: 0.2), value: message)
             .onChange(of: message) {
-                if message != nil {
-                    Task { @MainActor in
-                        try? await Task.sleep(for: .seconds(duration))
-                        withAnimation { self.message = nil }
-                    }
+                guard let msg = message else { return }
+                AccessibilityNotification.Announcement(msg).post()
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(duration))
+                    withAnimation { self.message = nil }
                 }
             }
     }

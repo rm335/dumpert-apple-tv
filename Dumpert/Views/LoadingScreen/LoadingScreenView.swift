@@ -33,7 +33,7 @@ struct LoadingScreenView: View {
                 .opacity(isExiting ? 0 : logoOpacity)
         }
         .accessibilityElement()
-        .accessibilityLabel("Dumpert wordt geladen")
+        .accessibilityLabel(Text("Dumpert wordt geladen", comment: "Accessibility label shown while the app is loading"))
         .focusable()
         .onAppear {
             appearDate = Date()

@@ -25,17 +25,17 @@ extension SettingsView {
     func destructiveLabel(_ title: LocalizedStringKey, icon: String, description: LocalizedStringKey) -> some View {
         HStack(alignment: .center, spacing: 28) {
             Image(systemName: icon)
-                .foregroundStyle(.red.opacity(0.8))
+                .foregroundStyle(Color(.systemRed).opacity(0.8))
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color(.systemRed))
                 Text(description)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
-        .accessibilityHint(Text(description))
+        .accessibilityHint(Text("Vraagt om bevestiging voordat actie wordt uitgevoerd", comment: "Accessibility hint for destructive Settings actions that show a confirmation dialog"))
     }
 
     func settingsToggle(_ title: LocalizedStringKey, icon: String, description: LocalizedStringKey, isOn: Binding<Bool>) -> some View {
