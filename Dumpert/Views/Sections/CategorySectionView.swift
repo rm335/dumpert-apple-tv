@@ -191,7 +191,7 @@ var body: some View {
                 .padding(.vertical, 12)
                 .background(Color.dumpiGreen, in: Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(FocusableCapsuleButtonStyle())
         .accessibilityLabel(Text("Sortering: \(sortOrder.displayName)", comment: "Accessibility: current sort order"))
         .accessibilityHint(Text("Wijzig de sorteervolgorde", comment: "Accessibility: change sort order hint"))
     }
