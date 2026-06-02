@@ -119,6 +119,10 @@ actor DumpertAPIClient {
         try await fetchMediaItems(endpoint: .topMonth(date: date))
     }
 
+    func fetchTopDay(date: Date = Date()) async throws -> [MediaItem] {
+        try await fetchMediaItems(endpoint: .topDay(date: date))
+    }
+
     func fetchLatest(page: Int = 0) async throws -> [MediaItem] {
         try await fetchMediaItems(endpoint: .latest(page: page))
     }

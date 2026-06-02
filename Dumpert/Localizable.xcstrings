@@ -3302,6 +3302,23 @@
         }
       }
     },
+    "Top Vandaag" : {
+      "comment" : "Section title for today's top videos",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top Today"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top Vandaag"
+          }
+        }
+      }
+    },
     "Top reaguursel van %@: %@" : {
       "comment" : "Accessibility: top comment by author",
       "localizations" : {

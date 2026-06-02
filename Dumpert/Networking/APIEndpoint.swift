@@ -3,6 +3,7 @@ import Foundation
 enum APIEndpoint {
     case topWeek(date: Date)
     case topMonth(date: Date)
+    case topDay(date: Date)
     case hotshiz
     case latest(page: Int)
     case search(query: String, page: Int, order: SortOrder?)
@@ -15,6 +16,12 @@ enum APIEndpoint {
     private nonisolated(unsafe) static let monthFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM"
+        return f
+    }()
+
+    private nonisolated(unsafe) static let dayFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
         return f
     }()
 
@@ -31,6 +38,8 @@ enum APIEndpoint {
             path = "/top5/week/\(Self.weekString(from: date))"
         case .topMonth(let date):
             path = "/top5/maand/\(Self.monthFormatter.string(from: date))"
+        case .topDay(let date):
+            path = "/top5/dag/\(Self.dayFormatter.string(from: date))"
         case .hotshiz:
             path = "/hotshiz"
         case .latest(let page):

@@ -9,6 +9,7 @@ final class VideoRepository {
     private(set) var hotshiz: [MediaItem] = []
     private(set) var topWeek: [MediaItem] = []
     private(set) var topMonth: [MediaItem] = []
+    private(set) var topDay: [MediaItem] = []
     private(set) var categoryVideos: [VideoCategory: [MediaItem]] = [:]
     private(set) var watchProgress: [String: WatchProgress] = [:]
     private(set) var curationEntries: [CurationEntry] = []
@@ -297,18 +298,21 @@ final class VideoRepository {
             async let h = apiClient.fetchHotshiz()
             async let w = apiClient.fetchTopWeek()
             async let m = apiClient.fetchTopMonth()
+            async let d = apiClient.fetchTopDay()
 
-            let (hotshizResult, weekResult, monthResult) = try await (h, w, m)
+            let (hotshizResult, weekResult, monthResult, dayResult) = try await (h, w, m, d)
 
             hotshiz = filterByKudos(hotshizResult)
             topWeek = filterByKudos(weekResult)
             topMonth = filterByKudos(monthResult)
+            topDay = filterByKudos(dayResult)
 
             recomputePopularTags()
 
             await cacheService.cacheMediaItems(hotshizResult, for: "hotshiz")
             await cacheService.cacheMediaItems(weekResult, for: "topweek")
             await cacheService.cacheMediaItems(monthResult, for: "topmonth")
+            await cacheService.cacheMediaItems(dayResult, for: "topday")
         } catch {
             self.error = error.localizedDescription
         }
@@ -579,7 +583,7 @@ final class VideoRepository {
             .prefix(100)
 
         // Build lookup from all locally available items
-        let allLocalItems = hotshiz + topWeek + topMonth + classics
+        let allLocalItems = hotshiz + topWeek + topMonth + topDay + classics
             + VideoCategory.allCases.flatMap { categoryVideos[$0] ?? [] }
         let localLookup = Dictionary(allLocalItems.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
 
@@ -703,7 +707,7 @@ final class VideoRepository {
     private(set) var popularTags: [String] = []
 
     private func recomputePopularTags() {
-        let allItems = hotshiz + topWeek + topMonth
+        let allItems = hotshiz + topWeek + topMonth + topDay
         var tagCounts: [String: Int] = [:]
         for item in allItems {
             for tag in item.tags {

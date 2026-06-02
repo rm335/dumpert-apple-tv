@@ -209,4 +209,18 @@ struct APIDecodingTests {
 
         #expect(mediaItem.viewsTotal == 63759)
     }
+
+    // MARK: - Endpoint URLs
+
+    @Test("topDay endpoint builds the /top5/dag path")
+    func topDayEndpointURL() throws {
+        var comps = DateComponents()
+        comps.year = 2026
+        comps.month = 6
+        comps.day = 2
+        let date = try #require(Calendar.current.date(from: comps))
+
+        let url = APIEndpoint.topDay(date: date).url
+        #expect(url.absoluteString == "https://post.dumpert.nl/api/v1.0/top5/dag/2026-06-02")
+    }
 }
