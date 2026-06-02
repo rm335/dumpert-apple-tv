@@ -122,6 +122,19 @@ extension FullScreenImageView {
             }
             .foregroundStyle(kudosColor)
 
+            if photo.viewsTotal > 0 {
+                HStack(spacing: 4) {
+                    Image(systemName: "eye.fill")
+                        .font(.caption)
+                    Text(photo.viewsTotal.formattedCount)
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .monospacedDigit()
+                }
+                .foregroundStyle(.secondary)
+                .accessibilityLabel(Text("\(photo.viewsTotal.formattedCount) views", comment: "Views count label"))
+            }
+
             if let date = photo.date {
                 Text("·")
                     .foregroundStyle(.tertiary)
@@ -134,13 +147,7 @@ extension FullScreenImageView {
         }
     }
 
-    var formattedKudos: String {
-        let k = photo.kudosTotal
-        if abs(k) >= 1000 {
-            return String(format: "%.1fk", Double(k) / 1000)
-        }
-        return "\(k)"
-    }
+    var formattedKudos: String { photo.kudosTotal.formattedCount }
 
     var kudosColor: Color {
         if photo.kudosTotal >= 100 { return .dumpiGreen }

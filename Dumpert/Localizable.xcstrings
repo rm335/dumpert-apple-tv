@@ -71,6 +71,23 @@
         }
       }
     },
+    "%@ views" : {
+      "comment" : "Views count label",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ views"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ weergaven"
+          }
+        }
+      }
+    },
     "%@, item %lld van %lld" : {
       "comment" : "Accessibility label for hero carousel item position",
       "localizations" : {
@@ -107,6 +124,7 @@
     },
     "%lld / %lld" : {
       "comment" : "Page indicator showing current position (e.g. 1 / 5)",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -135,6 +153,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld kijkers"
+          }
+        }
+      }
+    },
+    "%lld minuten" : {
+      "comment" : "Accessibility: selected reeten minimum duration",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld minutes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld minuten"
+          }
+        }
+      }
+    },
+    "%lld resultaten" : {
+      "comment" : "Search result count",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld results"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld resultaten"
           }
         }
       }
@@ -292,6 +344,23 @@
         }
       }
     },
+    "5+ min" : {
+      "comment" : "Reeten minimum duration: 5 minutes",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5+ min"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5+ min"
+          }
+        }
+      }
+    },
     "10 minuten" : {
       "comment" : "Duration filter option - 10 minutes",
       "localizations" : {
@@ -343,6 +412,23 @@
         }
       }
     },
+    "10+ min" : {
+      "comment" : "Reeten minimum duration: 10 minutes",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10+ min"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "10+ min"
+          }
+        }
+      }
+    },
     "15 minuten" : {
       "comment" : "Duration filter option - 15 minutes",
       "localizations" : {
@@ -360,6 +446,23 @@
         }
       }
     },
+    "15+ min" : {
+      "comment" : "Reeten minimum duration: 15 minutes",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15+ min"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "15+ min"
+          }
+        }
+      }
+    },
     "20 minuten" : {
       "comment" : "Duration filter option - 20 minutes",
       "localizations" : {
@@ -373,6 +476,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "20 minuten"
+          }
+        }
+      }
+    },
+    "20+ min" : {
+      "comment" : "Reeten minimum duration: 20 minutes",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20+ min"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "20+ min"
           }
         }
       }
@@ -599,7 +719,7 @@
       }
     },
     "Alle duur" : {
-      "comment" : "Duration filter: any duration",
+      "comment" : "Duration filter: any duration\nReeten minimum duration: no minimum",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -956,7 +1076,21 @@
       }
     },
     "Categorie: " : {
-      "comment" : "Accessibility: search category button prefix"
+      "comment" : "Accessibility: search category button prefix",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Category: "
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Categorie: "
+          }
+        }
+      }
     },
     "Categorieën" : {
       "comment" : "Categories section header\nCategories tab title",
@@ -1005,6 +1139,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Compilatie"
+          }
+        }
+      }
+    },
+    "Content" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content"
           }
         }
       }
@@ -1158,6 +1308,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dumpert wordt geladen"
+          }
+        }
+      }
+    },
+    "Eerder" : {
+      "comment" : "Date section header for items without a date",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Earlier"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eerder"
+          }
+        }
+      }
+    },
+    "Eerder bekeken" : {
+      "comment" : "Watched tab: previously finished section",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previously watched"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eerder bekeken"
           }
         }
       }
@@ -1435,7 +1619,7 @@
       }
     },
     "Gekeken" : {
-      "comment" : "Accessibility: Gekeken sub-tab\nWatched tab: section title",
+      "comment" : "Watched tab title\nWatched tab: section title",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1481,6 +1665,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gemarkeerd als onbekeken"
+          }
+        }
+      }
+    },
+    "Gisteren" : {
+      "comment" : "Date section header: yesterday",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Yesterday"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gisteren"
           }
         }
       }
@@ -2046,6 +2247,40 @@
         }
       }
     },
+    "Menu om over te slaan" : {
+      "comment" : "Loading screen: hint to skip with the Menu button",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press Menu to skip"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu om over te slaan"
+          }
+        }
+      }
+    },
+    "Minimale duur" : {
+      "comment" : "Accessibility: reeten minimum duration filter",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimum duration"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minimale duur"
+          }
+        }
+      }
+    },
     "Minimale kudos" : {
       "comment" : "Settings: minimum kudos label",
       "localizations" : {
@@ -2335,6 +2570,23 @@
         }
       }
     },
+    "Onbekend jaar" : {
+      "comment" : "Classics: section for items without a date",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown year"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onbekend jaar"
+          }
+        }
+      }
+    },
     "Ongeldige URL" : {
       "comment" : "Error when URL is malformed",
       "localizations" : {
@@ -2489,7 +2741,21 @@
       }
     },
     "Populaire zoekopdracht: %@" : {
-      "comment" : "Accessibility: popular tag button"
+      "comment" : "Accessibility: popular tag button",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popular search: %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Populaire zoekopdracht: %@"
+          }
+        }
+      }
     },
     "Razendsnel (6 woorden/sec)" : {
       "comment" : "Reading speed - ultra fast",
@@ -2543,7 +2809,21 @@
       }
     },
     "Recente zoekopdracht: %@" : {
-      "comment" : "Accessibility: recent search button"
+      "comment" : "Accessibility: recent search button",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent search: %@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recente zoekopdracht: %@"
+          }
+        }
+      }
     },
     "Reeten" : {
       "comment" : "Accessibility: Reeten sub-tab",
@@ -2681,8 +2961,26 @@
         }
       }
     },
+    "Sortering" : {
+      "comment" : "Accessibility: sort order control",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sorting"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortering"
+          }
+        }
+      }
+    },
     "Sortering: %@" : {
       "comment" : "Accessibility: current sort order",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3090,7 +3388,7 @@
       }
     },
     "Vandaag" : {
-      "comment" : "Period filter: today only",
+      "comment" : "Date section header: today\nPeriod filter: today only",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3153,6 +3451,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verbeter thumbnails automatisch met een beter videoframe"
+          }
+        }
+      }
+    },
+    "Verder kijken" : {
+      "comment" : "Watched tab: continue watching section",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue watching"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verder kijken"
           }
         }
       }
@@ -3362,7 +3677,21 @@
       }
     },
     "Vraagt om bevestiging voordat actie wordt uitgevoerd" : {
-      "comment" : "Accessibility hint for destructive Settings actions that show a confirmation dialog"
+      "comment" : "Accessibility hint for destructive Settings actions that show a confirmation dialog",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asks for confirmation before performing the action"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vraagt om bevestiging voordat actie wordt uitgevoerd"
+          }
+        }
+      }
     },
     "VrijMiCo" : {
       "comment" : "Accessibility: VrijMiCo sub-tab\nCategory name for Friday/Saturday/Sunday content",
@@ -3398,8 +3727,25 @@
         }
       }
     },
+    "Weergave" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weergave"
+          }
+        }
+      }
+    },
     "Weergave & content" : {
       "comment" : "Settings section header",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

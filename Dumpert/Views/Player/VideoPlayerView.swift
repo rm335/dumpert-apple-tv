@@ -206,10 +206,12 @@ private struct UpNextOverlayContainer: View {
                 isVisible: viewModel.sharePlayService.isSharePlayActive
             )
 
-            // Top comment overlay (bottom-left)
+            // Top comment overlay (bottom-left). Suppressed while the Up Next
+            // card is up so only one bottom-zone overlay competes for attention —
+            // the playback decision outranks a comment in the Theater.
             TopCommentOverlayView(
                 comment: viewModel.currentTopComment,
-                isVisible: viewModel.showTopComment
+                isVisible: viewModel.showTopComment && !viewModel.showUpNext
             )
 
             // Up next overlay (bottom-right)

@@ -39,6 +39,13 @@ enum MediaItem: Identifiable, Hashable, Sendable {
         }
     }
 
+    var viewsTotal: Int {
+        switch self {
+        case .video(let v): v.viewsTotal
+        case .photo(let p): p.viewsTotal
+        }
+    }
+
     var thumbnailURL: URL? {
         switch self {
         case .video(let v): v.thumbnailURL

@@ -20,12 +20,7 @@ struct KudosBadgeView: View {
         .accessibilityLabel(Text("\(formattedKudos) kudos", comment: "Kudos count label"))
     }
 
-    private var formattedKudos: String {
-        if abs(kudos) >= 1000 {
-            return String(format: "%.1fk", Double(kudos) / 1000)
-        }
-        return "\(kudos)"
-    }
+    private var formattedKudos: String { kudos.formattedCount }
 
     private var kudosColor: Color {
         if kudos >= 100 { return .dumpiGreen }

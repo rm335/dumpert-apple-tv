@@ -25,19 +25,16 @@ struct CategoriesSectionView: View {
             ZStack {
                 switch selection {
                 case .reeten:
-                    CategorySectionView(category: .reeten)
+                    CategorySectionView(category: .reeten, showsTitle: false)
                         .transition(.opacity)
                 case .vrijmico:
-                    CategorySectionView(category: .vrijmico)
+                    CategorySectionView(category: .vrijmico, showsTitle: false)
                         .transition(.opacity)
                 case .dashcam:
-                    CategorySectionView(category: .dashcam)
+                    CategorySectionView(category: .dashcam, showsTitle: false)
                         .transition(.opacity)
                 case .classics:
-                    ClassicsSectionView()
-                        .transition(.opacity)
-                case .gekeken:
-                    WatchedSectionView()
+                    ClassicsSectionView(showsHeader: false)
                         .transition(.opacity)
                 }
             }
@@ -97,7 +94,6 @@ extension CategoriesSectionView {
         case vrijmico
         case dashcam
         case classics
-        case gekeken
 
         var id: String { rawValue }
 
@@ -107,7 +103,6 @@ extension CategoriesSectionView {
             case .vrijmico: "VrijMiCo"
             case .dashcam: "Dashcam"
             case .classics: "Classics"
-            case .gekeken: "Gekeken"
             }
         }
 
@@ -117,7 +112,6 @@ extension CategoriesSectionView {
             case .vrijmico: "party.popper.fill"
             case .dashcam: "car.fill"
             case .classics: "clock.arrow.circlepath"
-            case .gekeken: "eye.fill"
             }
         }
 
@@ -127,7 +121,6 @@ extension CategoriesSectionView {
             case .vrijmico: String(localized: "VrijMiCo", comment: "Accessibility: VrijMiCo sub-tab")
             case .dashcam: String(localized: "Dashcam", comment: "Accessibility: Dashcam sub-tab")
             case .classics: String(localized: "Classics", comment: "Accessibility: Classics sub-tab")
-            case .gekeken: String(localized: "Gekeken", comment: "Accessibility: Gekeken sub-tab")
             }
         }
     }

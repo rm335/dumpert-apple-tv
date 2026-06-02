@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct ClassicsSectionView: View {
+    /// When embedded under the Categorieën pill bar the pill already names the
+    /// channel, so the in-grid title is suppressed to avoid a duplicate label.
+    var showsHeader: Bool = true
     @Environment(VideoRepository.self) private var repository
     @Environment(ImmersiveBackgroundState.self) private var backgroundState
     @State private var selectedVideo: Video?
@@ -17,7 +20,9 @@ struct ClassicsSectionView: View {
             if repository.isLoading && items.isEmpty {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 30) {
-                        classicsHeader
+                        if showsHeader {
+                            classicsHeader
+                        }
                         SkeletonGridView(columnCount: repository.settings.tileSize.gridColumnCount)
                     }
                     .padding(.vertical, 30)
@@ -25,7 +30,9 @@ struct ClassicsSectionView: View {
                 .transition(.opacity)
             } else if items.isEmpty && !repository.isLoading {
                 VStack(spacing: 30) {
-                    classicsHeader
+                    if showsHeader {
+                        classicsHeader
+                    }
 
                     if let error = repository.error {
                         EmptyStateView(
@@ -50,56 +57,15 @@ struct ClassicsSectionView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         VStack(alignment: .leading, spacing: 30) {
-                            classicsHeader
-                                .id("top")
+                            Color.clear.frame(height: 0).id("top")
 
-                            LazyVGrid(
-                                columns: repository.settings.tileSize.gridColumns,
-                                spacing: 35
-                            ) {
-                                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                                    Button {
-                                        item.present(selectedVideo: $selectedVideo, selectedPhoto: $selectedPhoto)
-                                    } label: {
-                                        VideoCardView(
-                                            item: item,
-                                            isWatched: repository.isWatched(item.id),
-                                            progress: repository.progressFor(item.id),
-                                            isFocused: focusedItem == item.id,
-                                            thumbnailPreviewEnabled: repository.settings.thumbnailPreviewEnabled,
-                                            smartThumbnailsEnabled: repository.settings.smartThumbnailsEnabled
-                                        )
-                                        .overlay(alignment: .topLeading) {
-                                            // Vintage year badge for classics
-                                            if let date = item.date {
-                                                Text(date.classicsYearString)
-                                                    .font(.caption2)
-                                                    .fontWeight(.bold)
-                                                    .monospacedDigit()
-                                                    .foregroundStyle(.white.opacity(0.9))
-                                                    .padding(.horizontal, 6)
-                                                    .padding(.vertical, 2)
-                                                    .modifier(GlassPillModifier())
-                                                    .padding(6)
-                                            }
-                                        }
-                                    }
-                                    .buttonStyle(.card)
-                                    .focused($focusedItem, equals: item.id)
-                                    .videoContextMenu(item: item, repository: repository, toastMessage: $toastMessage)
-                                    .onAppear {
-                                        let prefetchRange = (index + 1)..<min(index + 6, items.count)
-                                        if !prefetchRange.isEmpty {
-                                            let upcoming = Array(items[prefetchRange])
-                                            Task { await ImagePrefetchService.shared.prefetch(upcoming) }
-                                        }
-                                        if index >= items.count - 3 {
-                                            Task { await repository.loadMoreClassics() }
-                                        }
-                                    }
-                                }
+                            if showsHeader {
+                                classicsHeader
                             }
-                            .padding(.horizontal, 50)
+
+                            // The Vault, walkable by era: year is a section header
+                            // rather than a tiny per-card badge.
+                            yearGroupedGrid
 
                             if repository.isClassicsLoadingMore {
                                 ProgressView(String(localized: "Meer laden...", comment: "Loading more results indicator"))
@@ -115,7 +81,7 @@ struct ClassicsSectionView: View {
                                 .accessibilityHint(Text("Laad meer classics", comment: "Accessibility: load more classics"))
                             }
 
-                            // Scroll to top button
+                            // Scroll to top button (no native snap-to-top gesture on tvOS)
                             if items.count > repository.settings.tileSize.gridColumnCount * 3 {
                                 Button {
                                     withAnimation(.spring(duration: 0.5)) {
@@ -160,6 +126,84 @@ struct ClassicsSectionView: View {
                     backgroundState.update(for: item)
                 }
             }
+        }
+    }
+
+    // MARK: - Year-grouped grid
+
+    private var yearGroupedGrid: some View {
+        let lookup = flatIndexLookup
+        return LazyVStack(alignment: .leading, spacing: 30) {
+            ForEach(yearGroups, id: \.key) { group in
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(group.label)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                        .padding(.horizontal, 50)
+                        .accessibilityAddTraits(.isHeader)
+
+                    LazyVGrid(columns: repository.settings.tileSize.gridColumns, spacing: 35) {
+                        ForEach(group.items) { item in
+                            card(for: item, index: lookup[item.id] ?? 0)
+                        }
+                    }
+                    .padding(.horizontal, 50)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func card(for item: MediaItem, index: Int) -> some View {
+        Button {
+            item.present(selectedVideo: $selectedVideo, selectedPhoto: $selectedPhoto)
+        } label: {
+            VideoCardView(
+                item: item,
+                isWatched: repository.isWatched(item.id),
+                progress: repository.progressFor(item.id),
+                isFocused: focusedItem == item.id,
+                thumbnailPreviewEnabled: repository.settings.thumbnailPreviewEnabled,
+                smartThumbnailsEnabled: repository.settings.smartThumbnailsEnabled
+            )
+        }
+        .buttonStyle(.card)
+        .focused($focusedItem, equals: item.id)
+        .videoContextMenu(item: item, repository: repository, toastMessage: $toastMessage)
+        .onAppear {
+            let prefetchRange = (index + 1)..<min(index + 6, items.count)
+            if !prefetchRange.isEmpty {
+                let upcoming = Array(items[prefetchRange])
+                Task { await ImagePrefetchService.shared.prefetch(upcoming) }
+            }
+            if index >= items.count - 3 {
+                Task { await repository.loadMoreClassics() }
+            }
+        }
+    }
+
+    private var flatIndexLookup: [String: Int] {
+        var dict: [String: Int] = [:]
+        for (i, item) in items.enumerated() { dict[item.id] = i }
+        return dict
+    }
+
+    private var yearGroups: [(key: Int, label: String, items: [MediaItem])] {
+        let cal = Calendar.current
+        let grouped = Dictionary(grouping: items) { item -> Int in
+            guard let date = item.date else { return 0 }
+            return cal.component(.year, from: date)
+        }
+        return grouped.keys.sorted(by: >).map { year in
+            (
+                key: year,
+                label: year == 0
+                    ? String(localized: "Onbekend jaar", comment: "Classics: section for items without a date")
+                    : String(year),
+                items: grouped[year] ?? []
+            )
         }
     }
 

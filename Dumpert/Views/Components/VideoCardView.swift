@@ -7,6 +7,9 @@ struct VideoCardView: View {
     var isFocused: Bool = false
     var thumbnailPreviewEnabled: Bool = true
     var smartThumbnailsEnabled: Bool = true
+    /// Optional extra badge (e.g. the Classics vintage year) rendered bottom-leading
+    /// on the thumbnail, coordinated with the other corner badges.
+    var cornerBadge: String? = nil
 
     @State private var showPreview = false
     @State private var upgradedThumbnail: UIImage?
@@ -115,6 +118,21 @@ struct VideoCardView: View {
                     }
                 }
 
+                // Optional corner badge (e.g. Classics year) — bottom-leading,
+                // coordinated with the bottom-trailing duration pill.
+                if let cornerBadge, !showPreview {
+                    Text(cornerBadge)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .monospacedDigit()
+                        .foregroundStyle(.white.opacity(0.9))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .modifier(GlassPillModifier())
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                        .padding(6)
+                }
+
                 // Progress bar at bottom (only for videos)
                 if item.isVideo && progress > 0 && !isWatched {
                     GeometryReader { geo in
@@ -156,6 +174,17 @@ struct VideoCardView: View {
                             .monospacedDigit()
                     }
                     .foregroundStyle(kudosColor)
+
+                    if item.viewsTotal > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "eye.fill")
+                                .font(.system(size: 8))
+                            Text(item.viewsTotal.formattedCount)
+                                .font(.caption2)
+                                .monospacedDigit()
+                        }
+                        .foregroundStyle(.secondary)
+                    }
 
                     if let date = item.date {
                         Text("·")
@@ -217,13 +246,7 @@ struct VideoCardView: View {
         return max(10, Double(duration) * 0.10)
     }
 
-    private var formattedKudos: String {
-        let k = item.kudosTotal
-        if abs(k) >= 1000 {
-            return String(format: "%.1fk", Double(k) / 1000)
-        }
-        return "\(k)"
-    }
+    private var formattedKudos: String { item.kudosTotal.formattedCount }
 
     private var accessibilityDescription: String {
         var parts: [String] = []
@@ -240,6 +263,9 @@ struct VideoCardView: View {
             parts.append(String(localized: "Foto", comment: "Accessibility: content type photo"))
         }
         parts.append(String(localized: "\(formattedKudos) kudos", comment: "Kudos count label"))
+        if item.viewsTotal > 0 {
+            parts.append(String(localized: "\(item.viewsTotal.formattedCount) views", comment: "Views count label"))
+        }
         if isWatched {
             parts.append(String(localized: "Bekeken", comment: "Accessibility: video has been watched"))
         } else if progress > 0 {

@@ -461,6 +461,34 @@ final class VideoRepository {
         }
     }
 
+    /// Updates the Reeten minimum-duration filter and refetches immediately so
+    /// the change is visible on the channel right away. The minimum is applied
+    /// at fetch time (not in `filteredItems`), so — like `setSortOrder` — this
+    /// must clear and reload rather than just flip the setting.
+    func setReetenMinimum(_ minutes: Int) {
+        guard settings.reetenMinimumMinutes != minutes else { return }
+        settings.reetenMinimumMinutes = minutes
+        let category = VideoCategory.reeten
+        categoryPages[category] = 0
+        categoryHasMore[category] = true
+        categoryVideos[category] = []
+        Task {
+            do {
+                let videos = try await categoryService.fetchItems(
+                    for: category,
+                    order: categorySortOrder[category] ?? .dateNewest,
+                    curationEntries: curationEntries,
+                    minimumKudos: settings.minimumKudos,
+                    reetenMinimumMinutes: settings.reetenMinimumMinutes
+                )
+                categoryVideos[category] = videos
+                categoryHasMore[category] = !videos.isEmpty
+            } catch {
+                self.error = error.localizedDescription
+            }
+        }
+    }
+
     func filteredItems(_ items: [MediaItem]) -> [MediaItem] {
         var result = filterByKudos(items)
         if !settings.nsfwEnabled {

@@ -7,9 +7,9 @@ struct ToppersSectionView: View {
     @State private var selectedPhoto: Photo?
     @State private var toastMessage: String?
     @State private var heroIndex = 0
-    @State private var heroAutoRotate = true
-    @State private var resumeAutoRotateTask: Task<Void, Never>?
     @FocusState private var focusedItem: String?
+    @FocusState private var heroFocused: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var heroItems: [MediaItem] {
         Array(repository.filteredItems(repository.hotshiz).prefix(5))
@@ -98,7 +98,11 @@ struct ToppersSectionView: View {
                             heroCarousel
                         }
 
+                        // Hero items already headline the spotlight above —
+                        // exclude them so the Trending rail shows *different* content.
+                        let heroIDs = Set(heroItems.map(\.id))
                         let trendingItems = repository.filteredItems(repository.hotshiz)
+                            .filter { !heroIDs.contains($0.id) }
                         let weekItems = repository.filteredItems(repository.topWeek)
                         let monthItems = repository.filteredItems(repository.topMonth)
 
@@ -133,6 +137,25 @@ struct ToppersSectionView: View {
         .task {
             if !heroItems.isEmpty {
                 backgroundState.update(for: heroItems[safeHeroIndex])
+            }
+        }
+        .task(id: heroItems.count) {
+            // Marquee auto-advance: a hero that never moves reads as a static
+            // poster. Pauses while the hero itself is focused so the user can
+            // read/select, and steps instantly under Reduce Motion.
+            guard heroItems.count > 1 else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(7))
+                guard !Task.isCancelled else { return }
+                if heroFocused { continue }
+                let next = (heroIndex + 1) % max(1, heroItems.count)
+                if reduceMotion {
+                    heroIndex = next
+                } else {
+                    withAnimation(.spring(duration: 0.7, bounce: 0.15)) {
+                        heroIndex = next
+                    }
+                }
             }
         }
         .onChange(of: heroIndex) { _, newIndex in
@@ -226,23 +249,20 @@ struct ToppersSectionView: View {
             }
             .aspectRatio(16/6, contentMode: .fit)
             .cornerRadius(24)
-            .animation(.spring(duration: 0.7, bounce: 0.15), value: safeHeroIndex)
+            .animation(reduceMotion ? nil : .spring(duration: 0.7, bounce: 0.15), value: safeHeroIndex)
         }
         .buttonStyle(.card)
+        .focused($heroFocused)
         .onMoveCommand { direction in
             switch direction {
             case .left:
-                heroAutoRotate = false
                 withAnimation(.spring(duration: 0.7, bounce: 0.15)) {
                     heroIndex = (heroIndex - 1 + heroItems.count) % heroItems.count
                 }
-                resumeAutoRotateAfterDelay()
             case .right:
-                heroAutoRotate = false
                 withAnimation(.spring(duration: 0.7, bounce: 0.15)) {
                     heroIndex = (heroIndex + 1) % heroItems.count
                 }
-                resumeAutoRotateAfterDelay()
             default:
                 break
             }
@@ -267,39 +287,22 @@ struct ToppersSectionView: View {
                 heroIndex = 0
             }
         }
-        .task(id: heroItems.count) {
-            guard heroItems.count > 1 else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(6))
-                guard !Task.isCancelled else { return }
-                if heroAutoRotate {
-                    heroIndex = (heroIndex + 1) % heroItems.count
-                }
-            }
-        }
     }
 
     private var pageIndicators: some View {
-        HStack(spacing: 10) {
-            if !heroAutoRotate {
-                Image(systemName: "pause.fill")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .transition(.scale.combined(with: .opacity))
+        HStack(spacing: 8) {
+            ForEach(0..<heroItems.count, id: \.self) { i in
+                Circle()
+                    .fill(i == safeHeroIndex ? Color.white : Color.white.opacity(0.4))
+                    .frame(width: 10, height: 10)
             }
-            Text("\(safeHeroIndex + 1) / \(heroItems.count)")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .monospacedDigit()
-                .foregroundStyle(.white)
-                .contentTransition(.numericText())
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(.ultraThinMaterial, in: Capsule())
-        .animation(.smooth(duration: 0.3), value: heroAutoRotate)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
         .padding(20)
+        .accessibilityHidden(true)
     }
 
     @ViewBuilder
@@ -316,6 +319,18 @@ struct ToppersSectionView: View {
             }
             HStack(spacing: 10) {
                 KudosBadgeView(kudos: hero.kudosTotal)
+                if hero.viewsTotal > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "eye.fill")
+                            .font(.caption)
+                        Text(hero.viewsTotal.formattedCount)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .monospacedDigit()
+                    }
+                    .foregroundStyle(.white.opacity(0.7))
+                    .accessibilityLabel(Text("\(hero.viewsTotal.formattedCount) views", comment: "Views count label"))
+                }
                 if hero.isVideo && hero.duration > 0 {
                     Text(hero.duration.formattedDuration)
                         .font(.caption)
@@ -363,15 +378,6 @@ struct ToppersSectionView: View {
                 infoContent
                     .padding(36)
             }
-        }
-    }
-
-    private func resumeAutoRotateAfterDelay() {
-        resumeAutoRotateTask?.cancel()
-        resumeAutoRotateTask = Task {
-            try? await Task.sleep(for: .seconds(10))
-            guard !Task.isCancelled else { return }
-            heroAutoRotate = true
         }
     }
 

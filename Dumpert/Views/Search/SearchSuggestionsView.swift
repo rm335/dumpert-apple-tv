@@ -87,7 +87,7 @@ extension SearchView {
     func popularTagsSection(_ tags: [String], viewModel: SearchViewModel) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Populair", comment: "Popular tags section header")
-                .font(.title3)
+                .font(.title2)
                 .fontWeight(.bold)
                 .padding(.horizontal, 50)
 
@@ -122,7 +122,7 @@ extension SearchView {
     func categoriesSection(_ viewModel: SearchViewModel) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Categorieën", comment: "Categories section header")
-                .font(.title3)
+                .font(.title2)
                 .fontWeight(.bold)
                 .padding(.horizontal, 50)
 

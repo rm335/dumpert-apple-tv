@@ -125,6 +125,7 @@ struct SearchView: View {
                     VStack(spacing: 20) {
                         if viewModel.hasSearched {
                             filterBar(viewModel)
+                            resultCountLabel(viewModel)
                         }
                         resultsGrid(viewModel)
                     }
@@ -138,21 +139,30 @@ struct SearchView: View {
     // MARK: - Error
 
     private func errorView(_ error: String, viewModel: SearchViewModel) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-            Text("Er ging iets mis", comment: "Error state title")
-                .font(.title3)
-                .fontWeight(.semibold)
-            Text(error)
-                .font(.body)
-                .foregroundStyle(.secondary)
-            Button(String(localized: "Opnieuw proberen", comment: "Retry button")) {
-                Task { await viewModel.search() }
-            }
+        EmptyStateView(
+            title: "Er ging iets mis",
+            systemImage: "exclamationmark.triangle",
+            description: "\(error)"
+        ) {
+            Task { await viewModel.search() }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Result Count
+
+    /// Confirms the query landed — the Launchpad's job is to make the outcome of
+    /// an intent legible. Counts results loaded so far (grows with pagination).
+    @ViewBuilder
+    private func resultCountLabel(_ viewModel: SearchViewModel) -> some View {
+        if !viewModel.filteredResults.isEmpty {
+            Text("\(viewModel.filteredResults.count) resultaten", comment: "Search result count")
+                .font(.callout)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 50)
+        }
     }
 
     // MARK: - Results Grid

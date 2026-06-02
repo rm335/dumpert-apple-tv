@@ -16,6 +16,7 @@ struct ImmersiveBackgroundView: View {
     @State private var imageB: UIImage?
     @State private var showingA = true
     @State private var loadedURL: URL?
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         GeometryReader { geo in
@@ -83,16 +84,19 @@ struct ImmersiveBackgroundView: View {
 
         loadedURL = url
 
+        // Calm by default; instant swap under Reduce Motion (no crossfade).
+        let crossfade: Animation? = reduceMotion ? nil : .easeInOut(duration: 0.6)
+
         if showingA {
             // Currently showing A → load into B, crossfade to B
             imageB = image
-            withAnimation(.easeInOut(duration: 0.4)) {
+            withAnimation(crossfade) {
                 showingA = false
             }
         } else {
             // Currently showing B → load into A, crossfade to A
             imageA = image
-            withAnimation(.easeInOut(duration: 0.4)) {
+            withAnimation(crossfade) {
                 showingA = true
             }
         }

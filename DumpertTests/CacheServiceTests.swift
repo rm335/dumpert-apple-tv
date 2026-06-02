@@ -76,4 +76,40 @@ struct CacheServiceTests {
         #expect(loaded.count == 2)
         #expect(loaded[0].query == "dashcam")
     }
+
+    @Test("Media item cache round-trip preserves viewsTotal")
+    func mediaItemViewsRoundTrip() async {
+        let cache = makeIsolatedCache()
+        let video = Video(
+            id: "v1", title: "Test", descriptionText: "", date: nil,
+            duration: 42, kudosTotal: 7, viewsTotal: 63_759,
+            thumbnailURL: nil, streamURL: nil, tags: [], isNSFW: false
+        )
+
+        await cache.cacheMediaItems([.video(video)], for: "k1")
+        let loaded = await cache.loadCachedMediaItems(for: "k1")
+
+        #expect(loaded?.count == 1)
+        #expect(loaded?.first?.viewsTotal == 63_759)
+        #expect(loaded?.first?.kudosTotal == 7)
+    }
+
+    @Test("Legacy cached media without viewsTotal decodes as zero")
+    func legacyCacheBackwardCompatible() async throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DumpertTests-\(UUID().uuidString)", isDirectory: true)
+        let cache = CacheService(cacheDirectory: dir)
+
+        // On-disk format that predates the viewsTotal field.
+        let legacyJSON = """
+        [{"id":"v1","title":"Oud","descriptionText":"","duration":42,"kudosTotal":7,"tags":[],"isNSFW":false,"mediaType":"video"}]
+        """
+        try Data(legacyJSON.utf8).write(to: dir.appendingPathComponent("videos_legacy.json"))
+
+        let loaded = await cache.loadCachedMediaItems(for: "legacy")
+
+        #expect(loaded?.count == 1)
+        #expect(loaded?.first?.kudosTotal == 7)
+        #expect(loaded?.first?.viewsTotal == 0)
+    }
 }

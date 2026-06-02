@@ -13,13 +13,15 @@ final class ImmersiveBackgroundState {
         currentImageURL ?? fallbackImageURL
     }
 
-    /// Update the background for a newly focused media item (debounced 150ms).
+    /// Update the background for a newly focused media item (debounced 250ms).
+    /// The longer settle keeps the backdrop calm during fast focus traversal
+    /// instead of strobing one image per focus hop.
     func update(for item: MediaItem) {
         let url = item.thumbnailURL
         guard url != currentImageURL else { return }
         debounceTask?.cancel()
         debounceTask = Task {
-            try? await Task.sleep(for: .milliseconds(150))
+            try? await Task.sleep(for: .milliseconds(250))
             guard !Task.isCancelled else { return }
             currentImageURL = url
         }

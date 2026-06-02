@@ -20,7 +20,7 @@ struct SettingsView: View {
 
         NavigationStack {
             List {
-            // MARK: - Weergave & content
+            // MARK: - Content (what shows up)
 
             Section {
                 settingsNavigationPicker(
@@ -60,6 +60,26 @@ struct SettingsView: View {
                     isOn: $settings.hideWatched
                 )
 
+                settingsNavigationPicker(
+                    "Minimale reeten-duur",
+                    icon: "timer",
+                    description: "Alleen in de Reeten-tab: verberg korte video's",
+                    selection: $settings.reetenMinimumMinutes,
+                    options: [
+                        ("Geen minimum", 0),
+                        ("5 minuten", 5),
+                        ("10 minuten", 10),
+                        ("15 minuten", 15),
+                        ("20 minuten", 20),
+                    ]
+                )
+            } header: {
+                sectionHeader("Content")
+            }
+
+            // MARK: - Weergave (how it looks)
+
+            Section {
                 settingsToggle(
                     "Slimme thumbnails",
                     icon: "sparkles.rectangle.stack",
@@ -81,7 +101,7 @@ struct SettingsView: View {
 
                 tilePreview(columnCount: settings.tileSize.gridColumnCount, tileSize: settings.tileSize)
             } header: {
-                sectionHeader("Weergave & content")
+                sectionHeader("Weergave")
             }
 
             // MARK: - Afspelen
@@ -154,19 +174,6 @@ struct SettingsView: View {
                     isOn: $settings.showResumeOverlay
                 )
 
-                settingsNavigationPicker(
-                    "Minimale reeten-duur",
-                    icon: "timer",
-                    description: "Alleen in de Reeten-tab: verberg korte video's",
-                    selection: $settings.reetenMinimumMinutes,
-                    options: [
-                        ("Geen minimum", 0),
-                        ("5 minuten", 5),
-                        ("10 minuten", 10),
-                        ("15 minuten", 15),
-                        ("20 minuten", 20),
-                    ]
-                )
             } header: {
                 sectionHeader("Afspelen")
             }
@@ -334,22 +341,7 @@ struct SettingsView: View {
                 .confirmationDialog(Text("Standaardwaarden herstellen", comment: "Reset defaults confirmation title"), isPresented: $showResetConfirmation) {
                     Button(String(localized: "Herstel standaardwaarden", comment: "Reset defaults button"), role: .destructive) {
                         withAnimation(.smooth) {
-                            settings.minimumKudos = 0
-                            settings.autoplayEnabled = true
-                            settings.hideWatched = true
-                            settings.reetenMinimumMinutes = 10
-                            settings.showNegativeKudos = false
-                            settings.nsfwEnabled = true
-                            settings.thumbnailPreviewEnabled = true
-                            settings.smartThumbnailsEnabled = true
-                            settings.tileSize = .normal
-                            settings.upNextOverlayEnabled = true
-                            settings.upNextCountdownSeconds = 5
-                            settings.upNextMinimumVideoSeconds = 60
-                            settings.topCommentMode = .all
-                            settings.readingSpeed = .normal
-                            settings.remoteSkipMode = .swipe
-                            settings.showResumeOverlay = true
+                            settings.resetToDefaults()
                         }
                         showResetFeedback = true
                     }

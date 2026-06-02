@@ -160,6 +160,14 @@ final class UserSettings {
         )
     }
 
+    /// Restores every setting to its factory default in one shot and persists
+    /// once. Data-driven: the defaults come from a fresh `UserSettingsSnapshot()`
+    /// so this never drifts as new settings are added (no hand-maintained list).
+    func resetToDefaults() {
+        apply(UserSettingsSnapshot())
+        onChange?()
+    }
+
     func apply(_ snapshot: UserSettingsSnapshot) {
         suppressNotifications = true
         defer { suppressNotifications = false }

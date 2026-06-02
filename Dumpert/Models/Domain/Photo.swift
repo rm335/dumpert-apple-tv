@@ -6,6 +6,7 @@ struct Photo: Identifiable, Hashable, Sendable {
     let descriptionText: String
     let date: Date?
     let kudosTotal: Int
+    let viewsTotal: Int
     let thumbnailURL: URL?
     let imageURL: URL?
     let tags: [String]
@@ -44,6 +45,7 @@ struct Photo: Identifiable, Hashable, Sendable {
             ?? item.thumbnail.flatMap { URL(string: $0) }
 
         self.kudosTotal = item.stats?.kudosTotal ?? 0
+        self.viewsTotal = item.stats?.viewsTotal ?? 0
         self.tags = item.tags?
             .components(separatedBy: " ")
             .map { $0.trimmingCharacters(in: .whitespaces) }
@@ -57,6 +59,7 @@ struct Photo: Identifiable, Hashable, Sendable {
         descriptionText: String,
         date: Date?,
         kudosTotal: Int,
+        viewsTotal: Int = 0,
         thumbnailURL: URL?,
         imageURL: URL?,
         tags: [String],
@@ -67,6 +70,7 @@ struct Photo: Identifiable, Hashable, Sendable {
         self.descriptionText = descriptionText
         self.date = date
         self.kudosTotal = kudosTotal
+        self.viewsTotal = viewsTotal
         self.thumbnailURL = thumbnailURL
         self.imageURL = imageURL
         self.tags = tags

@@ -13,8 +13,12 @@ struct LoadingScreenView: View {
     @State private var dismissed = false
     @State private var heartbeatScale: CGFloat = 1.0
     @State private var heartbeatTask: Task<Void, Never>?
+    @State private var showSlowHint = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private let minimumDisplayTime: TimeInterval = 2.5
+    // A threshold, not a wait: gone the instant data is ready, with just enough
+    // floor to avoid a flash. (Was 2.5s — which forced a wait the theme forbids.)
+    private let minimumDisplayTime: TimeInterval = 0.6
     private let maxTimeout: TimeInterval = 10.0
 
     var body: some View {
@@ -29,17 +33,35 @@ struct LoadingScreenView: View {
                 .scaledToFit()
                 .frame(width: 280, height: 280)
                 .rotationEffect(.degrees(logoRotation))
-                .scaleEffect(isExiting ? 50.0 : logoScale * heartbeatScale)
+                .scaleEffect(exitScale)
                 .opacity(isExiting ? 0 : logoOpacity)
+
+            // Only appears if the load is genuinely slow — the happy path never
+            // sees it, so the threshold stays pure under good conditions.
+            if showSlowHint && !isExiting {
+                VStack(spacing: 16) {
+                    ProgressView()
+                    Text("Menu om over te slaan", comment: "Loading screen: hint to skip with the Menu button")
+                        .font(.callout)
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .padding(.bottom, 120)
+                .transition(.opacity)
+            }
         }
         .accessibilityElement()
         .accessibilityLabel(Text("Dumpert wordt geladen", comment: "Accessibility label shown while the app is loading"))
         .focusable()
+        .onExitCommand {
+            performExit()
+        }
         .onAppear {
             appearDate = Date()
             startLogoAnimation()
             soundPlayer.playRandom()
             startTimeout()
+            startSlowHintTimer()
         }
         .onChange(of: repository.isLoading) { _, isLoading in
             if !isLoading {
@@ -51,6 +73,15 @@ struct LoadingScreenView: View {
     }
 
     private func startLogoAnimation() {
+        // Reduce Motion: a calm fade-in, no spring overshoot and no heartbeat.
+        if reduceMotion {
+            withAnimation(.easeOut(duration: 0.4)) {
+                logoScale = 1.0
+                logoOpacity = 1.0
+            }
+            return
+        }
+
         withAnimation(.spring(duration: 1.2, bounce: 0.3)) {
             logoScale = 1.0
             logoOpacity = 1.0
@@ -108,6 +139,25 @@ struct LoadingScreenView: View {
         }
     }
 
+    /// Surfaces a progress indicator + skip hint only once the load is clearly
+    /// slow, so a fast launch never shows them.
+    private func startSlowHintTimer() {
+        Task {
+            try? await Task.sleep(for: .seconds(3))
+            guard !dismissed, !isExiting else { return }
+            withAnimation(.easeIn(duration: 0.3)) {
+                showSlowHint = true
+            }
+        }
+    }
+
+    /// Exit zoom: a 50× burst normally, but flat under Reduce Motion so the exit
+    /// is a clean cross-fade instead of a zoom-bomb.
+    private var exitScale: CGFloat {
+        if isExiting { return reduceMotion ? 1.0 : 50.0 }
+        return logoScale * heartbeatScale
+    }
+
     private func scheduleExit() {
         guard !dismissed else { return }
         Task {
@@ -124,6 +174,18 @@ struct LoadingScreenView: View {
         dismissed = true
         heartbeatTask?.cancel()
         heartbeatScale = 1.0
+
+        // Reduce Motion: a plain cross-fade out — no 50× zoom-bomb, no rotation.
+        if reduceMotion {
+            withAnimation(.easeIn(duration: 0.4)) {
+                isExiting = true
+            }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(450))
+                onDismiss()
+            }
+            return
+        }
 
         logoRotation = Double.random(in: -25...25)
         withAnimation(.easeIn(duration: 0.6)) {

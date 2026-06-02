@@ -227,6 +227,7 @@ private struct CachedMediaItem: Codable {
     let date: Date?
     let duration: Int
     let kudosTotal: Int
+    let viewsTotal: Int?
     let thumbnailURL: String?
     let streamURL: String?
     let videoFileURL: String?
@@ -241,6 +242,7 @@ private struct CachedMediaItem: Codable {
         self.descriptionText = item.descriptionText
         self.date = item.date
         self.kudosTotal = item.kudosTotal
+        self.viewsTotal = item.viewsTotal
         self.thumbnailURL = item.thumbnailURL?.absoluteString
         self.tags = item.tags
         self.isNSFW = item.isNSFW
@@ -269,6 +271,7 @@ private struct CachedMediaItem: Codable {
                 descriptionText: descriptionText,
                 date: date,
                 kudosTotal: kudosTotal,
+                viewsTotal: viewsTotal ?? 0,
                 thumbnailURL: thumbnailURL.flatMap { URL(string: $0) },
                 imageURL: imageURL.flatMap { URL(string: $0) },
                 tags: tags,
@@ -282,6 +285,7 @@ private struct CachedMediaItem: Codable {
                 date: date,
                 duration: duration,
                 kudosTotal: kudosTotal,
+                viewsTotal: viewsTotal ?? 0,
                 thumbnailURL: thumbnailURL.flatMap { URL(string: $0) },
                 streamURL: streamURL.flatMap { URL(string: $0) },
                 videoFileURL: videoFileURL.flatMap { URL(string: $0) },

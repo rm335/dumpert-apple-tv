@@ -7,6 +7,7 @@ struct Video: Identifiable, Hashable, Sendable {
     let date: Date?
     let duration: Int
     let kudosTotal: Int
+    let viewsTotal: Int
     let thumbnailURL: URL?
     let streamURL: URL?
     /// Direct MP4 URL (720p/1080p) for frame extraction. Unlike HLS streams,
@@ -57,6 +58,7 @@ struct Video: Identifiable, Hashable, Sendable {
             ?? item.thumbnail.flatMap { URL(string: $0) }
 
         self.kudosTotal = item.stats?.kudosTotal ?? 0
+        self.viewsTotal = item.stats?.viewsTotal ?? 0
         self.tags = item.tags?
             .components(separatedBy: " ")
             .map { $0.trimmingCharacters(in: .whitespaces) }
@@ -71,6 +73,7 @@ struct Video: Identifiable, Hashable, Sendable {
         date: Date?,
         duration: Int,
         kudosTotal: Int,
+        viewsTotal: Int = 0,
         thumbnailURL: URL?,
         streamURL: URL?,
         videoFileURL: URL? = nil,
@@ -83,6 +86,7 @@ struct Video: Identifiable, Hashable, Sendable {
         self.date = date
         self.duration = duration
         self.kudosTotal = kudosTotal
+        self.viewsTotal = viewsTotal
         self.thumbnailURL = thumbnailURL
         self.streamURL = streamURL
         self.videoFileURL = videoFileURL

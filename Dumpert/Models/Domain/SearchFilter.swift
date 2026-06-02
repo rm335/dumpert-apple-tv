@@ -53,6 +53,18 @@ struct SearchFilter: Equatable {
     }
 }
 
+/// Common interface for the four search refinement enums so one generic
+/// `filterMenu` can render any of them as a Menu with a checkmarked selection.
+protocol FilterOption: Hashable {
+    var displayName: String { get }
+    var icon: String { get }
+}
+
+extension MediaTypeFilter: FilterOption {}
+extension PeriodFilter: FilterOption {}
+extension KudosFilter: FilterOption {}
+extension DurationFilter: FilterOption {}
+
 enum MediaTypeFilter: String, CaseIterable {
     case all, video, photo
 

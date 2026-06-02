@@ -176,4 +176,37 @@ struct APIDecodingTests {
         #expect(photo.thumbnailURL != nil)
         #expect(photo.imageURL?.absoluteString.contains("image.jpg") == true)
     }
+
+    // MARK: - Views (stats) mapping
+
+    @Test("Video carries viewsTotal from stats")
+    func videoViewsTotal() throws {
+        let data = try loadFixture("hotshiz")
+        let response = try decoder.decode(DumpertAPIResponse.self, from: data)
+        let item = response.items!.first!
+        let video = Video(from: item)
+
+        #expect(video.viewsTotal == item.stats?.viewsTotal)
+        #expect(video.viewsTotal == 63759)
+    }
+
+    @Test("Photo carries viewsTotal from stats")
+    func photoViewsTotal() throws {
+        let data = try loadFixture("foto_item")
+        let response = try decoder.decode(DumpertAPIResponse.self, from: data)
+        let item = response.items!.first!
+        let photo = Photo(from: item)
+
+        #expect(photo.viewsTotal == 4793)
+    }
+
+    @Test("MediaItem exposes viewsTotal")
+    func mediaItemViewsTotal() throws {
+        let data = try loadFixture("hotshiz")
+        let response = try decoder.decode(DumpertAPIResponse.self, from: data)
+        let item = response.items!.first!
+        let mediaItem = MediaItem(from: item)
+
+        #expect(mediaItem.viewsTotal == 63759)
+    }
 }

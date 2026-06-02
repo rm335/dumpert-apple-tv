@@ -13,7 +13,8 @@ struct FullScreenImageView: View {
     @State var currentScale: CGFloat = 1.0
     @State private var offsetX: CGFloat = 0
     @State private var offsetY: CGFloat = 0
-    @State var showOverlay = true
+    // Lightbox opens to the image alone; Play/Pause reveals the chrome.
+    @State var showOverlay = false
 
     // Top comment state
     @State private var topComments: [DumpertComment] = []
@@ -57,8 +58,9 @@ struct FullScreenImageView: View {
                 isVisible: showTopComment
             )
 
-            // Zoom controls overlay (bottom right)
-            if !isLoading && !loadFailed && image != nil {
+            // Zoom controls overlay (bottom right) — part of the chrome, so it
+            // reveals and hides together with the title overlay via Play/Pause.
+            if showOverlay && !isLoading && !loadFailed && image != nil {
                 zoomControls
             }
         }
