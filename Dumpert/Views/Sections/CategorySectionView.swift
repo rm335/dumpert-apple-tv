@@ -13,7 +13,12 @@ struct CategorySectionView: View {
     @FocusState private var focusedItem: String?
 
     private var items: [MediaItem] {
-        repository.filteredItems(repository.categoryVideos[category] ?? [])
+        let base = repository.filteredItems(repository.categoryVideos[category] ?? [])
+        // DumpertTV's endpoint returns items in a date-arbitrary order across pages
+        // (each page mixes years) and has no server-side sort, so order the loaded
+        // set newest-first client-side. Undated items sink to the bottom.
+        guard category.usesDumpertTVEndpoint else { return base }
+        return base.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
     }
 
     private var sortOrder: SortOrder {
@@ -123,7 +128,7 @@ struct CategorySectionView: View {
                         if category == .reeten {
                             reetenDurationMenu
                         }
-                        if !category.usesLatestEndpoint {
+                        if category.supportsSorting {
                             sortPicker
                         }
                     }

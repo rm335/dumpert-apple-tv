@@ -223,4 +223,17 @@ struct APIDecodingTests {
         let url = APIEndpoint.topDay(date: date).url
         #expect(url.absoluteString == "https://post.dumpert.nl/api/v1.0/top5/dag/2026-06-02")
     }
+
+    @Test("dumpertTV endpoint builds the /dumperttv path")
+    func dumpertTVEndpointURL() {
+        let url = APIEndpoint.dumpertTV(page: 2).url
+        #expect(url.absoluteString == "https://post.dumpert.nl/api/v1.0/dumperttv/2")
+    }
+
+    @Test("DumpertTV category routes to its own endpoint and hides sorting")
+    func dumpertTVCategoryFlags() {
+        #expect(VideoCategory.dumperttv.usesDumpertTVEndpoint)
+        #expect(!VideoCategory.dumperttv.usesLatestEndpoint)
+        #expect(!VideoCategory.dumperttv.supportsSorting)
+    }
 }

@@ -9,6 +9,7 @@ enum APIEndpoint {
     case search(query: String, page: Int, order: SortOrder?)
     case info(id: String)
     case classics(page: Int)
+    case dumpertTV(page: Int)
     case related(id: String)
 
     private static let baseURL = "https://post.dumpert.nl/api/v1.0"
@@ -56,6 +57,8 @@ enum APIEndpoint {
             path = "/info/\(id)"
         case .classics(let page):
             path = "/classics/\(page)"
+        case .dumpertTV(let page):
+            path = "/dumperttv/\(page)"
         case .related(let id):
             path = "/related/\(id)"
         }

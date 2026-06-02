@@ -36,6 +36,9 @@ struct CategoriesSectionView: View {
                 case .classics:
                     ClassicsSectionView(showsHeader: false)
                         .transition(.opacity)
+                case .dumperttv:
+                    CategorySectionView(category: .dumperttv, showsTitle: false)
+                        .transition(.opacity)
                 }
             }
             .id(selection)
@@ -94,6 +97,7 @@ extension CategoriesSectionView {
         case vrijmico
         case dashcam
         case classics
+        case dumperttv
 
         var id: String { rawValue }
 
@@ -103,6 +107,7 @@ extension CategoriesSectionView {
             case .vrijmico: "VrijMiCo"
             case .dashcam: "Dashcam"
             case .classics: "Classics"
+            case .dumperttv: "DumpertTV"
             }
         }
 
@@ -112,6 +117,7 @@ extension CategoriesSectionView {
             case .vrijmico: "party.popper.fill"
             case .dashcam: "car.fill"
             case .classics: "clock.arrow.circlepath"
+            case .dumperttv: "tv"
             }
         }
 
@@ -121,6 +127,7 @@ extension CategoriesSectionView {
             case .vrijmico: String(localized: "VrijMiCo", comment: "Accessibility: VrijMiCo sub-tab")
             case .dashcam: String(localized: "Dashcam", comment: "Accessibility: Dashcam sub-tab")
             case .classics: String(localized: "Classics", comment: "Accessibility: Classics sub-tab")
+            case .dumperttv: String(localized: "DumpertTV", comment: "Accessibility: DumpertTV sub-tab")
             }
         }
     }

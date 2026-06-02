@@ -9,6 +9,7 @@ protocol APIClientProtocol: Sendable {
     func fetchLatest(page: Int) async throws -> [MediaItem]
     func fetchSearch(query: String, page: Int, order: SortOrder?) async throws -> [MediaItem]
     func fetchClassics(page: Int) async throws -> [MediaItem]
+    func fetchDumpertTV(page: Int) async throws -> [MediaItem]
     func fetchRelated(id: String) async throws -> [MediaItem]
     func fetchItem(id: String) async throws -> MediaItem?
     func fetchTopComments(for itemId: String) async throws -> [DumpertComment]

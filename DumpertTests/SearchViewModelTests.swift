@@ -31,6 +31,7 @@ struct SearchViewModelTests {
         func fetchTopDay(date: Date) async throws -> [MediaItem] { [] }
         func fetchLatest(page: Int) async throws -> [MediaItem] { [] }
         func fetchClassics(page: Int) async throws -> [MediaItem] { [] }
+        func fetchDumpertTV(page: Int) async throws -> [MediaItem] { [] }
         func fetchRelated(id: String) async throws -> [MediaItem] { [] }
         func fetchItem(id: String) async throws -> MediaItem? { nil }
         func fetchTopComments(for itemId: String) async throws -> [DumpertComment] { [] }

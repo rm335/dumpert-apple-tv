@@ -20,6 +20,8 @@ actor CategoryService {
         let items: [MediaItem]
         if category.usesLatestEndpoint {
             items = try await apiClient.fetchLatest(page: page)
+        } else if category.usesDumpertTVEndpoint {
+            items = try await apiClient.fetchDumpertTV(page: page)
         } else {
             items = try await apiClient.fetchSearch(query: category.searchQuery, page: page, order: order)
         }
