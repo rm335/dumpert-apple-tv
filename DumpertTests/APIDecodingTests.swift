@@ -232,8 +232,8 @@ struct APIDecodingTests {
 
     @Test("DumpertTV category routes to its own endpoint and hides sorting")
     func dumpertTVCategoryFlags() {
-        #expect(VideoCategory.dumperttv.usesDumpertTVEndpoint)
-        #expect(!VideoCategory.dumperttv.usesLatestEndpoint)
+        #expect(VideoCategory.dumperttv.endpoint == .dumpertTV)
         #expect(!VideoCategory.dumperttv.supportsSorting)
+        #expect(!VideoCategory.dumperttv.supportsCuration)
     }
 }

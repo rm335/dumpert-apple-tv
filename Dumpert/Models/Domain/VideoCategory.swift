@@ -39,19 +39,39 @@ enum VideoCategory: String, CaseIterable, Identifiable, Codable {
         }
     }
 
-    var usesLatestEndpoint: Bool {
-        self == .nieuwBinnen
+    /// Which backend feed this channel is served by. Selecting the endpoint via a
+    /// single enum — rather than a growing set of `usesXEndpoint` booleans — keeps
+    /// the routing switch exhaustive (the compiler flags a new case) and lets the
+    /// derived capabilities below live in one place.
+    var endpoint: CategoryEndpoint {
+        switch self {
+        case .nieuwBinnen: .latest
+        case .reeten, .vrijmico, .dashcam: .search
+        case .dumperttv: .dumpertTV
+        }
     }
 
-    /// DumpertTV has its own paginated endpoint (`/dumperttv/{page}`) rather than
-    /// the search or latest endpoints used by the other channels.
-    var usesDumpertTVEndpoint: Bool {
-        self == .dumperttv
-    }
-
-    /// Channels backed by the search endpoint can be re-sorted server-side; the
-    /// latest and DumpertTV feeds have a fixed order, so they hide the sort picker.
+    /// Only the search-backed channels accept a server-side sort order; the latest
+    /// and DumpertTV feeds have a fixed order, so they hide the sort picker.
     var supportsSorting: Bool {
-        !usesLatestEndpoint && !usesDumpertTVEndpoint
+        endpoint == .search
     }
+
+    /// Whether individual videos can be pinned/hidden in this channel. Only the
+    /// search-backed genre channels are curatable: the Nieuw feed is a plain
+    /// chronological stream and DumpertTV is an editorial feed we don't control,
+    /// so curation entries there have no meaningful effect.
+    var supportsCuration: Bool {
+        endpoint == .search
+    }
+}
+
+/// The backend feed backing a `VideoCategory`.
+enum CategoryEndpoint {
+    /// `/json/latest` — the chronological "Nieuw" feed.
+    case latest
+    /// `/search` — the genre channels (Reeten, VrijMiCo, Dashcam), re-sortable server-side.
+    case search
+    /// `/dumperttv/{page}` — the editorial DumpertTV feed.
+    case dumpertTV
 }

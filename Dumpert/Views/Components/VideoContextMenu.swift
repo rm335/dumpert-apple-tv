@@ -18,14 +18,14 @@ struct VideoContextMenuModifier: ViewModifier {
                     : String(localized: "Gemarkeerd als bekeken", comment: "Toast: video marked as watched")
             }
 
-            if let currentCategory, !currentCategory.usesLatestEndpoint {
+            if let currentCategory, currentCategory.supportsCuration {
                 Button(String(localized: "Verwijder uit \(currentCategory.displayName)", comment: "Context menu: remove from category")) {
                     repository.removeFromCategory(videoId: item.id, category: currentCategory)
                     toastMessage = String(localized: "Verwijderd uit \(currentCategory.displayName)", comment: "Toast: removed from category")
                 }
             }
 
-            ForEach(VideoCategory.allCases.filter { $0 != currentCategory && !$0.usesLatestEndpoint }) { category in
+            ForEach(VideoCategory.allCases.filter { $0 != currentCategory && $0.supportsCuration }) { category in
                 Button(String(localized: "Voeg toe aan \(category.displayName)", comment: "Context menu: add to category")) {
                     repository.addToCategory(videoId: item.id, category: category)
                     toastMessage = String(localized: "Toegevoegd aan \(category.displayName)", comment: "Toast: added to category")

@@ -13,12 +13,10 @@ struct CategorySectionView: View {
     @FocusState private var focusedItem: String?
 
     private var items: [MediaItem] {
-        let base = repository.filteredItems(repository.categoryVideos[category] ?? [])
-        // DumpertTV's endpoint returns items in a date-arbitrary order across pages
-        // (each page mixes years) and has no server-side sort, so order the loaded
-        // set newest-first client-side. Undated items sink to the bottom.
-        guard category.usesDumpertTVEndpoint else { return base }
-        return base.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
+        // DumpertTV's newest-first ordering is applied once in the data layer
+        // (CategoryService) when each page is fetched, so the view just reads the
+        // stored order — no per-access re-sort, and pages don't reorder on load-more.
+        repository.filteredItems(repository.categoryVideos[category] ?? [])
     }
 
     private var sortOrder: SortOrder {
@@ -137,7 +135,7 @@ struct CategorySectionView: View {
 
                     // The Nieuw feed groups by day so recency is legible;
                     // curated genres stay a single flat grid.
-                    if category.usesLatestEndpoint {
+                    if category.endpoint == .latest {
                         groupedFeed
                     } else {
                         flatGrid

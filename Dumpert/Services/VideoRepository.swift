@@ -25,6 +25,10 @@ final class VideoRepository {
     private(set) var categoryPages: [VideoCategory: Int] = [:]
     private(set) var categoryHasMore: [VideoCategory: Bool] = [:]
     private(set) var isCategoryLoadingMore: [VideoCategory: Bool] = [:]
+    /// Raw item ids (pre-filter) seen so far per category, used to detect when an
+    /// endpoint starts repeating items so pagination can stop. Bookkeeping only —
+    /// views never read it, so it's excluded from observation.
+    @ObservationIgnored private var categorySeenRawIDs: [VideoCategory: Set<String>] = [:]
     private(set) var classicsPage = 0
     private(set) var classicsHasMore = true
     private(set) var isClassicsLoadingMore = false
@@ -319,21 +323,50 @@ final class VideoRepository {
     }
 
     private func refreshCategories() async {
+        // Snapshot main-actor state up front so the concurrent child tasks only
+        // touch Sendable locals (Swift 6 strict concurrency).
+        let curationEntries = self.curationEntries
+        let minimumKudos = settings.minimumKudos
+        let reetenMinimum = settings.reetenMinimumMinutes
+        let categoryService = self.categoryService
+
+        var orders: [VideoCategory: SortOrder] = [:]
         for category in VideoCategory.allCases {
             categoryPages[category] = 0
             categoryHasMore[category] = true
-            do {
-                let videos = try await categoryService.fetchItems(
-                    for: category,
-                    order: categorySortOrder[category] ?? .dateNewest,
-                    curationEntries: curationEntries,
-                    minimumKudos: settings.minimumKudos,
-                    reetenMinimumMinutes: settings.reetenMinimumMinutes
-                )
-                categoryVideos[category] = videos
-                categoryHasMore[category] = !videos.isEmpty
-            } catch {
-                self.error = error.localizedDescription
+            orders[category] = categorySortOrder[category] ?? .dateNewest
+        }
+
+        // Fetch every category concurrently (they're independent) instead of one
+        // serial round-trip after another; assign results on the main actor as
+        // each completes so the UI fills in progressively.
+        await withTaskGroup(of: (VideoCategory, CategoryService.CategoryPage?, String?).self) { group in
+            for category in VideoCategory.allCases {
+                let order = orders[category] ?? .dateNewest
+                group.addTask {
+                    do {
+                        let page = try await categoryService.fetchItems(
+                            for: category,
+                            order: order,
+                            curationEntries: curationEntries,
+                            minimumKudos: minimumKudos,
+                            reetenMinimumMinutes: reetenMinimum
+                        )
+                        return (category, page, nil)
+                    } catch {
+                        return (category, nil, error.localizedDescription)
+                    }
+                }
+            }
+
+            for await (category, page, errorMessage) in group {
+                if let page {
+                    categoryVideos[category] = page.items
+                    categoryHasMore[category] = !page.rawIDs.isEmpty
+                    categorySeenRawIDs[category] = Set(page.rawIDs)
+                } else if let errorMessage {
+                    self.error = errorMessage
+                }
             }
         }
     }
@@ -378,7 +411,7 @@ final class VideoRepository {
         let nextPage = (categoryPages[category] ?? 0) + 1
 
         do {
-            let newVideos = try await categoryService.fetchItems(
+            let page = try await categoryService.fetchItems(
                 for: category,
                 page: nextPage,
                 order: categorySortOrder[category] ?? .dateNewest,
@@ -386,15 +419,30 @@ final class VideoRepository {
                 minimumKudos: settings.minimumKudos,
                 reetenMinimumMinutes: settings.reetenMinimumMinutes
             )
-            if newVideos.isEmpty {
+
+            if page.rawIDs.isEmpty {
+                // The endpoint has no more items.
                 categoryHasMore[category] = false
             } else {
-                var existing = categoryVideos[category] ?? []
-                let existingIds = Set(existing.map(\.id))
-                let unique = newVideos.filter { !existingIds.contains($0.id) }
-                existing.append(contentsOf: unique)
-                categoryVideos[category] = existing
-                categoryPages[category] = nextPage
+                var seen = categorySeenRawIDs[category] ?? []
+                let newRawIDs = page.rawIDs.filter { !seen.contains($0) }
+                if newRawIDs.isEmpty {
+                    // The page only repeats items we've already loaded (overlapping
+                    // or wrapping pages), so there's genuinely nothing more to show.
+                    categoryHasMore[category] = false
+                } else {
+                    seen.formUnion(page.rawIDs)
+                    categorySeenRawIDs[category] = seen
+                    // Advance the page even when every new item was filtered out for
+                    // display, so a page that's entirely below the kudos threshold
+                    // doesn't dead-end pagination before later pages that qualify.
+                    categoryPages[category] = nextPage
+                    var existing = categoryVideos[category] ?? []
+                    let existingIds = Set(existing.map(\.id))
+                    let uniqueItems = page.items.filter { !existingIds.contains($0.id) }
+                    existing.append(contentsOf: uniqueItems)
+                    categoryVideos[category] = existing
+                }
             }
         } catch {
             self.error = error.localizedDescription
@@ -444,21 +492,27 @@ final class VideoRepository {
     // MARK: - Sort Order
 
     func setSortOrder(_ order: SortOrder, for category: VideoCategory) {
+        // Only the search-backed channels honor a sort order; ignore for the
+        // latest/DumpertTV feeds so we don't store an order the endpoint drops and
+        // trigger a needless clear-and-refetch.
+        guard category.supportsSorting else { return }
         categorySortOrder[category] = order
         categoryPages[category] = 0
         categoryHasMore[category] = true
         categoryVideos[category] = []
+        categorySeenRawIDs[category] = []
         Task {
             do {
-                let videos = try await categoryService.fetchItems(
+                let page = try await categoryService.fetchItems(
                     for: category,
                     order: order,
                     curationEntries: curationEntries,
                     minimumKudos: settings.minimumKudos,
                     reetenMinimumMinutes: settings.reetenMinimumMinutes
                 )
-                categoryVideos[category] = videos
-                categoryHasMore[category] = !videos.isEmpty
+                categoryVideos[category] = page.items
+                categoryHasMore[category] = !page.rawIDs.isEmpty
+                categorySeenRawIDs[category] = Set(page.rawIDs)
             } catch {
                 self.error = error.localizedDescription
             }
@@ -476,17 +530,19 @@ final class VideoRepository {
         categoryPages[category] = 0
         categoryHasMore[category] = true
         categoryVideos[category] = []
+        categorySeenRawIDs[category] = []
         Task {
             do {
-                let videos = try await categoryService.fetchItems(
+                let page = try await categoryService.fetchItems(
                     for: category,
                     order: categorySortOrder[category] ?? .dateNewest,
                     curationEntries: curationEntries,
                     minimumKudos: settings.minimumKudos,
                     reetenMinimumMinutes: settings.reetenMinimumMinutes
                 )
-                categoryVideos[category] = videos
-                categoryHasMore[category] = !videos.isEmpty
+                categoryVideos[category] = page.items
+                categoryHasMore[category] = !page.rawIDs.isEmpty
+                categorySeenRawIDs[category] = Set(page.rawIDs)
             } catch {
                 self.error = error.localizedDescription
             }
