@@ -196,9 +196,9 @@ struct CategorySectionView: View {
     private var groupedFeed: some View {
         let lookup = flatIndexLookup
         return LazyVStack(alignment: .leading, spacing: 30) {
-            ForEach(dayGroups, id: \.key) { group in
+            ForEach(daySections) { section in
                 VStack(alignment: .leading, spacing: 14) {
-                    Text(group.label)
+                    Text(label(for: section.kind))
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundStyle(.secondary)
@@ -206,7 +206,7 @@ struct CategorySectionView: View {
                         .accessibilityAddTraits(.isHeader)
 
                     LazyVGrid(columns: repository.settings.tileSize.gridColumns, spacing: 35) {
-                        ForEach(group.items) { item in
+                        ForEach(section.items) { item in
                             card(for: item, index: lookup[item.id] ?? 0)
                         }
                     }
@@ -255,34 +255,30 @@ struct CategorySectionView: View {
         return dict
     }
 
-    private var dayGroups: [(key: Date, label: String, items: [MediaItem])] {
-        let cal = Calendar.current
-        let grouped = Dictionary(grouping: items) { item in
-            cal.startOfDay(for: item.date ?? .distantPast)
-        }
-        return grouped.keys.sorted(by: >).map { day in
-            (key: day, label: dayLabel(for: day), items: grouped[day] ?? [])
-        }
+    private var daySections: [DaySection] {
+        DayGrouping.sections(for: items)
     }
 
-    private func dayLabel(for day: Date) -> String {
-        let cal = Calendar.current
-        if let cutoff = cal.date(byAdding: .year, value: -50, to: Date()), day < cutoff {
-            return String(localized: "Eerder", comment: "Date section header for items without a date")
-        }
-        if cal.isDateInToday(day) {
+    private func label(for kind: DaySection.Kind) -> String {
+        switch kind {
+        case .today:
             return String(localized: "Vandaag", comment: "Date section header: today")
-        }
-        if cal.isDateInYesterday(day) {
+        case .yesterday:
             return String(localized: "Gisteren", comment: "Date section header: yesterday")
+        case .day(let day):
+            return Self.sectionDateFormatter.string(from: day)
+        case .undated:
+            return String(localized: "Eerder", comment: "Date section header for items without a parseable date")
         }
-        return Self.sectionDateFormatter.string(from: day)
     }
 
+    /// Formats older day headers in dumpert's home timezone so the printed date
+    /// matches the boundary `DayGrouping` bucketed on.
     private static let sectionDateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateStyle = .medium
         f.timeStyle = .none
+        f.timeZone = TimeZone(identifier: "Europe/Amsterdam")
         return f
     }()
 

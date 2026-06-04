@@ -16,24 +16,12 @@ struct Video: Identifiable, Hashable, Sendable {
     let tags: [String]
     let isNSFW: Bool
 
-    private nonisolated(unsafe) static let dateFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-        return f
-    }()
-    private nonisolated(unsafe) static let iso8601Formatter = ISO8601DateFormatter()
-
     init(from item: DumpertItem) {
         self.id = item.id
         self.title = item.title
         self.descriptionText = item.description?.strippingHTML() ?? ""
 
-        if let dateString = item.date {
-            self.date = Video.dateFormatter.date(from: dateString)
-                ?? Video.iso8601Formatter.date(from: dateString)
-        } else {
-            self.date = nil
-        }
+        self.date = DumpertDate.parse(item.date)
 
         let media = item.media?.first
         self.duration = media?.duration ?? 0

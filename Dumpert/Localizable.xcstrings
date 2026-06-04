@@ -1312,8 +1312,11 @@
         }
       }
     },
+    "DumpertTV" : {
+      "comment" : "Accessibility: DumpertTV sub-tab\nCategory name for DumpertTV editorial videos"
+    },
     "Eerder" : {
-      "comment" : "Date section header for items without a date",
+      "comment" : "Date section header for items without a parseable date",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -3302,23 +3305,6 @@
         }
       }
     },
-    "Top Vandaag" : {
-      "comment" : "Section title for today's top videos",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Top Today"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Top Vandaag"
-          }
-        }
-      }
-    },
     "Top reaguursel van %@: %@" : {
       "comment" : "Accessibility: top comment by author",
       "localizations" : {
@@ -3332,6 +3318,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Top reaguursel van %1$@: %2$@"
+          }
+        }
+      }
+    },
+    "Top Vandaag" : {
+      "comment" : "Section title for today's top videos",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top Today"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top Vandaag"
           }
         }
       }

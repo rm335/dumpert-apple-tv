@@ -49,10 +49,7 @@ enum TopShelfFetcher: Sendable {
         }
 
         var parsedDate: Date? {
-            guard let date else { return nil }
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            return formatter.date(from: date) ?? ISO8601DateFormatter().date(from: date)
+            DumpertDate.parse(date)
         }
     }
 
