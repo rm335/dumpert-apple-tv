@@ -99,16 +99,10 @@ struct ToppersSectionView: View {
                             heroCarousel
                         }
 
-                        // Hero items already headline the spotlight above —
-                        // exclude them so the Trending rail shows *different* content.
-                        let heroIDs = Set(heroItems.map(\.id))
-                        let trendingItems = repository.filteredItems(repository.hotshiz)
-                            .filter { !heroIDs.contains($0.id) }
                         let dayItems = repository.filteredItems(repository.topDay)
                         let weekItems = repository.filteredItems(repository.topWeek)
                         let monthItems = repository.filteredItems(repository.topMonth)
 
-                        mediaRow(title: "Trending Nu", items: trendingItems)
                         mediaRow(title: "Top Vandaag", items: dayItems)
                         mediaRow(title: "Top Deze Week", items: weekItems)
                         mediaRow(title: "Top Deze Maand", items: monthItems)
@@ -171,6 +165,7 @@ struct ToppersSectionView: View {
             Task { @MainActor in
                 if let id = newId {
                     let allItems = repository.filteredItems(repository.hotshiz)
+                        + repository.filteredItems(repository.topDay)
                         + repository.filteredItems(repository.topWeek)
                         + repository.filteredItems(repository.topMonth)
                     if let item = allItems.first(where: { $0.id == id }) {

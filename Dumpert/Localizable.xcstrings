@@ -3356,23 +3356,6 @@
         }
       }
     },
-    "Trending Nu" : {
-      "comment" : "Section title for currently trending videos",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trending Now"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trending Nu"
-          }
-        }
-      }
-    },
     "Uit" : {
       "comment" : "Remote skip mode - off\nTop comment mode - off",
       "localizations" : {
