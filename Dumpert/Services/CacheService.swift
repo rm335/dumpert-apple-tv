@@ -46,6 +46,27 @@ actor CacheService {
 
     // MARK: - Settings
 
+    /// Default on-disk settings location, available without an instance so the
+    /// persisted NSFW flag can be read synchronously at launch.
+    nonisolated static var defaultSettingsURL: URL {
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        return caches
+            .appendingPathComponent("DumpertCache", isDirectory: true)
+            .appendingPathComponent("settings.json")
+    }
+
+    /// Synchronously reads the persisted "show NSFW" preference from the default
+    /// location, falling back to the app default when nothing is stored yet.
+    /// Used as the fail-safe source for the launch sound before the async
+    /// settings load completes and before the UserDefaults mirror is seeded.
+    nonisolated static func persistedNSFWEnabled() -> Bool {
+        guard let data = try? Data(contentsOf: defaultSettingsURL),
+              let snapshot = try? JSONDecoder().decode(UserSettingsSnapshot.self, from: data) else {
+            return UserSettingsSnapshot().nsfwEnabled
+        }
+        return snapshot.nsfwEnabled
+    }
+
     private var settingsURL: URL {
         cacheDirectory.appendingPathComponent("settings.json")
     }
@@ -65,6 +86,9 @@ actor CacheService {
         } catch {
             Logger.cache.warning("Failed to save settings: \(error.localizedDescription)")
         }
+        // Mirror the NSFW flag so it can be read synchronously at launch (for the
+        // startup sound) before the async settings load has run.
+        UserDefaults.standard.set(settings.nsfwEnabled, forKey: UserSettings.nsfwEnabledDefaultsKey)
         cachedDiskSize = nil
     }
 

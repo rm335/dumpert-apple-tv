@@ -8,13 +8,18 @@ final class LoadingSoundPlayer {
     private var fadeTask: Task<Void, Never>?
     private var autoStopTask: Task<Void, Never>?
     private let logger = Logger(subsystem: "nl.dumpert.tvos", category: "sound")
+    private let catalog: LoadingSoundCatalog
+
+    init(catalog: LoadingSoundCatalog = .bundled()) {
+        self.catalog = catalog
+    }
 
     func playRandom() {
         stop()
         configureAudioSession()
-        let urls = soundURLs()
+        let urls = eligibleSoundURLs()
         guard let url = urls.randomElement() else {
-            logger.warning("No sound files found in bundle")
+            logger.warning("No eligible sound files found in bundle")
             return
         }
         do {
@@ -69,6 +74,26 @@ final class LoadingSoundPlayer {
         fadeTask?.cancel()
         audioPlayer?.stop()
         audioPlayer = nil
+    }
+
+    /// Bundle sound URLs filtered by the persisted "show NSFW" preference. When
+    /// NSFW content is hidden, only catalog-approved (safe-for-work) sounds play.
+    private func eligibleSoundURLs() -> [URL] {
+        let all = soundURLs()
+        guard !Self.nsfwAllowed() else { return all }
+        return all.filter { catalog.isSafe(filename: $0.lastPathComponent) }
+    }
+
+    /// The persisted "show NSFW" preference, read *synchronously* so the launch
+    /// sound never races the asynchronous settings load. Prefers the UserDefaults
+    /// mirror (written on every settings save) and falls back to the on-disk
+    /// settings snapshot — so even on the first launch after this feature ships,
+    /// a user who hid NSFW never hears an NSFW sound.
+    static func nsfwAllowed() -> Bool {
+        if UserDefaults.standard.object(forKey: UserSettings.nsfwEnabledDefaultsKey) != nil {
+            return UserDefaults.standard.bool(forKey: UserSettings.nsfwEnabledDefaultsKey)
+        }
+        return CacheService.persistedNSFWEnabled()
     }
 
     private func soundURLs() -> [URL] {

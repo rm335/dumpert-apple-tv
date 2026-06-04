@@ -3169,19 +3169,19 @@
         }
       }
     },
-    "Toon content die als niet-veilig-voor-werk is gemarkeerd" : {
+    "Toon content en opstartgeluiden die als niet-veilig-voor-werk zijn gemarkeerd" : {
       "comment" : "Settings: NSFW toggle description",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Show content marked as not safe for work"
+            "value" : "Show content and startup sounds marked as not safe for work"
           }
         },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toon content die als niet-veilig-voor-werk is gemarkeerd"
+            "value" : "Toon content en opstartgeluiden die als niet-veilig-voor-werk zijn gemarkeerd"
           }
         }
       }

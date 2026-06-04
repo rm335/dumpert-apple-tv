@@ -107,6 +107,9 @@ targets:
       - path: DumpertTests/Fixtures
         buildPhase: resources
         type: folder
+      # Validate the real shipped manifest (not a copy) in LoadingSoundCatalogTests.
+      - path: Dumpert/Resources/Sounds.json
+        buildPhase: resources
     dependencies:
       - target: Dumpert
     settings:

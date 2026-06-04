@@ -56,7 +56,7 @@ The easiest way to install DumpertTV on your Apple TV:
 - **Skeleton loading** with shimmer animation while content loads
 - **Top Shelf extension** showing trending content directly on the Apple TV home screen
 - **Immersive background** with dynamic blurred imagery
-- **Loading screen** with logo animation and random sound effect
+- **Loading screen** with logo animation and a random sound effect (NSFW sounds are withheld when NSFW content is hidden)
 - **Sort order** support for category tabs and search results
 - **Context menu** on video cards (long press)
 
@@ -286,7 +286,8 @@ dumpert/
 │   │   ├── RefreshScheduler.swift
 │   │   ├── SharePlayService.swift  # GroupActivities coordination
 │   │   ├── NowPlayingService.swift # MPNowPlayingInfoCenter + remote commands
-│   │   ├── LoadingSoundPlayer.swift
+│   │   ├── LoadingSoundPlayer.swift  # Random startup sound (NSFW-filtered)
+│   │   ├── LoadingSoundCatalog.swift # Sounds.json manifest → NSFW classification
 │   │   ├── ImmersiveBackgroundState.swift
 │   │   ├── ThumbnailUpgradeService.swift
 │   │   └── ThumbnailUpgradeDiskCache.swift
@@ -354,16 +355,20 @@ dumpert/
 │   ├── TopShelfItem.swift
 │   ├── TopShelfDataStore.swift     # App Group UserDefaults
 │   └── TopShelfFetcher.swift
-├── DumpertTests/                   # Unit tests (82 tests, 11 suites)
+├── DumpertTests/                   # Unit tests (122 tests, 15 suites)
 │   ├── ModelTests.swift
 │   ├── APIDecodingTests.swift
+│   ├── DumpertDateTests.swift
+│   ├── DayGroupingTests.swift
 │   ├── DurationFormatterTests.swift
 │   ├── SearchFilterTests.swift
 │   ├── SearchViewModelTests.swift
+│   ├── CategoryServiceTests.swift
 │   ├── CacheServiceTests.swift
 │   ├── CloudKitMergeTests.swift
 │   ├── CloudKitSettingsSyncTests.swift
 │   ├── UserSettingsPersistenceTests.swift
+│   ├── LoadingSoundCatalogTests.swift
 │   ├── ErrorCaseTests.swift
 │   ├── AutoNextPlayTests.swift
 │   └── Fixtures/                   # JSON test fixtures
@@ -403,25 +408,29 @@ The project has 3 targets, defined in `project.yml`:
 |---|---|---|---|
 | **Dumpert** | tvOS Application | `nl.dumpert.tvos` | Main app |
 | **DumpertTopShelf** | App Extension | `nl.dumpert.tvos.topshelf` | Top Shelf content provider |
-| **DumpertTests** | Unit Test Bundle | `nl.dumpert.tvos.tests` | 82 tests across 11 suites |
+| **DumpertTests** | Unit Test Bundle | `nl.dumpert.tvos.tests` | 122 tests across 15 suites |
 
 ---
 
 ## Tests
 
-82 tests across 11 suites, using Swift Testing framework:
+122 tests across 15 suites, using Swift Testing framework:
 
 | Suite | Tests | What it covers |
 |---|---|---|
 | **ModelTests** | 9 | WatchProgress, CurationEntry, UserSettings, VideoCategory, HTML stripping |
-| **APIDecodingTests** | 12 | API response decoding, Video conversion, HLS preference, tags parsing |
-| **DurationFormatterTests** | 6 | Time formatting (MM:SS, edge cases) |
+| **APIDecodingTests** | 18 | API response decoding, Video conversion, HLS preference, tags parsing |
+| **DumpertDateTests** | 9 | ISO8601 parsing — fractional seconds, mixed formats, Europe/Amsterdam boundaries |
+| **DayGroupingTests** | 5 | Grouping the Nieuw feed into Europe/Amsterdam day buckets |
+| **DurationFormatterTests** | 10 | Time formatting (MM:SS, edge cases) |
 | **SearchFilterTests** | 5 | Filter activation for media type, period, kudos, duration |
 | **SearchViewModelTests** | 12 | Search state, debouncing, pagination, cancellation, history persistence |
-| **CacheServiceTests** | 4 | Persistence of watch progress, settings, curation, search history |
+| **CategoryServiceTests** | 7 | Category → endpoint routing, sort order, curation flags |
+| **CacheServiceTests** | 6 | Persistence of watch progress, settings, curation, search history |
 | **CloudKitMergeTests** | 4 | Remote/local merge logic, deletion handling, change-token persistence |
 | **CloudKitSettingsSyncTests** | 5 | Settings sync without overwriting local values |
 | **UserSettingsPersistenceTests** | 4 | Settings round-trip, defaults, migration |
+| **LoadingSoundCatalogTests** | 7 | NSFW classification of startup sounds (safe-by-default allowlist) + shipped manifest |
 | **ErrorCaseTests** | 5 | API error descriptions, network/decoding/HTTP error handling, 5xx retry |
 | **AutoNextPlayTests** | 16 | Playlist navigation, autoplay state, skip/previous, up-next overlay |
 
@@ -464,7 +473,7 @@ The Settings tab allows users to configure:
 
 **Display & Content:**
 - Minimum kudos filter (0–500+)
-- NSFW content toggle
+- NSFW content toggle (also withholds NSFW startup sounds)
 - Negative kudos toggle
 - Hide watched content
 - Smart thumbnails (automatic thumbnail upgrade)

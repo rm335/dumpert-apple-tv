@@ -83,6 +83,11 @@ enum RemoteSkipMode: String, Codable, Sendable, CaseIterable {
 @Observable
 @MainActor
 final class UserSettings {
+    /// UserDefaults key mirroring `nsfwEnabled`, so it can be read synchronously
+    /// at launch (e.g. by `LoadingSoundPlayer`) before the async settings load
+    /// finishes. Written by `CacheService.saveSettings(_:)`.
+    nonisolated static let nsfwEnabledDefaultsKey = "nsfwEnabled"
+
     var minimumKudos: Int { didSet { notifyChange() } }
     var autoplayEnabled: Bool { didSet { notifyChange() } }
     var hideWatched: Bool { didSet { notifyChange() } }

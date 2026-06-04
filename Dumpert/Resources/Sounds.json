@@ -1,0 +1,27 @@
+{
+  "comment": "Classification for the random startup sounds. When the user hides NSFW content, sounds with \"nsfw\": true are withheld. Any .mp3 in Resources/Sounds that is NOT listed here is treated as NSFW (withheld while NSFW is hidden) — the safe default. Add new sounds here with an explicit rating.",
+  "sounds": [
+    { "file": "das-een-hele-stellage.mp3", "nsfw": false, "title": "Das een hele stellage" },
+    { "file": "er-is-een-tijd-van-komen.mp3", "nsfw": false, "title": "Er is een tijd van komen" },
+    { "file": "geestelijk-gestoord.mp3", "nsfw": true, "title": "Geestelijk gestoord" },
+    { "file": "gratis-g-r-a-t-i-s.mp3", "nsfw": false, "title": "Gratis, G-R-A-T-I-S" },
+    { "file": "he-vieze-tiefuslijer.mp3", "nsfw": true, "title": "He vieze tiefuslijer" },
+    { "file": "hoeren-kut-kankerzooi.mp3", "nsfw": true, "title": "Hoeren, kut, kankerzooi" },
+    { "file": "ik-ben-een-eerste-klas-hoerenloper.mp3", "nsfw": true, "title": "Ik ben een eerste klas hoerenloper" },
+    { "file": "ik-gooi-helemaal-leeg-blik-in-de-water.mp3", "nsfw": false, "title": "Ik gooi helemaal leeg blik in de water" },
+    { "file": "ik-sloop-die-hele-kanker-kamer.mp3", "nsfw": true, "title": "Ik sloop die hele kankerkamer" },
+    { "file": "jeroen-doe-normaal-gek.mp3", "nsfw": false, "title": "Jeroen, doe normaal gek" },
+    { "file": "kijk-hier-is-helemaal-zand.mp3", "nsfw": false, "title": "Kijk, hier is helemaal zand" },
+    { "file": "neee-beter-he.mp3", "nsfw": false, "title": "Neee, beter he" },
+    { "file": "nitraatie-erbij.mp3", "nsfw": false, "title": "Nitraatie erbij" },
+    { "file": "nou-nee.mp3", "nsfw": false, "title": "Nou, nee" },
+    { "file": "pizza-maar-ik-heb-al-heel-veel-pizza-gegeten.mp3", "nsfw": false, "title": "Pizza, maar ik heb al heel veel pizza gegeten" },
+    { "file": "poa-das-mien-merk.mp3", "nsfw": false, "title": "Poa, das mien merk" },
+    { "file": "rustaaagh.mp3", "nsfw": false, "title": "Rustaaagh" },
+    { "file": "tiny-daar-word-je-ook-krankjorum-van-hoor.mp3", "nsfw": true, "title": "Tiny, daar word je ook krankjorum van hoor" },
+    { "file": "verkeerde-khant.mp3", "nsfw": false, "title": "Verkeerde khant" },
+    { "file": "vuile-vieze-kk-lijer.mp3", "nsfw": true, "title": "Vuile vieze kk-lijer" },
+    { "file": "wahahauw.mp3", "nsfw": false, "title": "Wahahauw" },
+    { "file": "you-speak-nederlands.mp3", "nsfw": false, "title": "You speak Nederlands" }
+  ]
+}

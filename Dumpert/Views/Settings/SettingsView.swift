@@ -42,7 +42,7 @@ struct SettingsView: View {
                 settingsToggle(
                     "NSFW-content tonen",
                     icon: "eye.trianglebadge.exclamationmark",
-                    description: "Toon content die als niet-veilig-voor-werk is gemarkeerd",
+                    description: "Toon content en opstartgeluiden die als niet-veilig-voor-werk zijn gemarkeerd",
                     isOn: $settings.nsfwEnabled
                 )
 
