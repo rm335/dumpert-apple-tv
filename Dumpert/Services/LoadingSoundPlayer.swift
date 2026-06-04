@@ -85,13 +85,14 @@ final class LoadingSoundPlayer {
     }
 
     /// The persisted "show NSFW" preference, read *synchronously* so the launch
-    /// sound never races the asynchronous settings load. Prefers the UserDefaults
-    /// mirror (written on every settings save) and falls back to the on-disk
-    /// settings snapshot — so even on the first launch after this feature ships,
-    /// a user who hid NSFW never hears an NSFW sound.
+    /// sound never races the asynchronous settings load. Prefers the App Group
+    /// mirror (written on every settings save/load, and shared with the Top Shelf
+    /// extension) and falls back to the on-disk settings snapshot — so even on the
+    /// first launch after this feature ships, a user who hid NSFW never hears an
+    /// NSFW sound.
     static func nsfwAllowed() -> Bool {
-        if UserDefaults.standard.object(forKey: UserSettings.nsfwEnabledDefaultsKey) != nil {
-            return UserDefaults.standard.bool(forKey: UserSettings.nsfwEnabledDefaultsKey)
+        if let stored = TopShelfDataStore.nsfwEnabledIfSet {
+            return stored
         }
         return CacheService.persistedNSFWEnabled()
     }

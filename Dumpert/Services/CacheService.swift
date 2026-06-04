@@ -86,9 +86,9 @@ actor CacheService {
         } catch {
             Logger.cache.warning("Failed to save settings: \(error.localizedDescription)")
         }
-        // Mirror the NSFW flag so it can be read synchronously at launch (for the
-        // startup sound) before the async settings load has run.
-        UserDefaults.standard.set(settings.nsfwEnabled, forKey: UserSettings.nsfwEnabledDefaultsKey)
+        // Mirror the NSFW flag into the App Group so it can be read synchronously
+        // at launch (startup sound) and by the Top Shelf extension.
+        TopShelfDataStore.setNSFWEnabled(settings.nsfwEnabled)
         cachedDiskSize = nil
     }
 

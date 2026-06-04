@@ -8,6 +8,33 @@ enum TopShelfDataStore: Sendable {
     private static let topWeekKey = "topshelf_topweek"
     private static let latestKey = "topshelf_latest"
     private static let lastUpdatedKey = "topshelf_last_updated"
+    private static let nsfwEnabledKey = "nsfw_enabled"
+
+    // MARK: - NSFW Preference (shared from the app)
+
+    /// The user's "show NSFW" preference, shared from the app via the App Group
+    /// so the Top Shelf extension can honor it. Defaults to `true` (the app
+    /// default) when the app has not written it yet.
+    static var nsfwEnabled: Bool { nsfwEnabledIfSet ?? true }
+
+    /// Same as ``nsfwEnabled`` but `nil` when the app has never written the flag,
+    /// so callers can fall back to another source.
+    static var nsfwEnabledIfSet: Bool? {
+        guard let defaults = UserDefaults(suiteName: appGroupIdentifier),
+              defaults.object(forKey: nsfwEnabledKey) != nil else {
+            return nil
+        }
+        return defaults.bool(forKey: nsfwEnabledKey)
+    }
+
+    /// Mirrors the app's NSFW preference into the App Group.
+    static func setNSFWEnabled(_ enabled: Bool) {
+        guard let defaults = UserDefaults(suiteName: appGroupIdentifier) else {
+            logger.fault("setNSFWEnabled: App Group UserDefaults nil — not provisioned")
+            return
+        }
+        defaults.set(enabled, forKey: nsfwEnabledKey)
+    }
 
     /// Returns true if cached data is older than the given interval (default 15 min).
     static var isStale: Bool {

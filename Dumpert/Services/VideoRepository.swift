@@ -102,6 +102,9 @@ final class VideoRepository {
     private func loadFromCache() async {
         settings.apply(await cacheService.loadSettings())
         await apiClient.setNSFWEnabled(settings.nsfwEnabled)
+        // Seed the App Group so the Top Shelf extension and startup sound honor
+        // the persisted NSFW preference even before any settings change.
+        TopShelfDataStore.setNSFWEnabled(settings.nsfwEnabled)
         watchProgress = await cacheService.loadWatchProgress()
         curationEntries = await cacheService.loadCurationEntries()
         searchHistory = await cacheService.loadSearchHistory()
@@ -795,8 +798,10 @@ final class VideoRepository {
     // MARK: - Top Shelf
 
     private func updateTopShelf() {
+        let nsfwHidden = !settings.nsfwEnabled
         let mapToShelfItems: ([MediaItem]) -> [TopShelfItem] = { items in
-            Array(items.prefix(10).map {
+            let visible = nsfwHidden ? items.filter { !$0.isNSFW } : items
+            return Array(visible.prefix(10).map {
                 TopShelfItem(
                     id: $0.id,
                     title: $0.title,

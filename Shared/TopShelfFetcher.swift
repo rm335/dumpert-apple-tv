@@ -24,6 +24,7 @@ enum TopShelfFetcher: Sendable {
         let media: [Media]?
         let stats: Stats?
         let date: String?
+        let nsfw: Bool?
 
         var thumbnailURL: URL? {
             let urlString = stills?["still-large"] ?? stills?["still"] ?? still
@@ -73,12 +74,16 @@ enum TopShelfFetcher: Sendable {
     static func fetchHotshiz() async -> [TopShelfItem] {
         logger.info("Fetching hotshiz from API: \(hotshizURL.absoluteString)")
 
+        let allowNSFW = TopShelfDataStore.nsfwEnabled
+
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
-        config.httpAdditionalHeaders = [
-            "Accept": "application/json",
-            "Cookie": "nsfw=1"
-        ]
+        var headers: [AnyHashable: Any] = ["Accept": "application/json"]
+        // Mirror the main API client: only opt into NSFW when the user allows it.
+        if allowNSFW {
+            headers["Cookie"] = "nsfw=1"
+        }
+        config.httpAdditionalHeaders = headers
         let session = URLSession(configuration: config)
 
         var request = URLRequest(url: hotshizURL)
@@ -107,7 +112,10 @@ enum TopShelfFetcher: Sendable {
                 }
 
                 let decoded = try JSONDecoder().decode(Response.self, from: data)
-                let items = (decoded.items ?? []).prefix(10).map { item in
+                // Defense in depth: drop NSFW items client-side too, in case the
+                // cookie didn't fully filter them server-side.
+                let source = allowNSFW ? (decoded.items ?? []) : (decoded.items ?? []).filter { $0.nsfw != true }
+                let items = source.prefix(10).map { item in
                     TopShelfItem(
                         id: item.id,
                         title: item.title,

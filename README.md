@@ -54,7 +54,7 @@ The easiest way to install DumpertTV on your Apple TV:
 - **Hero banner** with horizontally scrolling carousel and face-centered thumbnails
 - **Infinite scroll pagination** on category and classics views
 - **Skeleton loading** with shimmer animation while content loads
-- **Top Shelf extension** showing trending content directly on the Apple TV home screen
+- **Top Shelf extension** showing trending content directly on the Apple TV home screen (honors the NSFW setting)
 - **Immersive background** with dynamic blurred imagery
 - **Loading screen** with logo animation and a random sound effect (NSFW sounds are withheld when NSFW content is hidden)
 - **Sort order** support for category tabs and search results
@@ -473,7 +473,7 @@ The Settings tab allows users to configure:
 
 **Display & Content:**
 - Minimum kudos filter (0–500+)
-- NSFW content toggle (also withholds NSFW startup sounds)
+- NSFW content toggle (also withholds NSFW startup sounds and Top Shelf items)
 - Negative kudos toggle
 - Hide watched content
 - Smart thumbnails (automatic thumbnail upgrade)
