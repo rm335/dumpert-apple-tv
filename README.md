@@ -49,8 +49,8 @@ The easiest way to install DumpertTV on your Apple TV:
 ## Features
 
 ### Content Browsing
-- **5 top-level tabs** (Dutch UI labels): Toppers (Top), Nieuw (New), Categorieën (Categories), Zoeken (Search), Instellingen (Settings)
-- The **Categories** tab consolidates Reeten, VrijMiCo, Dashcam, Classics and Gekeken (Watched) behind an in-view pill filter (selection persists via `@SceneStorage`)
+- **6 top-level tabs** (Dutch UI labels): Toppers (Top), Nieuw (New), Categorieën (Categories), Gekeken (Watched), Zoeken (Search), Instellingen (Settings)
+- The **Categorieën** tab consolidates Reeten, VrijMiCo, Dashcam, Classics and DumpertTV behind an in-view pill filter (selection persists via `@SceneStorage`)
 - **Hero banner** with horizontally scrolling carousel and face-centered thumbnails
 - **Infinite scroll pagination** on category and classics views
 - **Skeleton loading** with shimmer animation while content loads
@@ -116,19 +116,13 @@ The easiest way to install DumpertTV on your Apple TV:
 
 ## Screenshots
 
-| Toppers | Search |
+| Toppers | Nieuw |
 |:---:|:---:|
-| ![Toppers](assets/screenshot-toppers.png) | ![Search](assets/screenshot-search.png) |
-| **Reeten** | **VrijMiCo** |
-| ![Reeten](assets/screenshot-reeten.png) | ![VrijMiCo](assets/screenshot-vrijmico.png) |
-| **Classics** | **Settings** |
-| ![Classics](assets/screenshot-classics.png) | ![Settings](assets/screenshot-settings.png) |
-
-### Demo
-
-<p align="center">
-  <img src="assets/demo.gif" alt="DumpertTV demo" width="100%">
-</p>
+| ![Toppers — trending Dumpert videos on Apple TV](assets/screenshot-toppers.jpg) | ![Nieuw — latest Dumpert videos](assets/screenshot-nieuw.jpg) |
+| **Categorieën** | **DumpertTV** |
+| ![Categorieën tab with pill filter (Dashcam) on Apple TV](assets/screenshot-categorieen.jpg) | ![DumpertTV section](assets/screenshot-dumperttv.jpg) |
+| **Zoeken** | **Instellingen** |
+| ![Zoeken — full-text Dumpert search with filters](assets/screenshot-zoeken.jpg) | ![Instellingen — app settings](assets/screenshot-instellingen.jpg) |
 
 ---
 
