@@ -9,10 +9,10 @@
   <img src="https://img.shields.io/badge/platform-tvOS%2018.0%2B-000000?style=flat&logo=apple&logoColor=white" alt="Platform">
   <img src="https://img.shields.io/badge/Swift-6.0-F05138?style=flat&logo=swift&logoColor=white" alt="Swift 6.0">
   <img src="https://img.shields.io/badge/Xcode-26.3-147EFB?style=flat&logo=xcode&logoColor=white" alt="Xcode 26.3">
-  <a href="https://github.com/rm335/dumpert/blob/main/LICENSE"><img src="https://img.shields.io/github/license/rm335/dumpert?style=flat" alt="License"></a>
-  <a href="https://github.com/rm335/dumpert/stargazers"><img src="https://img.shields.io/github/stars/rm335/dumpert?style=flat" alt="Stars"></a>
-  <a href="https://github.com/rm335/dumpert/commits/main"><img src="https://img.shields.io/github/last-commit/rm335/dumpert?style=flat" alt="Last Commit"></a>
-  <img src="https://img.shields.io/github/repo-size/rm335/dumpert?style=flat" alt="Repo Size">
+  <a href="https://github.com/rm335/dumpert-apple-tv/blob/main/LICENSE"><img src="https://img.shields.io/github/license/rm335/dumpert-apple-tv?style=flat" alt="License"></a>
+  <a href="https://github.com/rm335/dumpert-apple-tv/stargazers"><img src="https://img.shields.io/github/stars/rm335/dumpert-apple-tv?style=flat" alt="Stars"></a>
+  <a href="https://github.com/rm335/dumpert-apple-tv/commits/main"><img src="https://img.shields.io/github/last-commit/rm335/dumpert-apple-tv?style=flat" alt="Last Commit"></a>
+  <img src="https://img.shields.io/github/repo-size/rm335/dumpert-apple-tv?style=flat" alt="Repo Size">
   <img src="https://img.shields.io/badge/build%20system-XcodeGen-blue?style=flat" alt="XcodeGen">
 </p>
 
@@ -155,8 +155,8 @@ brew install xcodegen
 ### 2. Clone the repository
 
 ```bash
-git clone https://github.com/rm335/dumpert.git
-cd dumpert
+git clone https://github.com/rm335/dumpert-apple-tv.git
+cd dumpert-apple-tv
 ```
 
 ### 3. Generate the Xcode project
