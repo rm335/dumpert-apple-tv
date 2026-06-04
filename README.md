@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/top-shelf.png" alt=”DumpertTV” width=”100%”>
+  <img src="assets/top-shelf.png" alt="DumpertTV - unofficial Dumpert client for Apple TV (tvOS)" width="100%">
 </p>
 
 # DumpertTV
@@ -16,7 +16,7 @@
   <img src="https://img.shields.io/badge/build%20system-XcodeGen-blue?style=flat" alt="XcodeGen">
 </p>
 
-An unofficial [Dumpert](https://www.dumpert.nl) client for Apple TV, built with Swift 6.0 and SwiftUI.
+**DumpertTV** is an unofficial [Dumpert](https://www.dumpert.nl) app for **Apple TV** — a native **tvOS** client built with **Swift 6** and **SwiftUI** that lets you browse, search and stream Dumpert videos on the big screen. Watch Toppers, Nieuw and the Classics, with Top Shelf integration, CloudKit sync across your Apple TVs, and SharePlay for watching together. Free public TestFlight beta below.
 
 > **Disclaimer**
 >
@@ -156,7 +156,7 @@ brew install xcodegen
 
 ```bash
 git clone https://github.com/rm335/dumpert.git
-cd DumpertTV
+cd dumpert
 ```
 
 ### 3. Generate the Xcode project
