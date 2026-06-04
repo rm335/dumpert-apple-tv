@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>DumpertTV — Unofficial Dumpert client for Apple TV (tvOS)</title>
+  <meta name="description" content="DumpertTV is a free, open-source unofficial Dumpert app for Apple TV — browse, search and stream Dumpert videos on tvOS 18+. Public TestFlight beta.">
+  <link rel="canonical" href="https://rm335.github.io/dumpert-apple-tv/">
+  <meta name="theme-color" content="#65B32E">
+  <meta name="keywords" content="dumpert apple tv, dumpert tvos, dumpert appletv, dumpert app apple tv, unofficial dumpert client, dumpert tv app">
+
+  <!-- Google Search Console: verified via /googlebd58b3b6dbabc389.html (HTML-file method) -->
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="DumpertTV">
+  <meta property="og:title" content="DumpertTV — Unofficial Dumpert client for Apple TV">
+  <meta property="og:description" content="Free, open-source unofficial Dumpert app for Apple TV. Browse, search and stream Dumpert videos on tvOS 18+. Public TestFlight beta.">
+  <meta property="og:url" content="https://rm335.github.io/dumpert-apple-tv/">
+  <meta property="og:image" content="https://rm335.github.io/dumpert-apple-tv/og.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DumpertTV — Unofficial Dumpert client for Apple TV">
+  <meta name="twitter:description" content="Free, open-source unofficial Dumpert app for Apple TV (tvOS 18+). Public TestFlight beta.">
+  <meta name="twitter:image" content="https://rm335.github.io/dumpert-apple-tv/og.png">
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2365B32E'/%3E%3Cpolygon points='38,28 38,72 74,50' fill='white'/%3E%3C/svg%3E">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "DumpertTV",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "tvOS 18+",
+    "description": "Unofficial Dumpert client for Apple TV. Browse, search and stream Dumpert videos on tvOS, with Top Shelf, CloudKit sync and SharePlay.",
+    "url": "https://rm335.github.io/dumpert-apple-tv/",
+    "downloadUrl": "https://testflight.apple.com/join/TXTUMzEq",
+    "license": "https://github.com/rm335/dumpert-apple-tv/blob/main/LICENSE",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Person", "name": "rm335" }
+  }
+  </script>
+
+  <style>
+    :root{
+      --bg:#0E1013; --panel:#15181c; --panel2:#1b1f24; --line:#262b31;
+      --text:#E6E9EC; --muted:#9AA1A9; --dim:#6B7178; --accent:#65B32E; --accent2:#7BCB3A;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+      line-height:1.55;-webkit-font-smoothing:antialiased}
+    a{color:var(--accent2);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+    .accent-bar{height:4px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+    /* hero */
+    header.hero{padding:72px 0 48px;text-align:center}
+    .pill{display:inline-block;border:1.5px solid var(--accent);color:var(--accent2);
+      font-size:13px;font-weight:700;letter-spacing:2px;border-radius:999px;padding:5px 14px;margin-bottom:24px}
+    h1{font-size:clamp(40px,7vw,72px);line-height:1.04;margin:0 0 14px;letter-spacing:-1.5px;font-weight:800}
+    h1 .tv{color:var(--accent2)}
+    .tagline{font-size:clamp(18px,2.6vw,23px);color:var(--muted);margin:0 auto 26px;max-width:620px}
+    .badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:30px}
+    .badge{background:var(--panel);border:1px solid var(--line);color:var(--muted);
+      font-size:13px;font-weight:600;border-radius:8px;padding:6px 12px}
+    .cta{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+    .btn{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:16px;
+      border-radius:12px;padding:14px 24px;transition:transform .08s ease}
+    .btn:hover{text-decoration:none;transform:translateY(-1px)}
+    .btn-primary{background:var(--accent);color:#0a0d08}
+    .btn-secondary{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+
+    section{padding:46px 0}
+    h2{font-size:clamp(26px,4vw,34px);margin:0 0 8px;letter-spacing:-.5px;font-weight:800}
+    .lead{color:var(--muted);margin:0 0 30px;max-width:640px}
+
+    /* screenshots */
+    .shots{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .shots img{width:100%;height:auto;border-radius:12px;border:1px solid var(--line);display:block}
+    .shots figcaption{color:var(--dim);font-size:13px;margin-top:8px;text-align:center}
+    figure{margin:0}
+
+    /* features */
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+    .card h3{margin:0 0 8px;font-size:18px}
+    .card p{margin:0;color:var(--muted);font-size:15px}
+    .card .ic{font-size:22px;margin-bottom:10px;display:block}
+
+    /* install */
+    .steps{counter-reset:step;display:grid;gap:14px;max-width:680px}
+    .step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px 16px 58px;position:relative}
+    .step::before{counter-increment:step;content:counter(step);position:absolute;left:16px;top:14px;
+      width:28px;height:28px;border-radius:50%;background:var(--accent);color:#0a0d08;
+      font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px}
+
+    footer{border-top:1px solid var(--line);padding:34px 0 56px;color:var(--dim);font-size:14px}
+    .disclaimer{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+      padding:16px 18px;margin-bottom:22px;color:var(--muted);font-size:14px}
+    footer a{color:var(--muted)}
+    .foot-links{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:14px}
+
+    @media(max-width:760px){
+      .shots{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+      header.hero{padding:52px 0 36px}
+    }
+  </style>
+</head>
+<body>
+  <div class="accent-bar"></div>
+
+  <header class="hero">
+    <div class="wrap">
+      <span class="pill">UNOFFICIAL</span>
+      <h1>Dumpert<span class="tv">TV</span></h1>
+      <p class="tagline">An unofficial Dumpert client for Apple TV — browse, search and stream Dumpert videos on the big screen.</p>
+      <div class="badges">
+        <span class="badge">tvOS 18+</span>
+        <span class="badge">Swift 6</span>
+        <span class="badge">SwiftUI</span>
+        <span class="badge">CloudKit sync</span>
+        <span class="badge">SharePlay</span>
+        <span class="badge">Open source · MIT</span>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://testflight.apple.com/join/TXTUMzEq">▶ Join the TestFlight beta</a>
+        <a class="btn btn-secondary" href="https://github.com/rm335/dumpert-apple-tv">View on GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="wrap">
+      <h2>See it on the big screen</h2>
+      <p class="lead">A native tvOS interface for Dumpert: Toppers, Nieuw, categories, full-text search and a Top Shelf row on your Apple TV home screen.</p>
+      <div class="shots">
+        <figure><img src="shot-toppers.jpg" alt="DumpertTV Toppers screen on Apple TV showing a grid of trending Dumpert videos" loading="lazy" width="1280" height="720"><figcaption>Toppers</figcaption></figure>
+        <figure><img src="shot-search.jpg" alt="DumpertTV search screen with filters for media type, period and kudos on tvOS" loading="lazy" width="1280" height="720"><figcaption>Search</figcaption></figure>
+        <figure><img src="shot-classics.jpg" alt="DumpertTV Classics screen browsing older Dumpert videos on Apple TV" loading="lazy" width="1280" height="720"><figcaption>Classics</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Features</h2>
+      <p class="lead">Built natively for tvOS 18 with Swift 6 and SwiftUI.</p>
+      <div class="grid">
+        <div class="card"><span class="ic">📺</span><h3>Content browsing</h3><p>Toppers, Nieuw and category tabs, a hero carousel with face-centered thumbnails, infinite scroll and a Top Shelf row on the home screen.</p></div>
+        <div class="card"><span class="ic">▶️</span><h3>Video player</h3><p>Autoplay with up-next overlay, playback speed, resume, a top-comment overlay and Now Playing on the Lock Screen.</p></div>
+        <div class="card"><span class="ic">👥</span><h3>SharePlay</h3><p>Watch Together — synchronized playback across multiple Apple TVs via GroupActivities.</p></div>
+        <div class="card"><span class="ic">🔍</span><h3>Search</h3><p>Full-text search with filters for media type, period, kudos and duration, plus sort order, popular tags and history.</p></div>
+        <div class="card"><span class="ic">☁️</span><h3>Sync &amp; offline</h3><p>CloudKit delta sync for watch progress and settings, ETag-based caching and an offline banner with network monitoring.</p></div>
+        <div class="card"><span class="ic">♿</span><h3>Accessibility &amp; i18n</h3><p>VoiceOver labels throughout, plus Dutch and English localization via String Catalogs.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Install via TestFlight</h2>
+      <p class="lead">The app is in a free, public TestFlight beta.</p>
+      <div class="steps">
+        <div class="step">Install <strong>TestFlight</strong> from the App Store on your Apple TV and iPhone.</div>
+        <div class="step">Open the <a href="https://testflight.apple.com/join/TXTUMzEq">TestFlight invite link</a> on your iPhone and accept the invite.</div>
+        <div class="step">Open <strong>TestFlight</strong> on your Apple TV and install DumpertTV.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="disclaimer">
+        <strong>Disclaimer.</strong> This project is not affiliated with, endorsed by, or associated with Dumpert or DPG Media B.V.
+        Dumpert is a registered trademark of DPG Media B.V. All trademarks belong to their respective owners.
+        DumpertTV is an independent, open-source app that consumes the public Dumpert API.
+      </div>
+      <div class="foot-links">
+        <a href="https://github.com/rm335/dumpert-apple-tv">GitHub repository</a>
+        <a href="https://github.com/rm335/dumpert-apple-tv/blob/main/LICENSE">MIT License</a>
+        <a href="https://testflight.apple.com/join/TXTUMzEq">TestFlight beta</a>
+      </div>
+      <div>© 2026 rm335 · Built with Swift 6 and SwiftUI for Apple TV.</div>
+    </div>
+  </footer>
+</body>
+</html>
