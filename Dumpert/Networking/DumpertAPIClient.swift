@@ -17,6 +17,11 @@ actor DumpertAPIClient {
         config.httpAdditionalHeaders = [
             "Accept": "application/json"
         ]
+        // The NSFW opt-in cookie is managed explicitly per request; never
+        // attach or store cookies implicitly, so a server-stored cookie can't
+        // silently override the user's preference.
+        config.httpShouldSetCookies = false
+        config.httpCookieAcceptPolicy = .never
         self.session = URLSession(configuration: config)
         self.decoder = JSONDecoder()
     }
@@ -25,15 +30,13 @@ actor DumpertAPIClient {
         nsfwEnabled = enabled
     }
 
-    private static let userAgent = "DumpertTV/1.0 (tvOS; unofficial)"
-
     private func fetch(endpoint: APIEndpoint) async throws -> DumpertAPIResponse {
         let url = endpoint.url
         var request = URLRequest(url: url)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
+        request.setValue(APIConstants.userAgent, forHTTPHeaderField: "User-Agent")
         if nsfwEnabled {
-            request.setValue("nsfw=1", forHTTPHeaderField: "Cookie")
+            request.setValue(APIConstants.nsfwOptInCookie, forHTTPHeaderField: "Cookie")
         }
 
         // Conditional request with ETag
@@ -161,7 +164,7 @@ actor DumpertAPIClient {
 
         var request = URLRequest(url: url)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
+        request.setValue(APIConstants.userAgent, forHTTPHeaderField: "User-Agent")
 
         var lastError: Error?
         for attempt in 0..<3 {
