@@ -3,6 +3,7 @@ import os
 
 actor CacheService {
     private let cacheDirectory: URL
+    private let settingsDefaults: UserDefaults
     private let maxCacheSize: Int = 50 * 1024 * 1024 // 50MB
     private var cachedDiskSize: Int?
 
@@ -13,10 +14,12 @@ actor CacheService {
     }
 
     /// Test-friendly initializer that lets each test use its own isolated
-    /// directory. Avoids parallel-test pollution where another suite's
-    /// markAsWatched write would overwrite this suite's seeded data.
-    init(cacheDirectory: URL) {
+    /// directory (and UserDefaults suite). Avoids parallel-test pollution where
+    /// another suite's markAsWatched write would overwrite this suite's seeded
+    /// data.
+    init(cacheDirectory: URL, settingsDefaults: UserDefaults = .standard) {
         self.cacheDirectory = cacheDirectory
+        self.settingsDefaults = settingsDefaults
         try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }
 
@@ -46,50 +49,69 @@ actor CacheService {
 
     // MARK: - Settings
 
-    /// Default on-disk settings location, available without an instance so the
-    /// persisted NSFW flag can be read synchronously at launch.
-    nonisolated static var defaultSettingsURL: URL {
+    /// UserDefaults key holding the encoded ``UserSettingsSnapshot``. Settings
+    /// live in UserDefaults — the only guaranteed-persistent local storage on
+    /// tvOS — not on disk: the old settings.json sat inside the purgeable cache
+    /// directory, where "Wis cache" (and the system, under storage pressure)
+    /// deleted it and silently reset every preference to the defaults.
+    nonisolated static let settingsDefaultsKey = "user_settings_snapshot"
+
+    /// Legacy on-disk settings location inside the cache directory, kept only
+    /// so existing installs can be migrated into UserDefaults.
+    nonisolated static var legacySettingsURL: URL {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         return caches
             .appendingPathComponent("DumpertCache", isDirectory: true)
             .appendingPathComponent("settings.json")
     }
 
-    /// Synchronously reads the persisted "show NSFW" preference from the default
-    /// location, falling back to the app default when nothing is stored yet.
-    /// Used as the fail-safe source for the launch sound before the async
-    /// settings load completes and before the UserDefaults mirror is seeded.
+    /// Synchronously reads the persisted "show NSFW" preference, falling back to
+    /// the app default when nothing is stored yet. Used as the fail-safe source
+    /// for the launch sound before the async settings load completes and before
+    /// the App Group mirror is seeded.
     nonisolated static func persistedNSFWEnabled() -> Bool {
-        guard let data = try? Data(contentsOf: defaultSettingsURL),
-              let snapshot = try? JSONDecoder().decode(UserSettingsSnapshot.self, from: data) else {
-            return UserSettingsSnapshot().nsfwEnabled
+        if let data = UserDefaults.standard.data(forKey: settingsDefaultsKey),
+           let snapshot = try? JSONDecoder().decode(UserSettingsSnapshot.self, from: data) {
+            return snapshot.nsfwEnabled
         }
-        return snapshot.nsfwEnabled
+        // First launch after settings moved out of the cache directory: the
+        // snapshot may still sit at the legacy path until loadSettings migrates it.
+        if let data = try? Data(contentsOf: legacySettingsURL),
+           let snapshot = try? JSONDecoder().decode(UserSettingsSnapshot.self, from: data) {
+            return snapshot.nsfwEnabled
+        }
+        return UserSettingsSnapshot().nsfwEnabled
     }
 
-    private var settingsURL: URL {
+    private var legacySettingsFileURL: URL {
         cacheDirectory.appendingPathComponent("settings.json")
     }
 
     func loadSettings() -> UserSettingsSnapshot {
-        guard let data = try? Data(contentsOf: settingsURL),
-              let settings = try? JSONDecoder().decode(UserSettingsSnapshot.self, from: data) else {
-            return UserSettingsSnapshot()
+        if let data = settingsDefaults.data(forKey: Self.settingsDefaultsKey),
+           let settings = try? JSONDecoder().decode(UserSettingsSnapshot.self, from: data) {
+            return settings
         }
-        return settings
+        // One-time migration from the legacy file inside the cache directory.
+        if let data = try? Data(contentsOf: legacySettingsFileURL),
+           let settings = try? JSONDecoder().decode(UserSettingsSnapshot.self, from: data) {
+            saveSettings(settings)
+            try? FileManager.default.removeItem(at: legacySettingsFileURL)
+            return settings
+        }
+        return UserSettingsSnapshot()
     }
 
     func saveSettings(_ settings: UserSettingsSnapshot) {
         do {
             let data = try JSONEncoder().encode(settings)
-            try data.write(to: settingsURL, options: .atomic)
+            settingsDefaults.set(data, forKey: Self.settingsDefaultsKey)
         } catch {
             Logger.cache.warning("Failed to save settings: \(error.localizedDescription)")
         }
         // Mirror the NSFW flag into the App Group so it can be read synchronously
         // at launch (startup sound) and by the Top Shelf extension.
         TopShelfDataStore.setNSFWEnabled(settings.nsfwEnabled)
-        cachedDiskSize = nil
     }
 
     // MARK: - Curation Entries

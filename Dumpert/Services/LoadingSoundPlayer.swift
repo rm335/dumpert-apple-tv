@@ -87,9 +87,9 @@ final class LoadingSoundPlayer {
     /// The persisted "show NSFW" preference, read *synchronously* so the launch
     /// sound never races the asynchronous settings load. Prefers the App Group
     /// mirror (written on every settings save/load, and shared with the Top Shelf
-    /// extension) and falls back to the on-disk settings snapshot — so even on the
-    /// first launch after this feature ships, a user who hid NSFW never hears an
-    /// NSFW sound.
+    /// extension) and falls back to the persisted settings snapshot — so even on
+    /// the first launch after this feature ships, a user who hid NSFW never hears
+    /// an NSFW sound.
     static func nsfwAllowed() -> Bool {
         if let stored = TopShelfDataStore.nsfwEnabledIfSet {
             return stored

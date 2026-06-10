@@ -6,11 +6,16 @@ import Foundation
 struct CacheServiceTests {
 
     /// Returns a fresh, isolated cache so parallel suites can't race on the
-    /// shared Caches/DumpertCache directory used in production.
+    /// shared Caches/DumpertCache directory (or the standard UserDefaults
+    /// settings entry) used in production.
     private func makeIsolatedCache() -> CacheService {
+        let name = "DumpertTests-\(UUID().uuidString)"
         let dir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DumpertTests-\(UUID().uuidString)", isDirectory: true)
-        return CacheService(cacheDirectory: dir)
+            .appendingPathComponent(name, isDirectory: true)
+        return CacheService(
+            cacheDirectory: dir,
+            settingsDefaults: UserDefaults(suiteName: name)!
+        )
     }
 
     @Test("Watch progress round-trip")
