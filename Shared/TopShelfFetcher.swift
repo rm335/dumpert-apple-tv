@@ -7,8 +7,6 @@ enum TopShelfFetcher: Sendable {
     private static let logger = Logger(subsystem: "nl.dumpert.tvos.topshelf", category: "fetcher")
     private static let hotshizURL = URL(string: "https://post.dumpert.nl/api/v1.0/hotshiz")!
 
-    private static let userAgent = "DumpertTV/1.0 (tvOS; unofficial)"
-
     // MARK: - Minimal API models
 
     private struct Response: Codable {
@@ -25,6 +23,10 @@ enum TopShelfFetcher: Sendable {
         let stats: Stats?
         let date: String?
         let nsfw: Bool?
+
+        /// Canonical NSFW mapping, matching the app's domain models
+        /// (`Video`/`Photo`): an absent flag means safe.
+        var isNSFW: Bool { nsfw ?? false }
 
         var thumbnailURL: URL? {
             let urlString = stills?["still-large"] ?? stills?["still"] ?? still
@@ -79,15 +81,20 @@ enum TopShelfFetcher: Sendable {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
         var headers: [AnyHashable: Any] = ["Accept": "application/json"]
-        // Mirror the main API client: only opt into NSFW when the user allows it.
+        // Same policy as DumpertAPIClient: only opt into NSFW when the user
+        // allows it.
         if allowNSFW {
-            headers["Cookie"] = "nsfw=1"
+            headers["Cookie"] = APIConstants.nsfwOptInCookie
         }
         config.httpAdditionalHeaders = headers
+        // Cookies are managed explicitly above; never attach or store cookies
+        // implicitly, so a server-stored cookie can't override the preference.
+        config.httpShouldSetCookies = false
+        config.httpCookieAcceptPolicy = .never
         let session = URLSession(configuration: config)
 
         var request = URLRequest(url: hotshizURL)
-        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        request.setValue(APIConstants.userAgent, forHTTPHeaderField: "User-Agent")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         // Retry up to 2 times with backoff
@@ -114,7 +121,7 @@ enum TopShelfFetcher: Sendable {
                 let decoded = try JSONDecoder().decode(Response.self, from: data)
                 // Defense in depth: drop NSFW items client-side too, in case the
                 // cookie didn't fully filter them server-side.
-                let source = allowNSFW ? (decoded.items ?? []) : (decoded.items ?? []).filter { $0.nsfw != true }
+                let source = (decoded.items ?? []).filter { allowNSFW || !$0.isNSFW }
                 let items = source.prefix(10).map { item in
                     TopShelfItem(
                         id: item.id,
@@ -124,7 +131,8 @@ enum TopShelfFetcher: Sendable {
                         description: item.description,
                         kudos: item.kudosTotal,
                         duration: item.videoDuration,
-                        date: item.parsedDate
+                        date: item.parsedDate,
+                        nsfw: item.isNSFW
                     )
                 }
 

@@ -105,6 +105,9 @@ final class VideoRepository {
         // Seed the App Group so the Top Shelf extension and startup sound honor
         // the persisted NSFW preference even before any settings change.
         TopShelfDataStore.setNSFWEnabled(settings.nsfwEnabled)
+        // One-time cleanup: the NSFW mirror briefly lived in standard
+        // UserDefaults before moving to the App Group; drop the orphaned key.
+        UserDefaults.standard.removeObject(forKey: "nsfwEnabled")
         watchProgress = await cacheService.loadWatchProgress()
         curationEntries = await cacheService.loadCurationEntries()
         searchHistory = await cacheService.loadSearchHistory()
@@ -224,7 +227,13 @@ final class VideoRepository {
                 fallback.lastModified = .distantPast
                 let remoteSettings = CloudKitService.makeSettings(from: record, fallback: fallback)
                 if remoteSettings.lastModified > settings.lastModified {
+                    // apply(_:) suppresses onChange, so a remote NSFW flip would
+                    // otherwise never reach the API client or the Top Shelf.
+                    let nsfwBefore = settings.nsfwEnabled
                     settings.apply(remoteSettings)
+                    if settings.nsfwEnabled != nsfwBefore {
+                        syncNSFWSetting()
+                    }
                     settingsDirty = true
                 }
             case "SearchHistory":
@@ -488,8 +497,17 @@ final class VideoRepository {
         }
     }
 
+    /// Propagates a change to the NSFW preference to every consumer outside the
+    /// SwiftUI view tree: the API client's cookie opt-in, the App Group mirror
+    /// (read by the Top Shelf extension and the startup sound), and the Top
+    /// Shelf caches themselves — rewritten so NSFW items disappear from the
+    /// home screen immediately instead of at the next scheduled refresh.
     func syncNSFWSetting() {
         Task { await apiClient.setNSFWEnabled(settings.nsfwEnabled) }
+        // The debounced settings save also mirrors the flag, but the extension
+        // can wake before that fires — write it now.
+        TopShelfDataStore.setNSFWEnabled(settings.nsfwEnabled)
+        updateTopShelf()
     }
 
     // MARK: - Sort Order
@@ -552,11 +570,16 @@ final class VideoRepository {
         }
     }
 
+    /// Applies the user's NSFW preference: passthrough when NSFW is allowed,
+    /// otherwise drops NSFW items. The single definition of "hidden NSFW item",
+    /// shared by the in-app feeds and the Top Shelf writer so the rule cannot
+    /// diverge between surfaces.
+    func applyNSFWFilter(_ items: [MediaItem]) -> [MediaItem] {
+        settings.nsfwEnabled ? items : items.filter { !$0.isNSFW }
+    }
+
     func filteredItems(_ items: [MediaItem]) -> [MediaItem] {
-        var result = filterByKudos(items)
-        if !settings.nsfwEnabled {
-            result = result.filter { !$0.isNSFW }
-        }
+        var result = applyNSFWFilter(filterByKudos(items))
         if settings.hideWatched {
             result = result.filter { item in
                 !(watchProgress[item.id]?.isCompleted ?? false)
@@ -798,10 +821,8 @@ final class VideoRepository {
     // MARK: - Top Shelf
 
     private func updateTopShelf() {
-        let nsfwHidden = !settings.nsfwEnabled
-        let mapToShelfItems: ([MediaItem]) -> [TopShelfItem] = { items in
-            let visible = nsfwHidden ? items.filter { !$0.isNSFW } : items
-            return Array(visible.prefix(10).map {
+        let mapToShelfItems: ([MediaItem]) -> [TopShelfItem] = { [self] items in
+            Array(applyNSFWFilter(items).prefix(10).map {
                 TopShelfItem(
                     id: $0.id,
                     title: $0.title,
@@ -810,7 +831,8 @@ final class VideoRepository {
                     description: $0.descriptionText.isEmpty ? nil : $0.descriptionText,
                     kudos: $0.kudosTotal,
                     duration: $0.isVideo ? $0.duration : nil,
-                    date: $0.date
+                    date: $0.date,
+                    nsfw: $0.isNSFW
                 )
             })
         }

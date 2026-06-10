@@ -12,6 +12,11 @@ struct TopShelfItem: Codable, Sendable, Identifiable {
     var duration: Int?
     var date: Date?
 
+    /// Whether the API marked this item NSFW. `nil` only for items cached
+    /// before this field shipped; readers treat those as unsafe when NSFW
+    /// content is hidden.
+    var nsfw: Bool?
+
     init(
         id: String,
         title: String,
@@ -20,7 +25,8 @@ struct TopShelfItem: Codable, Sendable, Identifiable {
         description: String? = nil,
         kudos: Int? = nil,
         duration: Int? = nil,
-        date: Date? = nil
+        date: Date? = nil,
+        nsfw: Bool? = nil
     ) {
         self.id = id
         self.title = title
@@ -30,5 +36,6 @@ struct TopShelfItem: Codable, Sendable, Identifiable {
         self.kudos = kudos
         self.duration = duration
         self.date = date
+        self.nsfw = nsfw
     }
 }

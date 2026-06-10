@@ -13,18 +13,17 @@ enum TopShelfDataStore: Sendable {
     // MARK: - NSFW Preference (shared from the app)
 
     /// The user's "show NSFW" preference, shared from the app via the App Group
-    /// so the Top Shelf extension can honor it. Defaults to `true` (the app
-    /// default) when the app has not written it yet.
-    static var nsfwEnabled: Bool { nsfwEnabledIfSet ?? true }
+    /// so the Top Shelf extension can honor it. Fails safe to `false` when the
+    /// app has never written the flag (fresh install, first run after an update,
+    /// or App Group unavailable): the Top Shelf is a public home-screen surface,
+    /// so an unknown preference must hide NSFW rather than show it. The app
+    /// seeds the real value on its first launch.
+    static var nsfwEnabled: Bool { nsfwEnabledIfSet ?? false }
 
     /// Same as ``nsfwEnabled`` but `nil` when the app has never written the flag,
     /// so callers can fall back to another source.
     static var nsfwEnabledIfSet: Bool? {
-        guard let defaults = UserDefaults(suiteName: appGroupIdentifier),
-              defaults.object(forKey: nsfwEnabledKey) != nil else {
-            return nil
-        }
-        return defaults.bool(forKey: nsfwEnabledKey)
+        UserDefaults(suiteName: appGroupIdentifier)?.object(forKey: nsfwEnabledKey) as? Bool
     }
 
     /// Mirrors the app's NSFW preference into the App Group.
@@ -34,6 +33,9 @@ enum TopShelfDataStore: Sendable {
             return
         }
         defaults.set(enabled, forKey: nsfwEnabledKey)
+        // Same cross-process flush the item-save path uses, so the extension
+        // sees the new value immediately after a toggle.
+        defaults.synchronize()
     }
 
     /// Returns true if cached data is older than the given interval (default 15 min).
@@ -132,10 +134,23 @@ enum TopShelfDataStore: Sendable {
         do {
             let items = try JSONDecoder().decode([TopShelfItem].self, from: data)
             logger.notice("Loaded \(items.count) items from \(key) (\(data.count) bytes)")
-            return items
+            return nsfwFiltered(items)
         } catch {
             logger.fault("Decode failed for \(key): \(error.localizedDescription)")
             return []
         }
+    }
+
+    /// Read-side NSFW enforcement, applied to every cache load so no reader can
+    /// serve NSFW items the current preference forbids — even from caches
+    /// written before the preference changed (or before the `nsfw` flag
+    /// existed: those items have `nsfw == nil` and are dropped, not trusted).
+    private static func nsfwFiltered(_ items: [TopShelfItem]) -> [TopShelfItem] {
+        guard !nsfwEnabled else { return items }
+        let safe = items.filter { $0.nsfw == false }
+        if safe.count != items.count {
+            logger.notice("NSFW hidden: dropped \(items.count - safe.count) of \(items.count) cached items")
+        }
+        return safe
     }
 }
