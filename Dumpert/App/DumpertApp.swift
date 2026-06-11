@@ -11,6 +11,10 @@ struct DumpertApp: App {
     @State private var showLoadingScreen = true
     @State private var backgroundDate: Date?
 
+    init() {
+        SentryMonitoring.start()
+    }
+
     var body: some Scene {
         WindowGroup {
             ZStack {

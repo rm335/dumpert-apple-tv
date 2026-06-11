@@ -14,6 +14,13 @@ settings:
     ENABLE_USER_SCRIPT_SANDBOXING: "YES"
     SWIFT_EMIT_LOC_STRINGS: "YES"
     LOCALIZATION_PREFERS_STRING_CATALOGS: "YES"
+    SENTRY_DSN: ""
+    SENTRY_ENVIRONMENT: development
+
+packages:
+  Sentry:
+    url: https://github.com/getsentry/sentry-cocoa.git
+    exactVersion: 9.17.0
 
 schemes:
   Dumpert:
@@ -47,6 +54,8 @@ targets:
       path: Dumpert/Info.plist
       properties:
         UILaunchScreen: {}
+        SentryDSN: $(SENTRY_DSN)
+        SentryEnvironment: $(SENTRY_ENVIRONMENT)
         UIBackgroundModes:
           - audio
         CFBundleURLTypes:
@@ -57,6 +66,11 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: nl.dumpert.tvos
         SWIFT_STRICT_CONCURRENCY: complete
+      configs:
+        Release:
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+    configFiles:
+      Release: Config/Release.xcconfig
     entitlements:
       path: Dumpert/Dumpert.entitlements
       properties:
@@ -70,6 +84,7 @@ targets:
           - group.nl.dumpert.tvos
     dependencies:
       - target: DumpertTopShelf
+      - package: Sentry
 
   DumpertTopShelf:
     type: app-extension

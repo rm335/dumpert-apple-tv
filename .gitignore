@@ -23,6 +23,9 @@ xcuserdata/
 Package.resolved
 .swiftpm/
 
+# Local monitoring configuration
+Config/Sentry.local.xcconfig
+
 # Test results
 TestResults/
 *.xcresult

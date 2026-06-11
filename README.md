@@ -506,6 +506,19 @@ Settings are persisted locally and synced via CloudKit.
 
 ---
 
+## Crash Reporting and Privacy
+
+Official non-Debug builds can use Sentry for crash and error reporting. Sentry
+is disabled when no DSN is configured, so local contributor builds and forks do
+not report to the official project.
+
+The integration does not send default PII, network breadcrumbs, failed request
+details, screenshots, view hierarchies, tracing, or profiling. Maintainers
+should review the complete [Sentry setup and privacy checklist](docs/SENTRY.md)
+before enabling it for TestFlight or App Store builds.
+
+---
+
 ## Contributing
 
 Contributions are welcome! Here's how:

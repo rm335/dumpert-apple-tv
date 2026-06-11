@@ -1,0 +1,3 @@
+// Official release configuration. Xcode Cloud creates the optional local file.
+SENTRY_ENVIRONMENT = production
+#include? "Sentry.local.xcconfig"
