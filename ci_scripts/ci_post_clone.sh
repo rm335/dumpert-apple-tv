@@ -20,4 +20,9 @@ fi
 echo "Generating Xcode project..."
 xcodegen generate
 
+echo "Installing resolved Swift package versions..."
+swiftpm_directory="Dumpert.xcodeproj/project.xcworkspace/xcshareddata/swiftpm"
+mkdir -p "$swiftpm_directory"
+cp Config/Package.resolved "$swiftpm_directory/Package.resolved"
+
 echo "Done — Dumpert.xcodeproj generated"

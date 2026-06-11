@@ -21,6 +21,7 @@ xcuserdata/
 # Swift Package Manager
 .build/
 Package.resolved
+!Config/Package.resolved
 .swiftpm/
 
 # Local monitoring configuration

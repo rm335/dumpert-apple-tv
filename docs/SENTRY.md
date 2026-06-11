@@ -147,6 +147,7 @@ platform-specific information that third-party reporting does not.
 ## Relevant files
 
 - `project.yml`
+- `Config/Package.resolved`
 - `Config/Release.xcconfig`
 - `Dumpert/Utilities/SentryMonitoring.swift`
 - `ci_scripts/ci_post_clone.sh`
