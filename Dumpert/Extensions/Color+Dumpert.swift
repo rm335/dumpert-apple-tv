@@ -9,6 +9,15 @@ extension Color {
 
     /// Darker variant for backgrounds/subtle accents
     static let dumpiGreenDark = Color(red: 0.30, green: 0.55, blue: 0.12)
+
+    /// Sentiment color for a kudos score — the single source for the kudos ramp,
+    /// shared by the video card meta, the kudos badge and the photo overlay so the
+    /// thresholds can't drift: brand green ≥ 100, neutral gray 0–99, red when negative.
+    static func kudos(_ score: Int) -> Color {
+        if score >= 100 { return .dumpiGreen }
+        if score >= 0 { return Color(.systemGray) }
+        return Color(.systemRed)
+    }
 }
 
 extension ShapeStyle where Self == Color {

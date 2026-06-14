@@ -15,16 +15,10 @@ struct KudosBadgeView: View {
         .foregroundStyle(.white)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(kudosColor)
+        .background(Color.kudos(kudos))
         .cornerRadius(6)
         .accessibilityLabel(Text("\(formattedKudos) kudos", comment: "Kudos count label"))
     }
 
     private var formattedKudos: String { kudos.formattedCount }
-
-    private var kudosColor: Color {
-        if kudos >= 100 { return .dumpiGreen }
-        if kudos >= 0 { return Color(.systemGray).opacity(0.7) }
-        return Color(.systemRed)
-    }
 }

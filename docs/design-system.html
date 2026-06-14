@@ -232,7 +232,7 @@ td .swatch-dot{display:inline-block;width:13px;height:13px;border-radius:4px;ver
 /* Video card — VideoCardView */
 .vcard{width:280px;cursor:pointer}
 .vcard .thumb{
-  position:relative;aspect-ratio:16/9;border-radius:0;overflow:hidden;
+  position:relative;aspect-ratio:16/9;border-radius:var(--r-12);overflow:hidden;
   background:linear-gradient(135deg,#2a3340,#161b22 70%);
   transition:transform var(--dur-slow) var(--ease-spring),box-shadow var(--dur-slow),filter var(--dur-standard);
 }
@@ -272,7 +272,7 @@ td .swatch-dot{display:inline-block;width:13px;height:13px;border-radius:4px;ver
 
 /* Skeleton — SkeletonView shimmer */
 .skel{width:280px}
-.skel .sthumb{aspect-ratio:16/9;background:rgba(255,255,255,.05)}
+.skel .sthumb{aspect-ratio:16/9;border-radius:var(--r-12);background:rgba(255,255,255,.05)}
 .skel .sline{height:12px;border-radius:3px;background:rgba(255,255,255,.08);margin:0 10px}
 .skel .sline.s2{width:62%;margin-top:8px;background:rgba(255,255,255,.05)}
 .skel .srow{height:9px;width:60%;border-radius:2px;background:rgba(255,255,255,.06);margin:10px}
@@ -321,7 +321,7 @@ td .swatch-dot{display:inline-block;width:13px;height:13px;border-radius:4px;ver
 .tabbar .t.active{background:#f2f3f4;color:#111}
 
 /* Hero banner */
-.hero{width:100%;max-width:680px;border-radius:var(--r-12);overflow:hidden;position:relative;aspect-ratio:21/9;
+.hero{width:100%;max-width:680px;border-radius:var(--r-24);overflow:hidden;position:relative;aspect-ratio:16/6;
   background:linear-gradient(135deg,#39424d,#10141a 75%)}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 8%,transparent 55%)}
 .hero .hbody{position:absolute;left:28px;bottom:22px;right:28px;z-index:2}
@@ -880,7 +880,7 @@ footer{border-top:1px solid var(--border-subtle);padding:30px 0;color:var(--grey
   content.<span class="p">background</span>(.black.<span class="p">opacity</span>(<span class="s">0.75</span>)).<span class="p">cornerRadius</span>(<span class="s">4</span>)
 }</pre></div>
     <div class="panel"><h4 style="color:#fff;font-size:16px">Safe areas &amp; layout</h4><p class="muted" style="font-size:14px">Content honors the 50pt horizontal / 30pt vertical screen margins. Top Shelf integration surfaces fresh content above the app icon. Immersive blurred backdrops sit behind the TabView.</p></div>
-    <div class="panel"><h4 style="color:#fff;font-size:16px">Architecture</h4><p class="muted" style="font-size:14px">SwiftUI + <span class="tok">@Observable</span> with Environment injection; an actor-based API client; a single <span class="tok">VideoRepository</span> source of truth. 120+ tests guard behavior.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Architecture</h4><p class="muted" style="font-size:14px">SwiftUI + <span class="tok">@Observable</span> with Environment injection; an actor-based API client; a single <span class="tok">VideoRepository</span> source of truth. 122+ tests guard behavior.</p></div>
   </div>
 </section>
 

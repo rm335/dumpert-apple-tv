@@ -71,7 +71,7 @@ struct VideoCardView: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(.red)
+                            .background(Color(.systemRed))
                             .cornerRadius(4)
                     }
 
@@ -173,7 +173,7 @@ struct VideoCardView: View {
                             .fontWeight(.bold)
                             .monospacedDigit()
                     }
-                    .foregroundStyle(kudosColor)
+                    .foregroundStyle(Color.kudos(item.kudosTotal))
 
                     if item.viewsTotal > 0 {
                         HStack(spacing: 3) {
@@ -294,12 +294,6 @@ struct VideoCardView: View {
         let idealOffset = container / 2 - facePos
         let minOffset = container - scaled
         return min(0, max(minOffset, idealOffset))
-    }
-
-    private var kudosColor: Color {
-        if item.kudosTotal >= 100 { return .dumpiGreen }
-        if item.kudosTotal >= 0 { return Color(.systemGray) }
-        return Color(.systemRed)
     }
 
 }

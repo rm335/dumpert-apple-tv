@@ -120,7 +120,7 @@ extension FullScreenImageView {
                     .fontWeight(.bold)
                     .monospacedDigit()
             }
-            .foregroundStyle(kudosColor)
+            .foregroundStyle(Color.kudos(photo.kudosTotal))
 
             if photo.viewsTotal > 0 {
                 HStack(spacing: 4) {
@@ -148,10 +148,4 @@ extension FullScreenImageView {
     }
 
     var formattedKudos: String { photo.kudosTotal.formattedCount }
-
-    var kudosColor: Color {
-        if photo.kudosTotal >= 100 { return .dumpiGreen }
-        if photo.kudosTotal >= 0 { return .gray }
-        return .red
-    }
 }
