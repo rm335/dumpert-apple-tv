@@ -4,6 +4,8 @@ struct FullScreenImageView: View {
     let photo: Photo
     let repository: VideoRepository
     @Environment(\.dismiss) private var dismiss
+    // `internal` (not `private`): the zoomControls extension lives in ZoomControlsView.swift.
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
 
     @State private var image: UIImage?
     @State private var isLoading = true
@@ -75,7 +77,7 @@ struct FullScreenImageView: View {
         }
         .onExitCommand {
             if currentScale > minScale {
-                withAnimation(.spring(duration: 0.3)) {
+                withAnimation(reduceMotion ? nil : .spring(duration: 0.3)) {
                     resetZoom()
                 }
             } else {
@@ -83,7 +85,7 @@ struct FullScreenImageView: View {
             }
         }
         .onPlayPauseCommand {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
                 showOverlay.toggle()
             }
         }
@@ -106,7 +108,7 @@ struct FullScreenImageView: View {
         // at 1x the focus engine can navigate to the zoom buttons
         if currentScale > minScale {
             base.onMoveCommand { direction in
-                withAnimation(.easeOut(duration: 0.2)) {
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
                     switch direction {
                     case .left: offsetX += panStep
                     case .right: offsetX -= panStep
@@ -168,7 +170,7 @@ struct FullScreenImageView: View {
         guard !topComments.isEmpty else { return }
 
         currentCommentIndex = 0
-        withAnimation { showTopComment = true }
+        withAnimation(reduceMotion ? nil : .default) { showTopComment = true }
 
         // Carousel: show each comment for dynamic duration, 5 second gap between
         let speed = repository.settings.readingSpeed
@@ -176,14 +178,14 @@ struct FullScreenImageView: View {
             // Show first comment for dynamic duration based on text length
             let firstDuration = speed.readingDuration(for: topComments[0].displayContent)
             try? await Task.sleep(for: .seconds(firstDuration))
-            withAnimation { showTopComment = false }
+            withAnimation(reduceMotion ? nil : .default) { showTopComment = false }
 
             // Cycle through remaining comments
             var index = 1
             while index < topComments.count {
                 // 5 second gap between comments
                 try? await Task.sleep(for: .seconds(5))
-                withAnimation {
+                withAnimation(reduceMotion ? nil : .default) {
                     currentCommentIndex = index
                     showTopComment = true
                 }
@@ -191,7 +193,7 @@ struct FullScreenImageView: View {
                 // Show comment for dynamic duration based on text length
                 let duration = speed.readingDuration(for: topComments[index].displayContent)
                 try? await Task.sleep(for: .seconds(duration))
-                withAnimation { showTopComment = false }
+                withAnimation(reduceMotion ? nil : .default) { showTopComment = false }
                 index += 1
             }
         }

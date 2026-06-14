@@ -9,6 +9,7 @@ import SwiftUI
 /// to the tab restores the previously selected sub-category.
 struct CategoriesSectionView: View {
     @SceneStorage("categoriesSelectedTab") private var rawSelection: String = CategoryTab.reeten.rawValue
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focusedPill: CategoryTab?
 
     private var selection: CategoryTab {
@@ -42,7 +43,7 @@ struct CategoriesSectionView: View {
                 }
             }
             .id(selection)
-            .animation(.easeOut(duration: 0.2), value: selection)
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: selection)
         }
     }
 

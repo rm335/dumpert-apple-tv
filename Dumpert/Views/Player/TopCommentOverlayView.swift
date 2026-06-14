@@ -3,6 +3,7 @@ import SwiftUI
 struct TopCommentOverlayView: View {
     let comment: DumpertComment?
     let isVisible: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack {
@@ -18,8 +19,8 @@ struct TopCommentOverlayView: View {
                 .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.6), value: isVisible)
-        .animation(.easeInOut(duration: 0.4), value: comment?.id)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.6), value: isVisible)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.4), value: comment?.id)
         .allowsHitTesting(false)
         .accessibilityElement(children: .combine)
     }

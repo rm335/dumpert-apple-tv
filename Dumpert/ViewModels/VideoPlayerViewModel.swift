@@ -193,6 +193,25 @@ final class VideoPlayerViewModel {
     func cancelUpNext() {
         upNextCancelled = true
         showUpNext = false
+        restorePlayerFocus()
+    }
+
+    /// Returns Siri Remote focus to the player surface after the Up Next overlay
+    /// is dismissed. That overlay's "Afspelen" button grabs focus when it appears
+    /// (so Select plays the next video immediately). When the video then advances
+    /// — or the user cancels — the overlay and its focused button are removed, and
+    /// tvOS does NOT automatically hand focus back to the AVPlayerViewController.
+    /// Focus lands in a black hole: hardware presses route up the responder chain
+    /// from the focused view, so with no focused view inside the player hierarchy
+    /// the play/pause gesture recognizer on the controller's view never fires and
+    /// the freshly started video can't be paused. Forcing a focus update while the
+    /// button is still in the hierarchy (this run-loop turn, before SwiftUI removes
+    /// it) moves focus back onto the player, because the controller still contains
+    /// the focused item at that moment.
+    private func restorePlayerFocus() {
+        guard let playerViewController else { return }
+        playerViewController.setNeedsFocusUpdate()
+        playerViewController.updateFocusIfNeeded()
     }
 
     // MARK: - Progress Tracking
@@ -432,6 +451,7 @@ final class VideoPlayerViewModel {
         playerViewController?.showsPlaybackControls = false
         showNowPlayingBriefly(video.title)
         configureNowPlaying(for: video)
+        restorePlayerFocus()
     }
 
     func playPrevious() {
@@ -476,6 +496,7 @@ final class VideoPlayerViewModel {
         playerViewController?.showsPlaybackControls = false
         showNowPlayingBriefly(video.title)
         configureNowPlaying(for: video)
+        restorePlayerFocus()
     }
 
     // MARK: - Top Comment

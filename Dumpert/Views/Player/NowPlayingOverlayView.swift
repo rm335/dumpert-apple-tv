@@ -3,6 +3,7 @@ import SwiftUI
 struct NowPlayingOverlayView: View {
     let title: String
     let isVisible: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack {
@@ -31,6 +32,6 @@ struct NowPlayingOverlayView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .center)
-        .animation(.easeInOut(duration: 0.5), value: isVisible)
+        .animation(reduceMotion ? nil : .dumpiOverlay, value: isVisible)
     }
 }

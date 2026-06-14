@@ -20,9 +20,9 @@ struct UpNextOverlayView: View {
             // Thumbnail of next video
             FaceCenteredThumbnailView(url: nextVideo.thumbnailURL)
                 .frame(width: 240, height: 135)
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: 12)
                         .strokeBorder(.white.opacity(0.15), lineWidth: 1)
                 )
                 .accessibilityHidden(true)
@@ -78,7 +78,7 @@ struct UpNextOverlayView: View {
             }
         }
         .padding(24)
-        .modifier(GlassCardModifier(cornerRadius: 16))
+        .modifier(GlassCardModifier(cornerRadius: 24))
         .padding(.bottom, 80)
         .padding(.trailing, 60)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
@@ -94,6 +94,7 @@ struct UpNextOverlayView: View {
 private struct CountdownRingView: View {
     let countdown: Int
     let total: Int
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var progress: Double {
         guard total > 0 else { return 0 }
@@ -109,7 +110,7 @@ private struct CountdownRingView: View {
                 .trim(from: 0, to: progress)
                 .stroke(.white, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
-                .animation(.linear(duration: 1), value: countdown)
+                .animation(reduceMotion ? nil : .linear(duration: 1), value: countdown)
 
             Text("\(countdown)")
                 .font(.caption2)
@@ -158,6 +159,7 @@ private struct UpNextButtonStyle: ButtonStyle {
         let configuration: Configuration
         let isPrimary: Bool
         @Environment(\.isFocused) private var isFocused
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
         var body: some View {
             let shape = RoundedRectangle(cornerRadius: 8)
@@ -173,8 +175,8 @@ private struct UpNextButtonStyle: ButtonStyle {
                 )
                 .scaleEffect(configuration.isPressed ? 0.95 : (isFocused ? 1.08 : 1.0))
                 .shadow(color: .white.opacity(isFocused ? 0.3 : 0), radius: 14)
-                .animation(.spring(duration: 0.25, bounce: 0.2), value: isFocused)
-                .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+                .animation(reduceMotion ? nil : .dumpiFocus, value: isFocused)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: configuration.isPressed)
         }
     }
 }

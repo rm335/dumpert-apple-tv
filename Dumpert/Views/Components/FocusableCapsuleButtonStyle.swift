@@ -15,6 +15,7 @@ struct FocusableCapsuleButtonStyle: ButtonStyle {
     private struct StyleBody: View {
         let configuration: Configuration
         @Environment(\.isFocused) private var isFocused
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
         var body: some View {
             configuration.label
@@ -24,8 +25,8 @@ struct FocusableCapsuleButtonStyle: ButtonStyle {
                 )
                 .scaleEffect(configuration.isPressed ? 0.96 : (isFocused ? 1.08 : 1.0))
                 .shadow(color: .white.opacity(isFocused ? 0.25 : 0), radius: 14)
-                .animation(.spring(duration: 0.25, bounce: 0.2), value: isFocused)
-                .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+                .animation(reduceMotion ? nil : .dumpiFocus, value: isFocused)
+                .animation(reduceMotion ? nil : .dumpiPress, value: configuration.isPressed)
         }
     }
 }

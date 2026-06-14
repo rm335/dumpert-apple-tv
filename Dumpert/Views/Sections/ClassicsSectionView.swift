@@ -6,6 +6,7 @@ struct ClassicsSectionView: View {
     var showsHeader: Bool = true
     @Environment(VideoRepository.self) private var repository
     @Environment(ImmersiveBackgroundState.self) private var backgroundState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedVideo: Video?
     @State private var selectedPhoto: Photo?
     @State private var toastMessage: String?
@@ -84,7 +85,7 @@ struct ClassicsSectionView: View {
                             // Scroll to top button (no native snap-to-top gesture on tvOS)
                             if items.count > repository.settings.tileSize.gridColumnCount * 3 {
                                 Button {
-                                    withAnimation(.spring(duration: 0.5)) {
+                                    withAnimation(reduceMotion ? nil : .dumpiSelection) {
                                         proxy.scrollTo("top", anchor: .top)
                                     }
                                 } label: {
@@ -104,7 +105,7 @@ struct ClassicsSectionView: View {
                 }
             }
         }
-        .animation(.easeOut(duration: 0.3), value: repository.isLoading)
+        .animation(reduceMotion ? nil : .dumpiStandard, value: repository.isLoading)
         .fullScreenCover(item: $selectedVideo) { video in
             let videoPlaylist = items.compactMap { item -> Video? in
                 if case .video(let v) = item { return v }
@@ -165,6 +166,7 @@ struct ClassicsSectionView: View {
                 isWatched: repository.isWatched(item.id),
                 progress: repository.progressFor(item.id),
                 isFocused: focusedItem == item.id,
+                suspendPreview: selectedVideo != nil || selectedPhoto != nil,
                 thumbnailPreviewEnabled: repository.settings.thumbnailPreviewEnabled,
                 smartThumbnailsEnabled: repository.settings.smartThumbnailsEnabled
             )

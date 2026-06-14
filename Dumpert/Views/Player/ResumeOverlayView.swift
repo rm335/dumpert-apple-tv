@@ -4,6 +4,7 @@ struct ResumeOverlayView: View {
     let formattedTime: String
     let isVisible: Bool
     let onPlayFromBeginning: () -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack {
@@ -46,7 +47,7 @@ struct ResumeOverlayView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .animation(.easeInOut(duration: 0.5), value: isVisible)
+        .animation(reduceMotion ? nil : .dumpiOverlay, value: isVisible)
     }
 }
 
@@ -60,6 +61,7 @@ private struct ResumeButtonStyle: ButtonStyle {
     private struct StyleBody: View {
         let configuration: Configuration
         @Environment(\.isFocused) private var isFocused
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
         var body: some View {
             let shape = RoundedRectangle(cornerRadius: 8)
@@ -71,8 +73,8 @@ private struct ResumeButtonStyle: ButtonStyle {
                 .overlay(shape.stroke(Color.white, lineWidth: isFocused ? 3 : 0))
                 .scaleEffect(configuration.isPressed ? 0.95 : (isFocused ? 1.08 : 1.0))
                 .shadow(color: .white.opacity(isFocused ? 0.3 : 0), radius: 14)
-                .animation(.spring(duration: 0.25, bounce: 0.2), value: isFocused)
-                .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+                .animation(reduceMotion ? nil : .dumpiFocus, value: isFocused)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: configuration.isPressed)
         }
     }
 }

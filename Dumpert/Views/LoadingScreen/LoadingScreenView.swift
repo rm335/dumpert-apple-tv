@@ -145,7 +145,7 @@ struct LoadingScreenView: View {
         Task {
             try? await Task.sleep(for: .seconds(3))
             guard !dismissed, !isExiting else { return }
-            withAnimation(.easeIn(duration: 0.3)) {
+            withAnimation(reduceMotion ? nil : .easeIn(duration: 0.3)) {
                 showSlowHint = true
             }
         }

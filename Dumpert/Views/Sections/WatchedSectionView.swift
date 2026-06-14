@@ -6,6 +6,7 @@ struct WatchedSectionView: View {
     var showsHeader: Bool = true
     @Environment(VideoRepository.self) private var repository
     @Environment(ImmersiveBackgroundState.self) private var backgroundState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedVideo: Video?
     @State private var selectedPhoto: Photo?
     @State private var toastMessage: String?
@@ -81,7 +82,7 @@ struct WatchedSectionView: View {
                             // Scroll to top button (no native snap-to-top gesture on tvOS)
                             if repository.watchedVideos.count > repository.settings.tileSize.gridColumnCount * 3 {
                                 Button {
-                                    withAnimation(.spring(duration: 0.5)) {
+                                    withAnimation(reduceMotion ? nil : .dumpiSelection) {
                                         proxy.scrollTo("top", anchor: .top)
                                     }
                                 } label: {
@@ -104,7 +105,7 @@ struct WatchedSectionView: View {
                 }
             }
         }
-        .animation(.easeOut(duration: 0.3), value: repository.isLoadingWatched)
+        .animation(reduceMotion ? nil : .dumpiStandard, value: repository.isLoadingWatched)
         .task {
             if repository.watchedVideos.isEmpty {
                 await repository.fetchWatchedVideos()
@@ -165,6 +166,7 @@ struct WatchedSectionView: View {
                 isWatched: repository.isWatched(item.id),
                 progress: repository.progressFor(item.id),
                 isFocused: focusedItem == item.id,
+                suspendPreview: selectedVideo != nil || selectedPhoto != nil,
                 thumbnailPreviewEnabled: repository.settings.thumbnailPreviewEnabled,
                 smartThumbnailsEnabled: repository.settings.smartThumbnailsEnabled
             )

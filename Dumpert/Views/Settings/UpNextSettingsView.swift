@@ -2,6 +2,7 @@ import SwiftUI
 
 struct UpNextSettingsView: View {
     @Environment(VideoRepository.self) private var repository
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         @Bindable var settings = repository.settings
@@ -98,7 +99,7 @@ struct UpNextSettingsView: View {
             }
         }
         .navigationTitle(Text("Volgende video", comment: "Up next settings screen title"))
-        .animation(.smooth, value: settings.upNextOverlayEnabled)
+        .animation(reduceMotion ? nil : .smooth, value: settings.upNextOverlayEnabled)
     }
 
     private func minimumVideoLengthLabel(_ seconds: Int) -> LocalizedStringKey {

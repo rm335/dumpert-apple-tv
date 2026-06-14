@@ -3,6 +3,7 @@ import SwiftUI
 struct SearchView: View {
     @Environment(VideoRepository.self) var repository
     @Environment(ImmersiveBackgroundState.self) private var backgroundState
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var viewModel: SearchViewModel?
     @State private var selectedVideo: Video?
     @State private var selectedPhoto: Photo?
@@ -133,7 +134,7 @@ struct SearchView: View {
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .animation(.easeOut(duration: 0.3), value: viewModel.isSearching)
+        .animation(reduceMotion ? nil : .dumpiStandard, value: viewModel.isSearching)
     }
 
     // MARK: - Error
@@ -182,6 +183,7 @@ struct SearchView: View {
                             isWatched: repository.isWatched(item.id),
                             progress: repository.progressFor(item.id),
                             isFocused: focusedItem == item.id,
+                            suspendPreview: selectedVideo != nil || selectedPhoto != nil,
                             thumbnailPreviewEnabled: repository.settings.thumbnailPreviewEnabled,
                             smartThumbnailsEnabled: repository.settings.smartThumbnailsEnabled
                         )

@@ -115,7 +115,7 @@ struct ToppersSectionView: View {
                 }
             }
         }
-        .animation(.easeOut(duration: 0.3), value: repository.isLoading)
+        .animation(reduceMotion ? nil : .dumpiStandard, value: repository.isLoading)
         .fullScreenCover(item: $selectedVideo) { video in
             let videoPlaylist = repository.filteredItems(repository.hotshiz).compactMap { item -> Video? in
                 if case .video(let v) = item { return v }
@@ -149,7 +149,7 @@ struct ToppersSectionView: View {
                 if reduceMotion {
                     heroIndex = next
                 } else {
-                    withAnimation(.spring(duration: 0.7, bounce: 0.15)) {
+                    withAnimation(.dumpiCarousel) {
                         heroIndex = next
                     }
                 }
@@ -196,6 +196,7 @@ struct ToppersSectionView: View {
                                     isWatched: repository.isWatched(item.id),
                                     progress: repository.progressFor(item.id),
                                     isFocused: focusedItem == item.id,
+                                    suspendPreview: selectedVideo != nil || selectedPhoto != nil,
                                     thumbnailPreviewEnabled: repository.settings.thumbnailPreviewEnabled,
                                     smartThumbnailsEnabled: repository.settings.smartThumbnailsEnabled
                                 )
@@ -247,18 +248,18 @@ struct ToppersSectionView: View {
             }
             .aspectRatio(16/6, contentMode: .fit)
             .cornerRadius(24)
-            .animation(reduceMotion ? nil : .spring(duration: 0.7, bounce: 0.15), value: safeHeroIndex)
+            .animation(reduceMotion ? nil : .dumpiCarousel, value: safeHeroIndex)
         }
         .buttonStyle(.card)
         .focused($heroFocused)
         .onMoveCommand { direction in
             switch direction {
             case .left:
-                withAnimation(.spring(duration: 0.7, bounce: 0.15)) {
+                withAnimation(reduceMotion ? nil : .dumpiCarousel) {
                     heroIndex = (heroIndex - 1 + heroItems.count) % heroItems.count
                 }
             case .right:
-                withAnimation(.spring(duration: 0.7, bounce: 0.15)) {
+                withAnimation(reduceMotion ? nil : .dumpiCarousel) {
                     heroIndex = (heroIndex + 1) % heroItems.count
                 }
             default:

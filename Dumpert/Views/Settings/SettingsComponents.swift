@@ -25,11 +25,11 @@ extension SettingsView {
     func destructiveLabel(_ title: LocalizedStringKey, icon: String, description: LocalizedStringKey) -> some View {
         HStack(alignment: .center, spacing: 28) {
             Image(systemName: icon)
-                .foregroundStyle(Color(.systemRed).opacity(0.8))
+                .foregroundStyle(Color.dumpiError.opacity(0.8))
                 .frame(width: 28)
             VStack(alignment: .leading, spacing: 6) {
                 Text(title)
-                    .foregroundStyle(Color(.systemRed))
+                    .foregroundStyle(Color.dumpiError)
                 Text(description)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
@@ -103,7 +103,7 @@ extension SettingsView {
         }
         .frame(maxHeight: 100)
         .padding(.vertical, 12)
-        .animation(.smooth(duration: 0.3), value: tileSize)
+        .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: tileSize)
         .listRowBackground(Color.clear)
         .accessibilityLabel(Text("Voorbeeld: \(columnCount) kolommen", comment: "Accessibility: tile preview with column count"))
     }

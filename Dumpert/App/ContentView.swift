@@ -7,6 +7,7 @@ struct ContentView: View {
     @Binding var deepLinkVideoId: String?
     @State private var deepLinkVideo: Video?
     @SceneStorage("selectedTab") private var selectedTab = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -56,7 +57,7 @@ struct ContentView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.smooth, value: networkMonitor.isConnected)
+        .animation(reduceMotion ? nil : .smooth, value: networkMonitor.isConnected)
         .onChange(of: repository.classics) {
             Task { @MainActor in
                 backgroundState.shuffleFallback(from: repository.classics)
@@ -113,7 +114,7 @@ struct ContentView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 12)
         .background(.ultraThinMaterial, in: Capsule())
-        .background(.red.opacity(0.6), in: Capsule())
+        .background(Color.dumpiError.opacity(0.55), in: Capsule())
         .padding(.bottom, 40)
     }
 }

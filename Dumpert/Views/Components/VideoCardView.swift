@@ -5,6 +5,14 @@ struct VideoCardView: View {
     let isWatched: Bool
     let progress: Double
     var isFocused: Bool = false
+    /// Suppresses the focus video preview while a full-screen player (or photo
+    /// viewer) is presented over the grid. A `.fullScreenCover` keeps this card
+    /// mounted and, on tvOS, retains its `@FocusState` for restoration — so the
+    /// preview's looping `AVPlayer` would otherwise keep decoding behind the
+    /// active player and starve its audio render thread (stuttering audio while
+    /// the foreground video stays smooth). Setting this true tears the preview
+    /// player down for the duration of playback.
+    var suspendPreview: Bool = false
     var thumbnailPreviewEnabled: Bool = true
     var smartThumbnailsEnabled: Bool = true
     /// Optional extra badge (e.g. the Classics vintage year) rendered bottom-leading
@@ -15,6 +23,9 @@ struct VideoCardView: View {
     @State private var upgradedThumbnail: UIImage?
     @State private var upgradedFaceCenter: CGPoint = CGPoint(x: 0.5, y: 0.5)
     @State private var upgradeAnimating = false
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .caption2) private var metaIconSize: CGFloat = 9
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -71,7 +82,7 @@ struct VideoCardView: View {
                             .foregroundStyle(.white)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color(.systemRed))
+                            .background(Color.dumpiError)
                             .cornerRadius(4)
                     }
 
@@ -153,7 +164,7 @@ struct VideoCardView: View {
             }
             // Green brand shadow on focus; scale + parallax handled by .buttonStyle(.card)
             .shadow(color: .dumpiGreen.opacity(isFocused ? 0.3 : 0), radius: 15)
-            .animation(.spring(duration: 0.35), value: isFocused)
+            .animation(reduceMotion ? nil : .dumpiCard, value: isFocused)
 
             // Info below thumbnail
             VStack(alignment: .leading, spacing: 4) {
@@ -167,7 +178,7 @@ struct VideoCardView: View {
                 HStack(spacing: 6) {
                     HStack(spacing: 3) {
                         Image(systemName: item.kudosTotal >= 0 ? "hand.thumbsup.fill" : "hand.thumbsdown.fill")
-                            .font(.system(size: 9))
+                            .font(.system(size: metaIconSize))
                         Text(formattedKudos)
                             .font(.caption2)
                             .fontWeight(.bold)
@@ -178,7 +189,7 @@ struct VideoCardView: View {
                     if item.viewsTotal > 0 {
                         HStack(spacing: 3) {
                             Image(systemName: "eye.fill")
-                                .font(.system(size: 8))
+                                .font(.system(size: metaIconSize))
                             Text(item.viewsTotal.formattedCount)
                                 .font(.caption2)
                                 .monospacedDigit()
@@ -201,15 +212,15 @@ struct VideoCardView: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
-        .task(id: isFocused) {
-            if isFocused && item.isVideo && item.streamURL != nil && thumbnailPreviewEnabled {
+        .task(id: previewActive) {
+            if previewActive {
                 try? await Task.sleep(for: .seconds(1.5))
                 guard !Task.isCancelled else { return }
-                withAnimation(.easeIn(duration: 0.3)) {
+                withAnimation(reduceMotion ? nil : .dumpiStandard) {
                     showPreview = true
                 }
             } else if showPreview {
-                withAnimation(.easeOut(duration: 0.2)) {
+                withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
                     showPreview = false
                 }
             }
@@ -237,6 +248,17 @@ struct VideoCardView: View {
                 applyUpgrade(image: upgraded, faceCenter: center)
             }
         }
+    }
+
+    /// Whether the focus video preview should be running. Gated on the suspend
+    /// flag so presenting the player tears the preview's `AVPlayer` down instead
+    /// of letting it decode behind the active player.
+    private var previewActive: Bool {
+        isFocused
+            && item.isVideo
+            && item.streamURL != nil
+            && thumbnailPreviewEnabled
+            && !suspendPreview
     }
 
     /// Preview shows at most 10% of the video, but never less than 10 seconds.
@@ -278,7 +300,7 @@ struct VideoCardView: View {
     private func applyUpgrade(image: UIImage, faceCenter: CGPoint) {
         upgradedFaceCenter = faceCenter
         upgradedThumbnail = image
-        withAnimation(.easeInOut(duration: 0.7)) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.7)) {
             upgradeAnimating = true
         }
     }

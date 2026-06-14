@@ -3,6 +3,7 @@ import SwiftUI
 struct SharePlayIndicatorView: View {
     let participantCount: Int
     let isVisible: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         VStack {
@@ -34,6 +35,6 @@ struct SharePlayIndicatorView: View {
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
         .padding(.trailing, 50)
-        .animation(.easeInOut(duration: 0.5), value: isVisible)
+        .animation(reduceMotion ? nil : .dumpiOverlay, value: isVisible)
     }
 }

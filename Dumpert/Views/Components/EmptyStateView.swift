@@ -8,12 +8,15 @@ struct EmptyStateView: View {
 
     @State private var iconPulse = false
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 56
+
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: systemImage)
-                .font(.system(size: 56))
+                .font(.system(size: iconSize))
                 .foregroundStyle(.secondary)
-                .symbolEffect(.pulse.byLayer, options: .repeating.speed(0.5), isActive: iconPulse)
+                .symbolEffect(.pulse.byLayer, options: .repeating.speed(0.5), isActive: iconPulse && !reduceMotion)
                 .onAppear { iconPulse = true }
                 .onDisappear { iconPulse = false }
                 .accessibilityHidden(true)

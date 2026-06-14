@@ -184,6 +184,7 @@ private struct PlayerRepresentable: UIViewControllerRepresentable {
 /// above the video on tvOS.
 private struct UpNextOverlayContainer: View {
     let viewModel: VideoPlayerViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -224,7 +225,7 @@ private struct UpNextOverlayContainer: View {
                     onCancel: { viewModel.cancelUpNext() }
                 )
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.spring(duration: 0.5, bounce: 0.2), value: viewModel.showUpNext)
+                .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.2), value: viewModel.showUpNext)
             }
         }
     }

@@ -636,7 +636,7 @@ footer{border-top:1px solid var(--border-subtle);padding:30px 0;color:var(--grey
 <section id="motion">
   <div class="h-sec">Foundations</div>
   <h2>Motion</h2>
-  <p class="sec-intro">Springy and quick. Focus and selection use a gentle spring; appearance/dismissal use ease-out; the brand has a couple of signature moments. Hover a tile to play it. Every motion has a <strong>Reduce Motion</strong> alternative.</p>
+  <p class="sec-intro">Springy and quick. Focus and selection use a gentle spring; appearance/dismissal use ease-out; the brand has a couple of signature moments. Hover a tile to play it. All tokens live in <span class="tok">Animation+Dumpert.swift</span> and are applied as <span class="tok">reduceMotion ? nil : .dumpiFocus</span> — so <strong>every</strong> animation collapses to nothing under <strong>Reduce Motion</strong>.</p>
   <div class="motiongrid">
     <div class="mdemo"><div class="ball spring"></div><div class="mname">motion.focus</div><div class="mval">spring · 0.25 · bounce .2</div></div>
     <div class="mdemo"><div class="ball spring"></div><div class="mname">motion.card</div><div class="mval">spring · 0.35</div></div>
@@ -644,6 +644,9 @@ footer{border-top:1px solid var(--border-subtle);padding:30px 0;color:var(--grey
     <div class="mdemo"><div class="ball fast"></div><div class="mname">motion.press</div><div class="mval">easeOut · 0.12</div></div>
     <div class="mdemo"><div class="ball smooth"></div><div class="mname">motion.toast</div><div class="mval">spring · 0.4 · bounce .2</div></div>
     <div class="mdemo"><div class="ball spring"></div><div class="mname">motion.logo</div><div class="mval">spring · 1.2 · bounce .3</div></div>
+    <div class="mdemo"><div class="ball spring"></div><div class="mname">motion.selection</div><div class="mval">spring · 0.5</div></div>
+    <div class="mdemo"><div class="ball spring"></div><div class="mname">motion.carousel</div><div class="mval">spring · 0.7 · bounce .15</div></div>
+    <div class="mdemo"><div class="ball smooth"></div><div class="mname">motion.overlay</div><div class="mval">easeInOut · 0.5</div></div>
   </div>
   <div class="callout"><b>Signature moments.</b> The launch logo springs in, then beats a realistic two-step <em>lub-dub</em> heartbeat (scale 1.12 → 0.92 → 1.06 → 0.85) and exits with a 50× zoom-burst. The shimmer skeleton sweeps a green gradient on a 1.5s linear loop. Under Reduce Motion both collapse to a calm cross-fade.</div>
 </section>
@@ -927,11 +930,11 @@ footer{border-top:1px solid var(--border-subtle);padding:30px 0;color:var(--grey
   <table>
     <tr><th>Concept</th><th>Web (CSS)</th><th>iOS (Swift)</th><th>Value</th></tr>
     <tr><td><span class="tok">color.brand.primary</span></td><td><code>--green</code></td><td><code>Color.dumpiGreen</code></td><td><span class="swatch-dot" style="background:#65B32E"></span>#65B32E</td></tr>
-    <tr><td><span class="tok">color.intent.error</span></td><td><code>--red</code></td><td><code>Color(.systemRed)</code></td><td><span class="swatch-dot" style="background:#FF453A"></span>#FF453A</td></tr>
+    <tr><td><span class="tok">color.intent.error</span></td><td><code>--red</code></td><td><code>Color.dumpiError</code></td><td><span class="swatch-dot" style="background:#FF453A"></span>#FF453A</td></tr>
     <tr><td><span class="tok">surface.glass</span></td><td><code>--glass</code></td><td><code>.glassEffect()</code></td><td>white 8% / Liquid Glass</td></tr>
     <tr><td><span class="tok">radius.card</span></td><td><code>--r-12</code></td><td><code>cornerRadius: 12</code></td><td>12</td></tr>
     <tr><td><span class="tok">space.screen</span></td><td><code>--s-50</code></td><td><code>.padding(.horizontal, 50)</code></td><td>50</td></tr>
-    <tr><td><span class="tok">motion.focus</span></td><td><code>--ease-spring</code></td><td><code>.spring(0.25, bounce:0.2)</code></td><td>spring</td></tr>
+    <tr><td><span class="tok">motion.focus</span></td><td><code>--ease-spring</code></td><td><code>Animation.dumpiFocus</code></td><td>spring</td></tr>
   </table>
   <h4>Source of truth — the actual brand definition</h4>
 <pre><span class="c">// Dumpert/Extensions/Color+Dumpert.swift</span>
@@ -949,7 +952,7 @@ footer{border-top:1px solid var(--border-subtle);padding:30px 0;color:var(--grey
   <h2>Governance</h2>
   <p class="sec-intro">How the system stays coherent as the app grows.</p>
   <div class="grid cols-3">
-    <div class="panel"><h4 style="color:#fff;font-size:15px">Single source</h4><p class="muted" style="font-size:13.5px">Tokens live in Swift (<span class="tok">Color+Dumpert</span>, asset catalog). This page is generated <em>from</em> that reality — no parallel definitions to drift.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:15px">Single source</h4><p class="muted" style="font-size:13.5px">Tokens live in Swift (<span class="tok">Color+Dumpert</span>, <span class="tok">Animation+Dumpert</span>, asset catalog). This page is generated <em>from</em> that reality — no parallel definitions to drift.</p></div>
     <div class="panel"><h4 style="color:#fff;font-size:15px">Reuse over redo</h4><p class="muted" style="font-size:13.5px">Shared primitives (DurationFormatter, GlassPillModifier, badges) are extracted, not re-implemented. New UI should ask "which pattern applies?" first.</p></div>
     <div class="panel"><h4 style="color:#fff;font-size:15px">Quality gates</h4><p class="muted" style="font-size:13.5px">122+ tests, accessibility labels per view, and Reduce-Motion/fallback paths are part of "done" — not follow-ups.</p></div>
   </div>

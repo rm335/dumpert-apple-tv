@@ -8,7 +8,7 @@ extension FullScreenImageView {
                 Spacer()
                 VStack(spacing: 8) {
                     Button {
-                        withAnimation(.spring(duration: 0.3)) {
+                        withAnimation(reduceMotion ? nil : .spring(duration: 0.3)) {
                             currentScale = min(currentScale + zoomStep, maxScale)
                         }
                     } label: {
@@ -26,7 +26,7 @@ extension FullScreenImageView {
                     }
 
                     Button {
-                        withAnimation(.spring(duration: 0.3)) {
+                        withAnimation(reduceMotion ? nil : .spring(duration: 0.3)) {
                             let newScale = currentScale - zoomStep
                             if newScale <= minScale {
                                 resetZoom()
@@ -44,7 +44,7 @@ extension FullScreenImageView {
 
                     if currentScale > minScale {
                         Button {
-                            withAnimation(.spring(duration: 0.3)) {
+                            withAnimation(reduceMotion ? nil : .spring(duration: 0.3)) {
                                 resetZoom()
                             }
                         } label: {
@@ -66,7 +66,8 @@ extension FullScreenImageView {
     }
 }
 
-/// Applies Liquid Glass on tvOS 26+, no additional background on older versions.
+/// Applies Liquid Glass on tvOS 26+, falling back to an ultra-thin material on
+/// older versions so the controls stay legible over bright imagery.
 struct GlassControlsModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(tvOS 26, *) {
@@ -74,6 +75,7 @@ struct GlassControlsModifier: ViewModifier {
                 .glassEffect(in: RoundedRectangle(cornerRadius: 12))
         } else {
             content
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
         }
     }
 }
@@ -91,6 +93,7 @@ private struct ZoomIconButtonStyle: ButtonStyle {
         let configuration: Configuration
         @Environment(\.isFocused) private var isFocused
         @Environment(\.isEnabled) private var isEnabled
+        @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
         var body: some View {
             configuration.label
@@ -101,8 +104,8 @@ private struct ZoomIconButtonStyle: ButtonStyle {
                 .foregroundStyle(isEnabled ? .primary : .tertiary)
                 .scaleEffect(configuration.isPressed ? 0.9 : (isFocused ? 1.15 : 1.0))
                 .shadow(color: .white.opacity(isFocused ? 0.3 : 0), radius: 12)
-                .animation(.spring(duration: 0.25, bounce: 0.2), value: isFocused)
-                .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+                .animation(reduceMotion ? nil : .dumpiFocus, value: isFocused)
+                .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: configuration.isPressed)
         }
     }
 }

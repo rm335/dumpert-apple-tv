@@ -3,6 +3,8 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(VideoRepository.self) private var repository
     @Environment(ImmersiveBackgroundState.self) private var backgroundState
+    // `internal` (not `private`): the helper builders live in SettingsComponents.swift.
+    @Environment(\.accessibilityReduceMotion) var reduceMotion
     @State private var showClearCacheConfirmation = false
     @State private var showCacheClearedFeedback = false
     @State private var showClearHistoryConfirmation = false
@@ -340,7 +342,7 @@ struct SettingsView: View {
                 }
                 .confirmationDialog(Text("Standaardwaarden herstellen", comment: "Reset defaults confirmation title"), isPresented: $showResetConfirmation) {
                     Button(String(localized: "Herstel standaardwaarden", comment: "Reset defaults button"), role: .destructive) {
-                        withAnimation(.smooth) {
+                        withAnimation(reduceMotion ? nil : .smooth) {
                             settings.resetToDefaults()
                         }
                         showResetFeedback = true
@@ -373,7 +375,7 @@ struct SettingsView: View {
             if showCacheClearedFeedback {
                 Task {
                     try? await Task.sleep(for: .seconds(4))
-                    withAnimation(.smooth) { showCacheClearedFeedback = false }
+                    withAnimation(reduceMotion ? nil : .smooth) { showCacheClearedFeedback = false }
                     await loadCacheSize()
                 }
             }

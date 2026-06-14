@@ -4,6 +4,7 @@ import SwiftUI
 struct ToastModifier: ViewModifier {
     @Binding var message: String?
     let duration: TimeInterval
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
         content
@@ -32,13 +33,13 @@ struct ToastModifier: ViewModifier {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .animation(.spring(duration: 0.4, bounce: 0.2), value: message)
+            .animation(reduceMotion ? nil : .dumpiToast, value: message)
             .onChange(of: message) {
                 guard let msg = message else { return }
                 AccessibilityNotification.Announcement(msg).post()
                 Task { @MainActor in
                     try? await Task.sleep(for: .seconds(duration))
-                    withAnimation { self.message = nil }
+                    withAnimation(reduceMotion ? nil : .default) { self.message = nil }
                 }
             }
     }
