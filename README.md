@@ -126,6 +126,17 @@ The easiest way to install DumpertTV on your Apple TV:
 
 ---
 
+## Design System
+
+The app's visual language — brand, design tokens (color, typography, spacing, radius, motion), components and patterns — is documented in a single, self-contained page derived directly from the SwiftUI source, so design and code stay in sync.
+
+- **Live:** [rm335.github.io/dumpert-apple-tv/design-system.html](https://rm335.github.io/dumpert-apple-tv/design-system.html)
+- **Source:** [`docs/design-system.html`](docs/design-system.html)
+
+It covers the `dumpiGreen` brand palette, the dark-only tvOS surface system (Liquid Glass with pre-26 fallbacks), SF Symbols iconography, and focus/motion rules — plus live reproductions of every reusable component (video card, kudos/watched badges, filter chips, toasts, skeletons, settings rows, hero and tab bar) with their anatomy, states and accessibility requirements.
+
+---
+
 ## Requirements
 
 | Requirement | Version |
@@ -540,6 +551,7 @@ Contributions are welcome! Here's how:
 - Add tests for new functionality
 - Use actors for new services, `@Observable @MainActor` for new state holders
 - Follow existing patterns for file organization
+- For UI work, follow the [design system](docs/design-system.html) — reuse existing tokens and components rather than introducing new ones
 
 ---
 

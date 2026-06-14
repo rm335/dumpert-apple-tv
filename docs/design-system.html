@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dumpert Design System — DumpertTV (tvOS)</title>
+<meta name="description" content="The design system for the DumpertTV tvOS app — brand, tokens, components, patterns and platform guidance, extracted from the SwiftUI source.">
+<link rel="canonical" href="https://rm335.github.io/dumpert-apple-tv/design-system.html">
+<meta name="theme-color" content="#65B32E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%2365B32E'/%3E%3Cpolygon points='38,28 38,72 74,50' fill='white'/%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DumpertTV">
+<meta property="og:title" content="Dumpert Design System">
+<meta property="og:description" content="Brand, design tokens, components and patterns behind the DumpertTV Apple TV app — extracted from the SwiftUI source.">
+<meta property="og:url" content="https://rm335.github.io/dumpert-apple-tv/design-system.html">
+<meta property="og:image" content="https://rm335.github.io/dumpert-apple-tv/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+/* ============================================================
+   DESIGN TOKENS  —  extracted from the DumpertTV tvOS source.
+   These CSS custom properties ARE the "Web token output".
+   ============================================================ */
+:root{
+  /* Brand — Color.dumpiGreen family + logo wordmark green */
+  --green:        #65B32E;   /* dumpiGreen · AccentColor */
+  --green-light:  #73C740;   /* dumpiGreenLight */
+  --green-dark:   #4D8C1F;   /* dumpiGreenDark */
+  --green-logo:   #66CC22;   /* wordmark / social tile */
+
+  /* Backgrounds — pure black app canvas + doc shell gradient */
+  --bg-app:   #000000;
+  --bg:       #0d0f12;
+  --bg-2:     #14171b;
+  --bg-grad:  linear-gradient(160deg,#0E1013 0%,#191C20 100%);
+
+  /* Surfaces — white-opacity overlays used across the app */
+  --surface-1: rgba(255,255,255,.05);
+  --surface-2: rgba(255,255,255,.08);
+  --surface-3: rgba(255,255,255,.10);
+  --surface-hover: rgba(255,255,255,.15);
+  --glass:    rgba(255,255,255,.08);
+
+  /* Text */
+  --text:           #f3f5f7;
+  --text-secondary: rgba(255,255,255,.60);
+  --text-tertiary:  rgba(255,255,255,.35);
+
+  /* Neutral greys (from social preview / metadata) */
+  --grey-1: #AEB6BF;
+  --grey-2: #9AA1A9;
+  --grey-3: #7E868F;
+  --grey-4: #646B73;
+
+  /* Semantic */
+  --red:    #FF453A;   /* systemRed · error / NSFW / destructive */
+  --gray:   #8E8E93;   /* systemGray · neutral kudos */
+
+  /* Borders */
+  --border:        rgba(255,255,255,.10);
+  --border-subtle: rgba(255,255,255,.06);
+  --border-focus:  #ffffff;
+
+  /* Radius scale */
+  --r-2:2px; --r-3:3px; --r-4:4px; --r-6:6px; --r-8:8px;
+  --r-10:10px; --r-12:12px; --r-24:24px; --r-full:999px;
+
+  /* Spacing scale (pt in app == px here) */
+  --s-2:2px; --s-4:4px; --s-6:6px; --s-8:8px; --s-10:10px; --s-12:12px;
+  --s-14:14px; --s-16:16px; --s-20:20px; --s-24:24px; --s-28:28px;
+  --s-30:30px; --s-35:35px; --s-40:40px; --s-50:50px; --s-60:60px;
+
+  /* Motion */
+  --dur-fast:120ms; --dur-standard:300ms; --dur-slow:500ms;
+  --ease-smooth: cubic-bezier(.16,1,.3,1);   /* easeOut / .smooth */
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);/* spring(bounce) */
+
+  /* Focus glow */
+  --glow-green: 0 0 30px rgba(101,179,46,.30);
+  --glow-white: 0 0 28px rgba(255,255,255,.25);
+
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+/* ============================================================ RESET */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{
+  font-family:var(--font);
+  background:var(--bg-grad) fixed;
+  color:var(--text);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+a{color:inherit;text-decoration:none}
+::selection{background:var(--green);color:#000}
+
+/* ============================================================ LAYOUT */
+.shell{display:grid;grid-template-columns:264px 1fr;min-height:100vh}
+
+/* Sidebar */
+.sidebar{
+  position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+  border-right:1px solid var(--border-subtle);
+  padding:28px 20px 60px;
+  background:rgba(8,10,12,.6);
+  backdrop-filter:blur(20px);
+}
+.sidebar .brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.sidebar .brand svg{width:128px;height:auto;color:var(--green-logo)}
+.sidebar .brand-sub{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey-3);margin:2px 0 26px 2px}
+.nav-group{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-4);margin:22px 0 8px 10px}
+.nav a{
+  display:block;padding:7px 10px;border-radius:var(--r-8);
+  color:var(--text-secondary);font-size:14px;font-weight:500;
+  transition:background var(--dur-fast),color var(--dur-fast);
+}
+.nav a:hover{background:var(--surface-1);color:var(--text)}
+.nav a.active{background:var(--surface-2);color:#fff}
+.nav a.active::before{content:"";display:inline-block;width:3px;height:14px;background:var(--green);border-radius:2px;margin-right:8px;vertical-align:-2px;margin-left:-13px}
+
+/* Content */
+main{max-width:1080px;width:100%;padding:64px 56px 140px;margin:0 auto}
+section{margin-bottom:84px;scroll-margin-top:24px}
+
+/* Hero / cover */
+.cover{
+  border:1px solid var(--border);border-radius:var(--r-24);
+  background:radial-gradient(120% 140% at 0% 0%,rgba(101,179,46,.16),transparent 55%),var(--bg-2);
+  padding:56px 52px;margin-bottom:64px;position:relative;overflow:hidden;
+}
+.cover::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--green)}
+.cover .logo{width:280px;max-width:60%;color:#fff;display:block;margin-bottom:28px}
+.cover .logo .tv{fill:var(--green)}
+.cover h1{font-size:46px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.cover p.lede{font-size:19px;color:var(--text-secondary);margin-top:14px;max-width:62ch}
+.cover .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.tag{font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:var(--r-full);
+  background:var(--surface-2);border:1px solid var(--border);color:var(--grey-1)}
+.tag.green{background:rgba(101,179,46,.16);border-color:rgba(101,179,46,.4);color:var(--green-light)}
+
+/* Section headings — dogfoods SectionTitleView (green 1/3 underline) */
+.h-sec{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--green);margin-bottom:6px}
+h2{font-size:34px;font-weight:800;letter-spacing:-.02em;position:relative;display:inline-block;padding-bottom:9px}
+h2::after{content:"";position:absolute;left:0;bottom:0;width:34%;height:3px;border-radius:1.5px;background:var(--green)}
+.sec-intro{color:var(--text-secondary);font-size:16px;max-width:72ch;margin:18px 0 30px}
+h3{font-size:21px;font-weight:700;margin:38px 0 14px;letter-spacing:-.01em}
+h4{font-size:15px;font-weight:700;margin:24px 0 10px;color:var(--grey-1);letter-spacing:.01em}
+p{max-width:74ch}
+.muted{color:var(--text-secondary)}
+strong{color:#fff;font-weight:650}
+
+/* Cards / panels */
+.panel{background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:var(--r-12);padding:24px}
+.grid{display:grid;gap:16px}
+.cols-2{grid-template-columns:repeat(2,1fr)}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+.cols-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1100px){.cols-4{grid-template-columns:repeat(2,1fr)}.cols-3{grid-template-columns:repeat(2,1fr)}}
+
+/* Demo stage — a black "tvOS canvas" to show components on */
+.stage{
+  background:var(--bg-app);
+  background-image:radial-gradient(140% 120% at 70% -10%,rgba(101,179,46,.10),transparent 50%);
+  border:1px solid var(--border);border-radius:var(--r-12);
+  padding:40px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;
+  position:relative;overflow:hidden;
+}
+.stage.col{flex-direction:column;align-items:flex-start}
+.stage-label{position:absolute;top:10px;right:14px;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-4)}
+
+/* Color swatches */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.swatch{border:1px solid var(--border-subtle);border-radius:var(--r-10);overflow:hidden;background:var(--surface-1)}
+.swatch .chip{height:78px;display:flex;align-items:flex-end;padding:8px;cursor:pointer}
+.swatch .body{padding:11px 13px}
+.swatch .name{font-family:var(--mono);font-size:12px;color:#fff;font-weight:600}
+.swatch .desc{font-size:11.5px;color:var(--text-secondary);margin-top:3px}
+.swatch .hex{font-family:var(--mono);font-size:11px;color:var(--grey-3);margin-top:6px;display:flex;justify-content:space-between}
+.copyhint{opacity:0;transition:opacity .15s;color:var(--green-light)}
+.swatch:hover .copyhint{opacity:1}
+
+/* Token table */
+table{width:100%;border-collapse:collapse;font-size:14px;margin-top:8px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border-subtle);vertical-align:top}
+th{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--grey-3);font-weight:700}
+td code,.tok{font-family:var(--mono);font-size:12.5px;color:var(--green-light);background:rgba(101,179,46,.08);padding:2px 7px;border-radius:5px;white-space:nowrap}
+td .swatch-dot{display:inline-block;width:13px;height:13px;border-radius:4px;vertical-align:-2px;margin-right:8px;border:1px solid var(--border)}
+
+/* Type scale */
+.type-row{display:flex;align-items:baseline;gap:20px;padding:14px 0;border-bottom:1px solid var(--border-subtle)}
+.type-row .sample{flex:1;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.type-row .spec{font-family:var(--mono);font-size:12px;color:var(--grey-3);text-align:right;min-width:230px}
+.type-row .spec b{color:var(--green-light);font-weight:600}
+
+/* Spacing & radius visual */
+.ramp{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.ramp .unit{text-align:center}
+.ramp .box{background:var(--green);border-radius:3px;margin:0 auto 7px}
+.ramp .lbl{font-family:var(--mono);font-size:11px;color:var(--grey-3)}
+.radii{display:flex;gap:20px;flex-wrap:wrap}
+.radii .r{width:84px;height:84px;background:linear-gradient(145deg,var(--green),var(--green-dark));border:1px solid rgba(255,255,255,.15)}
+.radii .lbl{font-family:var(--mono);font-size:11px;color:var(--grey-3);text-align:center;margin-top:8px}
+
+/* ============================================================
+   LIVE COMPONENT REPRODUCTIONS (faithful to the SwiftUI source)
+   ============================================================ */
+.icon{width:1em;height:1em;fill:currentColor;flex:none;vertical-align:-.12em}
+
+/* Capsule button — FocusableCapsuleButtonStyle */
+.btn{
+  font:inherit;font-size:16px;font-weight:600;color:#fff;cursor:pointer;
+  background:var(--surface-hover);border:3px solid transparent;border-radius:var(--r-full);
+  padding:13px 28px;display:inline-flex;align-items:center;gap:9px;
+  transition:transform var(--dur-standard) var(--ease-spring),
+             border-color var(--dur-fast),box-shadow var(--dur-standard);
+}
+.btn:hover,.btn:focus-visible{transform:scale(1.08);border-color:var(--border-focus);box-shadow:var(--glow-white);outline:none}
+.btn:active{transform:scale(.96)}
+.btn.green{background:var(--green)}
+.btn.green:hover,.btn.green:focus-visible{box-shadow:var(--glow-green)}
+.btn.bordered{background:transparent;border:1px solid var(--surface-hover)}
+
+/* Filter chip — SearchFilterBar Menu label */
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:500;color:#fff;
+  background:var(--surface-hover);border-radius:var(--r-full);padding:11px 20px;cursor:pointer;border:none;font-family:inherit;
+  transition:transform var(--dur-standard) var(--ease-spring)}
+.chip:hover{transform:scale(1.06)}
+.chip--active{background:var(--green);font-weight:600}
+
+/* Video card — VideoCardView */
+.vcard{width:280px;cursor:pointer}
+.vcard .thumb{
+  position:relative;aspect-ratio:16/9;border-radius:0;overflow:hidden;
+  background:linear-gradient(135deg,#2a3340,#161b22 70%);
+  transition:transform var(--dur-slow) var(--ease-spring),box-shadow var(--dur-slow),filter var(--dur-standard);
+}
+.vcard .thumb::after{content:"";position:absolute;inset:0;background:
+  radial-gradient(60% 80% at 50% 40%,rgba(120,160,90,.25),transparent),
+  repeating-linear-gradient(115deg,rgba(255,255,255,.03) 0 18px,transparent 18px 38px)}
+.vcard:hover .thumb{transform:scale(1.06);box-shadow:var(--glow-green);filter:brightness(1.05) saturate(1.15)}
+.badge{position:absolute;font-size:11px;font-weight:700;color:#fff;padding:3px 7px;border-radius:var(--r-4);z-index:2}
+.badge.nsfw{top:8px;left:8px;background:var(--red)}
+.badge.watched{top:8px;right:8px;background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--border);
+  letter-spacing:.06em;display:flex;align-items:center;gap:5px}
+.pill-dur{position:absolute;bottom:8px;right:8px;font-size:11px;font-weight:700;color:#fff;font-variant-numeric:tabular-nums;
+  padding:3px 7px;border-radius:var(--r-4);background:rgba(0,0,0,.55);backdrop-filter:blur(14px)}
+.vcard .progress{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.15);z-index:2}
+.vcard .progress i{display:block;height:100%;background:var(--green)}
+.vcard .info{padding:8px 10px 10px}
+.vcard .vtitle{font-size:13px;font-weight:500;color:#fff;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
+.vcard .vmeta{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:11px;color:var(--text-secondary);font-variant-numeric:tabular-nums}
+.vcard .vmeta .kudos{display:flex;align-items:center;gap:3px;color:var(--green);font-weight:700}
+.vcard .vmeta .views{display:flex;align-items:center;gap:3px}
+.vcard .vmeta .dot{color:var(--text-tertiary)}
+
+/* Kudos badge — KudosBadgeView */
+.kbadge{display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:700;color:#fff;
+  padding:4px 9px;border-radius:var(--r-6);font-variant-numeric:tabular-nums}
+.kbadge.pos{background:var(--green)}
+.kbadge.neu{background:rgba(142,142,147,.7)}
+.kbadge.neg{background:var(--red)}
+
+/* Toast — ToastView */
+.toast{display:inline-flex;align-items:center;gap:10px;font-size:16px;font-weight:500;color:#fff;
+  padding:14px 24px;border-radius:var(--r-full);background:var(--glass);backdrop-filter:blur(24px);
+  border:1px solid var(--border)}
+.toast .icon{color:var(--green);font-size:20px}
+.toast.show{animation:toastIn .4s var(--ease-spring)}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* Skeleton — SkeletonView shimmer */
+.skel{width:280px}
+.skel .sthumb{aspect-ratio:16/9;background:rgba(255,255,255,.05)}
+.skel .sline{height:12px;border-radius:3px;background:rgba(255,255,255,.08);margin:0 10px}
+.skel .sline.s2{width:62%;margin-top:8px;background:rgba(255,255,255,.05)}
+.skel .srow{height:9px;width:60%;border-radius:2px;background:rgba(255,255,255,.06);margin:10px}
+.shimmer{position:relative;overflow:hidden}
+.shimmer::after{content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(115deg,transparent 30%,rgba(101,179,46,.10) 50%,transparent 70%);
+  animation:shimmer 1.5s linear infinite}
+@keyframes shimmer{to{transform:translateX(100%)}}
+
+/* Empty state — EmptyStateView */
+.empty{text-align:center;max-width:460px;margin:0 auto;padding:24px}
+.empty .eicon{font-size:56px;color:var(--text-secondary);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+.empty .etitle{font-size:21px;font-weight:600;margin-top:18px}
+.empty .edesc{color:var(--text-secondary);margin-top:8px}
+
+/* Section title — SectionTitleView */
+.sectitle{display:inline-flex;flex-direction:column;gap:5px}
+.sectitle b{font-size:24px;font-weight:700}
+.sectitle i{height:3px;width:33%;border-radius:1.5px;background:var(--green)}
+
+/* Settings rows — SettingsComponents */
+.slist{width:100%;max-width:560px;display:flex;flex-direction:column}
+.srow{display:flex;align-items:center;gap:24px;padding:16px 8px;border-bottom:1px solid var(--border-subtle)}
+.srow .sic{width:28px;text-align:center;color:var(--text-secondary);font-size:20px;flex:none}
+.srow .sic.on{color:var(--green)}
+.srow .sic.danger{color:var(--red)}
+.srow .stext{flex:1}
+.srow .stext b{display:block;font-weight:500;color:#fff;font-size:15px}
+.srow .stext b.danger{color:var(--red)}
+.srow .stext span{display:block;font-size:12.5px;color:var(--text-secondary);margin-top:2px}
+.srow .sval{color:var(--text-secondary);font-size:14px;display:flex;align-items:center;gap:6px}
+.shead{font-size:13px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.04em;padding:18px 8px 6px}
+.toggle{width:46px;height:28px;border-radius:var(--r-full);background:var(--surface-hover);position:relative;flex:none;transition:background .2s}
+.toggle.on{background:var(--green)}
+.toggle i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s var(--ease-spring)}
+.toggle.on i{left:21px}
+
+/* Offline banner — ContentView.offlineBanner */
+.offline{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:500;color:#fff;
+  padding:12px 24px;border-radius:var(--r-full);background:rgba(255,69,58,.55);backdrop-filter:blur(20px)}
+
+/* Tab bar — ContentView TabView */
+.tabbar{display:inline-flex;gap:4px;padding:6px;border-radius:var(--r-full);background:var(--glass);backdrop-filter:blur(24px);border:1px solid var(--border)}
+.tabbar .t{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:var(--text-secondary);padding:10px 18px;border-radius:var(--r-full);white-space:nowrap}
+.tabbar .t.active{background:#f2f3f4;color:#111}
+
+/* Hero banner */
+.hero{width:100%;max-width:680px;border-radius:var(--r-12);overflow:hidden;position:relative;aspect-ratio:21/9;
+  background:linear-gradient(135deg,#39424d,#10141a 75%)}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 8%,transparent 55%)}
+.hero .hbody{position:absolute;left:28px;bottom:22px;right:28px;z-index:2}
+.hero h3{font-size:30px;font-weight:800;margin:0;color:#fff;letter-spacing:-.01em}
+.hero .hsub{color:rgba(255,255,255,.7);font-size:15px;margin-top:2px}
+.hero .hmeta{display:flex;align-items:center;gap:12px;margin-top:12px;font-size:13px;color:rgba(255,255,255,.85);font-variant-numeric:tabular-nums}
+.hero .dots{position:absolute;top:14px;right:16px;display:flex;gap:6px;z-index:2}
+.hero .dots b{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.4)}
+.hero .dots b.on{background:#fff}
+
+/* Motion demo */
+.motiongrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.mdemo{background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:var(--r-10);padding:18px;text-align:center}
+.mdemo .ball{width:34px;height:34px;border-radius:50%;background:var(--green);margin:6px auto 14px}
+.mdemo:hover .ball.spring{animation:mSpring .6s var(--ease-spring)}
+.mdemo:hover .ball.smooth{animation:mSmooth .5s var(--ease-smooth)}
+.mdemo:hover .ball.fast{animation:mFast .12s ease-out}
+@keyframes mSpring{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
+@keyframes mSmooth{0%{transform:translateX(-30px);opacity:.3}100%{transform:translateX(0);opacity:1}}
+@keyframes mFast{0%{transform:scale(1)}50%{transform:scale(.85)}100%{transform:scale(1)}}
+.mdemo .mname{font-family:var(--mono);font-size:11.5px;color:var(--green-light)}
+.mdemo .mval{font-size:11px;color:var(--grey-3);margin-top:3px}
+
+/* Icon grid */
+.icongrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+.icell{background:var(--surface-1);border:1px solid var(--border-subtle);border-radius:var(--r-10);padding:18px 10px;text-align:center}
+.icell .icon{font-size:26px;color:#fff}
+.icell .iname{font-family:var(--mono);font-size:10.5px;color:var(--grey-3);margin-top:10px;word-break:break-all}
+
+/* Code */
+pre{background:#0a0c0e;border:1px solid var(--border-subtle);border-radius:var(--r-10);padding:18px 20px;overflow-x:auto;margin:14px 0;font-family:var(--mono);font-size:13px;line-height:1.6}
+code{font-family:var(--mono)}
+pre .c{color:var(--grey-4)}        /* comment */
+pre .k{color:#ff7b72}             /* keyword */
+pre .s{color:var(--green-light)}  /* string */
+pre .t{color:#79c0ff}             /* type */
+pre .p{color:#d2a8ff}             /* property */
+
+/* Do / Don't */
+.dd{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px}
+@media(max-width:840px){.dd{grid-template-columns:1fr}}
+.dd .card2{border:1px solid var(--border-subtle);border-radius:var(--r-10);padding:16px 18px;background:var(--surface-1)}
+.dd .do{border-left:3px solid var(--green)}
+.dd .dont{border-left:3px solid var(--red)}
+.dd h5{font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.dd .do h5{color:var(--green-light)}
+.dd .dont h5{color:var(--red)}
+.dd p{font-size:14px;color:var(--text-secondary);margin:0}
+
+/* misc */
+.callout{border-left:3px solid var(--green);background:rgba(101,179,46,.06);padding:14px 18px;border-radius:0 var(--r-8) var(--r-8) 0;margin:18px 0;font-size:14.5px;color:var(--text-secondary)}
+.callout b{color:var(--green-light)}
+.pill-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pill-list span{font-size:13px;padding:6px 13px;border-radius:var(--r-full);background:var(--surface-2);border:1px solid var(--border-subtle);color:var(--grey-1)}
+.spec-grid{display:grid;grid-template-columns:120px 1fr;gap:4px 18px;font-size:13.5px;margin-top:6px}
+.spec-grid dt{color:var(--grey-3);font-weight:600}
+.spec-grid dd{color:var(--text-secondary)}
+.comp{margin-bottom:54px}
+.comp-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.comp-head .src{font-family:var(--mono);font-size:11.5px;color:var(--grey-4)}
+footer{border-top:1px solid var(--border-subtle);padding:30px 0;color:var(--grey-4);font-size:13px;text-align:center}
+
+/* mobile */
+.menu-btn{display:none}
+@media(max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:0;width:264px;z-index:50;transform:translateX(-100%);transition:transform .25s}
+  .sidebar.open{transform:translateX(0)}
+  main{padding:64px 22px 120px}
+  .menu-btn{display:flex;position:fixed;top:14px;left:14px;z-index:60;background:var(--green);color:#000;border:none;
+    width:44px;height:44px;border-radius:12px;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
+  .cover{padding:36px 26px}.cover h1{font-size:34px}
+  h2{font-size:27px}
+}
+</style>
+</head>
+<body>
+
+<!-- SVG icon sprite (web stand-ins for the SF Symbols used in-app) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 2c2 4-1 5-1 8a3 3 0 0 0 6 0c0-1 0-2-.5-3 3 2 4.5 5 4.5 8a9 9 0 1 1-18 0c0-4 3-7 4-9 1.5-3 4-3 5-4z"/></symbol>
+  <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 2l1.8 4.7L18.5 8 13.8 9.8 12 14.5l-1.8-4.7L5.5 8l4.7-1.3zM18 14l.9 2.4 2.4.9-2.4.9L18 21l-.9-2.4-2.4-.9 2.4-.9zM5 13l.8 2.2 2.2.8-2.2.8L5 19l-.8-2.2L2 16l2.2-.8z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M12 5c6 0 10 7 10 7s-4 7-10 7S2 12 2 12 6 5 12 5zm0 3.5A3.5 3.5 0 1 0 15.5 12 3.5 3.5 0 0 0 12 8.5z"/></symbol>
+  <symbol id="i-eyeslash" viewBox="0 0 24 24"><path d="M2 4.3L3.3 3 21 20.7 19.7 22l-3-3A11 11 0 0 1 12 19C6 19 2 12 2 12a18 18 0 0 1 4.4-5.1zM12 5c6 0 10 7 10 7a18 18 0 0 1-2.4 3.2L9.8 5.4A11 11 0 0 1 12 5z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="M10 2a8 8 0 1 1-5 14.3l-3 3L0.7 18l3-3A8 8 0 0 1 10 2zm0 3a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm9 4l2 1.6-1.5 2.6-2.4-.6a7.6 7.6 0 0 1-1.5.9L17 19h-3l-.6-2a7.6 7.6 0 0 1-1.5-.9l-2.4.6L7 14l2-1.6V11L7 9.4l1.5-2.6 2.4.6c.5-.4 1-.7 1.5-.9L14 4h3l.6 2c.5.2 1 .5 1.5.9l2.4-.6L23 9l-2 1.6z"/></symbol>
+  <symbol id="i-thumbup" viewBox="0 0 24 24"><path d="M2 10h4v11H2zM8 21V10l5-7c1.3 0 2 1 2 2l-1 5h5c1.1 0 2 .9 2 2l-2 7c-.2.8-1 1-1.8 1z"/></symbol>
+  <symbol id="i-thumbdown" viewBox="0 0 24 24"><path d="M22 14h-4V3h4zM16 3v11l-5 7c-1.3 0-2-1-2-2l1-5H5c-1.1 0-2-.9-2-2l2-7c.2-.8 1-1 1.8-1z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-1.3 14.3L6 11.6 7.4 10l3.3 3.3L16.6 7 18 8.4z"/></symbol>
+  <symbol id="i-wifislash" viewBox="0 0 24 24"><path d="M2 3.3L3.3 2l18.4 18.4L20.4 22l-3.2-3.2A4 4 0 0 0 12 16l-2.2-2.2c2.7-1 5.8-.5 8 1.4l1-1.3L2 3.3zM3.7 8.2 6 10.5A11 11 0 0 0 4 12l2 2a8 8 0 0 1 1.6-1.2L9 14.2A4 4 0 0 0 7.8 15l2.4 2.4L12 19.2 13.7 21H10.3z"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 24 24"><path d="M3 4h18v16H3zm3 3a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-1 10h14l-4.5-6-3.5 4.5L9.5 13z"/></symbol>
+  <symbol id="i-videoslash" viewBox="0 0 24 24"><path d="M2 4.3 3.3 3 21 20.7 19.7 22l-2.7-2.7H4a1 1 0 0 1-1-1V6.6zM17 6v3.5L22 6v12l-3-2.1L8.8 5H16a1 1 0 0 1 1 1z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 10V6h-2v7l5 3 1-1.7z"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 2 1 21h22zm0 6 .9 8h-1.8zm-1 9h2v2h-2z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z"/></symbol>
+</svg>
+
+<button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+
+<div class="shell">
+<!-- ============================ SIDEBAR ============================ -->
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <svg viewBox="0 0 500 72.4" aria-label="Dumpert"><g fill="currentColor"><polygon points="190.4,41.6 190.2,41.6 180.1,0 149.1,0 149.1,70.8 169.7,70.8 169.7,25.4 169.9,25.4 182.2,70.8 198.5,70.8 210.8,25.4 210.9,25.4 210.9,70.8 231.6,70.8 231.6,0 200.5,0"/><path d="M119.3,38.5c0,7.2,0,16.3-10.3,16.3c-10.6,0-10.6-9-10.6-16.3V0H76.6v43.4c0,19.6,10.7,29,32.3,29c21.6,0,32.2-9.4,32.2-29V0h-21.8V38.5z"/><path d="M39.6,0H0v70.8h35.3C60,70.8,71.5,57,71.5,35.3C71.5,17.4,63.2,0,39.6,0z M20.6,54.9V16.5L54,35.7L20.6,54.9z"/><polygon points="327.2,43.8 360.6,43.8 360.6,27 327.2,27 327.2,18.1 363.9,18.1 363.9,0 305.4,0 305.4,70.8 365,70.8 365,52.6 327.2,52.6"/><polygon points="438.6,0 438.6,18.1 458.4,18.1 458.4,70.8 480.2,70.8 480.2,18.1 500,18.1 500,0"/><path d="M426.1,38c7.2-2.7,10.6-10.4,10.6-17.7C436.7,6.8,426,0,413.6,0h-41.5v70.8h21.8V46.1h11.6c8.6,0,9.2,7,9.8,13.8c0.3,3.7,0.7,7.3,1.8,10.9h21.8c-2-3.3-2.1-11.7-2.4-15.2C435.7,46.8,432,40.2,426.1,38z M405.3,30.9h-11.4V16.8h10.2c8.3,0,10.8,2.6,10.8,7C414.9,30.2,409.4,30.9,405.3,30.9z"/><path d="M276.4,0H240v70.8h21.8V49.3h12.9c16.2,0,27.7-8,27.7-25.2C302.4,14.1,295.7,0,276.4,0z M270.2,32.5h-8.4V18.1h9.7c5.4,0,10.3,0.4,10.3,6.8C281.8,32.1,275.8,32.5,270.2,32.5z"/></g></svg>
+  </div>
+  <div class="brand-sub">Design System</div>
+  <nav class="nav" id="nav">
+    <div class="nav-group">Foundations</div>
+    <a href="#overview">Overview</a>
+    <a href="#principles">Principles</a>
+    <a href="#brand">Brand</a>
+    <a href="#color">Color</a>
+    <a href="#type">Typography</a>
+    <a href="#spacing">Spacing</a>
+    <a href="#radius">Radius &amp; Shape</a>
+    <a href="#elevation">Elevation &amp; Focus</a>
+    <a href="#motion">Motion</a>
+    <a href="#icons">Iconography</a>
+    <div class="nav-group">Library</div>
+    <a href="#components">Components</a>
+    <a href="#patterns">Patterns</a>
+    <div class="nav-group">Standards</div>
+    <a href="#platform">Platform (tvOS)</a>
+    <a href="#a11y">Accessibility</a>
+    <a href="#content">Content &amp; Voice</a>
+    <a href="#tokens">Token Output</a>
+    <a href="#governance">Governance</a>
+  </nav>
+</aside>
+
+<!-- ============================ MAIN ============================ -->
+<main>
+
+<!-- COVER -->
+<div class="cover" id="overview">
+  <svg class="logo" viewBox="0 0 500 72.4" aria-label="DumpertTV"><g fill="currentColor"><polygon points="190.4,41.6 190.2,41.6 180.1,0 149.1,0 149.1,70.8 169.7,70.8 169.7,25.4 169.9,25.4 182.2,70.8 198.5,70.8 210.8,25.4 210.9,25.4 210.9,70.8 231.6,70.8 231.6,0 200.5,0"/><path d="M119.3,38.5c0,7.2,0,16.3-10.3,16.3c-10.6,0-10.6-9-10.6-16.3V0H76.6v43.4c0,19.6,10.7,29,32.3,29c21.6,0,32.2-9.4,32.2-29V0h-21.8V38.5z"/><path d="M39.6,0H0v70.8h35.3C60,70.8,71.5,57,71.5,35.3C71.5,17.4,63.2,0,39.6,0z M20.6,54.9V16.5L54,35.7L20.6,54.9z"/><polygon points="327.2,43.8 360.6,43.8 360.6,27 327.2,27 327.2,18.1 363.9,18.1 363.9,0 305.4,0 305.4,70.8 365,70.8 365,52.6 327.2,52.6"/><polygon points="438.6,0 438.6,18.1 458.4,18.1 458.4,70.8 480.2,70.8 480.2,18.1 500,18.1 500,0"/><path d="M426.1,38c7.2-2.7,10.6-10.4,10.6-17.7C436.7,6.8,426,0,413.6,0h-41.5v70.8h21.8V46.1h11.6c8.6,0,9.2,7,9.8,13.8c0.3,3.7,0.7,7.3,1.8,10.9h21.8c-2-3.3-2.1-11.7-2.4-15.2C435.7,46.8,432,40.2,426.1,38z M405.3,30.9h-11.4V16.8h10.2c8.3,0,10.8,2.6,10.8,7C414.9,30.2,409.4,30.9,405.3,30.9z"/><path d="M276.4,0H240v70.8h21.8V49.3h12.9c16.2,0,27.7-8,27.7-25.2C302.4,14.1,295.7,0,276.4,0z M270.2,32.5h-8.4V18.1h9.7c5.4,0,10.3,0.4,10.3,6.8C281.8,32.1,275.8,32.5,270.2,32.5z"/></g></svg>
+  <h1>Dumpert Design System</h1>
+  <p class="lede">The shared visual language behind <strong>DumpertTV</strong> — an unofficial Dumpert client for Apple&nbsp;TV. Brand, design tokens, components, patterns and platform rules, extracted directly from the SwiftUI source so design and code never drift.</p>
+  <div class="meta">
+    <span class="tag green">tvOS 18+</span>
+    <span class="tag">Swift 6</span>
+    <span class="tag">SwiftUI · @Observable</span>
+    <span class="tag">Liquid Glass</span>
+    <span class="tag">CloudKit</span>
+    <span class="tag">Dark-only</span>
+  </div>
+</div>
+
+<!-- PRINCIPLES -->
+<section id="principles">
+  <div class="h-sec">Foundations</div>
+  <h2>Principles</h2>
+  <p class="sec-intro">Five ideas the interface keeps returning to. Every token and component below exists to serve one of them.</p>
+  <div class="grid cols-2">
+    <div class="panel"><h4 style="color:#fff;font-size:17px">Lean back, never wait</h4><p class="muted">It's a 10-foot couch experience. Loading is a <em>threshold</em>, not a wait — the loading screen is gone the instant data is ready. Skeletons mirror real layout so nothing jumps.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:17px">The content is the hero</h4><p class="muted">Pure-black canvas, immersive blurred backdrops, chrome that recedes. Thumbnails are face-centered and upgrade themselves to the best frame. Green appears only to mean something.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:17px">Focus must be obvious</h4><p class="muted">From across the room you must always know where the Siri Remote is. Focus = scale-up, white border, and a green glow. Ambiguity is a bug.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:17px">Native first, brand always</h4><p class="muted">Follow Apple TV conventions and SF Symbols, adopt Liquid Glass where it lands — but the green, the voice and the wordmark are unmistakably Dumpert.</p></div>
+    <div class="panel" style="grid-column:1/-1"><h4 style="color:#fff;font-size:17px">Accessible by construction</h4><p class="muted">VoiceOver labels, Reduce Motion alternatives and Dynamic Type aren't a pass at the end — they live in the component. A card without its accessibility label is unfinished.</p></div>
+  </div>
+</section>
+
+<!-- BRAND -->
+<section id="brand">
+  <div class="h-sec">Foundations</div>
+  <h2>Brand</h2>
+  <p class="sec-intro">The wordmark, the mark, and the voice. The identity is loud, green, and a little irreverent — true to Dumpert.</p>
+
+  <h3>Logo</h3>
+  <div class="stage col">
+    <span class="stage-label">dumpert-logo · vector</span>
+    <svg viewBox="0 0 500 72.4" style="width:300px;color:var(--green-logo)"><g fill="currentColor"><polygon points="190.4,41.6 190.2,41.6 180.1,0 149.1,0 149.1,70.8 169.7,70.8 169.7,25.4 169.9,25.4 182.2,70.8 198.5,70.8 210.8,25.4 210.9,25.4 210.9,70.8 231.6,70.8 231.6,0 200.5,0"/><path d="M119.3,38.5c0,7.2,0,16.3-10.3,16.3c-10.6,0-10.6-9-10.6-16.3V0H76.6v43.4c0,19.6,10.7,29,32.3,29c21.6,0,32.2-9.4,32.2-29V0h-21.8V38.5z"/><path d="M39.6,0H0v70.8h35.3C60,70.8,71.5,57,71.5,35.3C71.5,17.4,63.2,0,39.6,0z M20.6,54.9V16.5L54,35.7L20.6,54.9z"/><polygon points="327.2,43.8 360.6,43.8 360.6,27 327.2,27 327.2,18.1 363.9,18.1 363.9,0 305.4,0 305.4,70.8 365,70.8 365,52.6 327.2,52.6"/><polygon points="438.6,0 438.6,18.1 458.4,18.1 458.4,70.8 480.2,70.8 480.2,18.1 500,18.1 500,0"/><path d="M426.1,38c7.2-2.7,10.6-10.4,10.6-17.7C436.7,6.8,426,0,413.6,0h-41.5v70.8h21.8V46.1h11.6c8.6,0,9.2,7,9.8,13.8c0.3,3.7,0.7,7.3,1.8,10.9h21.8c-2-3.3-2.1-11.7-2.4-15.2C435.7,46.8,432,40.2,426.1,38z M405.3,30.9h-11.4V16.8h10.2c8.3,0,10.8,2.6,10.8,7C414.9,30.2,409.4,30.9,405.3,30.9z"/><path d="M276.4,0H240v70.8h21.8V49.3h12.9c16.2,0,27.7-8,27.7-25.2C302.4,14.1,295.7,0,276.4,0z M270.2,32.5h-8.4V18.1h9.7c5.4,0,10.3,0.4,10.3,6.8C281.8,32.1,275.8,32.5,270.2,32.5z"/></g></svg>
+  </div>
+  <div class="dd">
+    <div class="card2 do"><h5>Do</h5><p>Keep clear space around the wordmark, render it on black or dark imagery, and preserve the vector so it stays crisp at any TV resolution. The app-icon mark is the green wordmark on a pure-black background.</p></div>
+    <div class="card2 dont"><h5>Don't</h5><p>Recolor, stretch, add effects, or place the mark on busy light backgrounds. "DumpertTV" is the product name (white "Dumpert", green "TV"); the app is <em>unofficial</em> and never implies endorsement by DPG Media.</p></div>
+  </div>
+
+  <h3>Voice &amp; tone</h3>
+  <p class="muted">Dutch-first, casual, dry-funny. Labels are short verbs and nouns; nothing corporate. The product's own section names set the register:</p>
+  <div class="pill-list">
+    <span>Toppers</span><span>Nieuw</span><span>Reeten</span><span>VrijMiCo</span><span>Classics</span><span>Gekeken</span><span>Zoeken</span><span>Instellingen</span><span>Opnieuw proberen</span>
+  </div>
+</section>
+
+<!-- COLOR -->
+<section id="color">
+  <div class="h-sec">Foundations</div>
+  <h2>Color</h2>
+  <p class="sec-intro">One brand green doing real work, an almost-black canvas, translucent surfaces, and a tight set of semantic colors. Click any swatch to copy its hex.</p>
+
+  <h3>Brand</h3>
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#65B32E" data-hex="#65B32E"></div><div class="body"><div class="name">dumpiGreen</div><div class="desc">Primary accent · AccentColor</div><div class="hex"><span>#65B32E</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:#73C740" data-hex="#73C740"></div><div class="body"><div class="name">dumpiGreenLight</div><div class="desc">Highlights, shimmer</div><div class="hex"><span>#73C740</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:#4D8C1F" data-hex="#4D8C1F"></div><div class="body"><div class="name">dumpiGreenDark</div><div class="desc">Backgrounds, subtle accents</div><div class="hex"><span>#4D8C1F</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:#66CC22" data-hex="#66CC22"></div><div class="body"><div class="name">logo green</div><div class="desc">Wordmark / app icon</div><div class="hex"><span>#66CC22</span><span class="copyhint">copy</span></div></div></div>
+  </div>
+
+  <h3>Canvas &amp; surfaces</h3>
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#000" data-hex="#000000"></div><div class="body"><div class="name">bg.app</div><div class="desc">Pure black — the content canvas</div><div class="hex"><span>#000000</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:#191C20" data-hex="#191C20"></div><div class="body"><div class="name">bg.elevated</div><div class="desc">Cards / sheets over black</div><div class="hex"><span>#191C20</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(255,255,255,.08)" data-hex="rgba(255,255,255,0.08)"></div><div class="body"><div class="name">surface.glass</div><div class="desc">Liquid Glass / translucent fill</div><div class="hex"><span>white 8%</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(255,255,255,.15)" data-hex="rgba(255,255,255,0.15)"></div><div class="body"><div class="name">surface.control</div><div class="desc">Inactive chips, toggles, tracks</div><div class="hex"><span>white 15%</span><span class="copyhint">copy</span></div></div></div>
+  </div>
+
+  <h3>Semantic &amp; text</h3>
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:#65B32E" data-hex="#65B32E"></div><div class="body"><div class="name">intent.positive</div><div class="desc">Success, "on", kudos ≥ 100</div><div class="hex"><span>#65B32E</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:#FF453A" data-hex="#FF453A"></div><div class="body"><div class="name">intent.error</div><div class="desc">systemRed · NSFW, destructive, offline</div><div class="hex"><span>#FF453A</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:#8E8E93" data-hex="#8E8E93"></div><div class="body"><div class="name">intent.neutral</div><div class="desc">systemGray · kudos 0–99</div><div class="hex"><span>#8E8E93</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:#fff" data-hex="#FFFFFF"></div><div class="body"><div class="name">text.primary</div><div class="desc">Titles, focused content</div><div class="hex"><span>#FFFFFF</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(255,255,255,.6)" data-hex="rgba(255,255,255,0.6)"></div><div class="body"><div class="name">text.secondary</div><div class="desc">Metadata, descriptions</div><div class="hex"><span>white 60%</span><span class="copyhint">copy</span></div></div></div>
+    <div class="swatch"><div class="chip" style="background:rgba(255,255,255,.35)" data-hex="rgba(255,255,255,0.35)"></div><div class="body"><div class="name">text.tertiary</div><div class="desc">Separators, de-emphasis</div><div class="hex"><span>white 35%</span><span class="copyhint">copy</span></div></div></div>
+  </div>
+
+  <div class="callout"><b>Kudos color ramp.</b> A video's score color encodes sentiment without a number: <span class="kbadge pos" style="font-size:11px;padding:2px 7px">≥ 100 green</span> &nbsp; <span class="kbadge neu" style="font-size:11px;padding:2px 7px">0–99 grey</span> &nbsp; <span class="kbadge neg" style="font-size:11px;padding:2px 7px">negative red</span>. The same logic drives the thumbs-up/down glyph.</div>
+</section>
+
+<!-- TYPOGRAPHY -->
+<section id="type">
+  <div class="h-sec">Foundations</div>
+  <h2>Typography</h2>
+  <p class="sec-intro">One typeface: the system font (SF&nbsp;Pro), driven entirely by SwiftUI semantic text styles so it scales with tvOS Dynamic Type. Numbers use <span class="tok">monospacedDigit()</span> so counts and timers don't jitter. No custom fonts, ever.</p>
+
+  <div class="panel">
+    <div class="type-row"><div class="sample" style="font-size:40px;font-weight:800;letter-spacing:-.02em">Die ene NSB-collega</div><div class="spec"><b>.largeTitle</b> · bold<br>Hero / player titles</div></div>
+    <div class="type-row"><div class="sample" style="font-size:30px;font-weight:700">Trending Nu</div><div class="spec"><b>.title2 / .title3</b> · bold<br>Section &amp; row headers</div></div>
+    <div class="type-row"><div class="sample" style="font-size:21px;font-weight:600">Geen video's gevonden</div><div class="spec"><b>.title3</b> · semibold<br>Empty-state titles</div></div>
+    <div class="type-row"><div class="sample" style="font-size:17px;font-weight:600">Minimale kudos</div><div class="spec"><b>.headline / .body</b><br>Settings rows, primary copy</div></div>
+    <div class="type-row"><div class="sample" style="font-size:16px;font-weight:500">Toegevoegd aan kijklijst</div><div class="spec"><b>.callout</b> · medium<br>Toasts, chips, banners</div></div>
+    <div class="type-row"><div class="sample" style="font-size:13.5px;font-weight:500">Verberg video's onder dit aantal</div><div class="spec"><b>.subheadline / .footnote</b><br>Row descriptions</div></div>
+    <div class="type-row"><div class="sample" style="font-size:13px;font-weight:500">Je mag ook niks meer</div><div class="spec"><b>.caption</b> · medium<br>Card titles</div></div>
+    <div class="type-row" style="border:none"><div class="sample" style="font-size:11px;font-weight:700;font-variant-numeric:tabular-nums">1.2k · 30.2k · 0:35</div><div class="spec"><b>.caption2</b> · bold · mono<br>Counts, durations, badges</div></div>
+  </div>
+  <div class="callout"><b>Why no point sizes here?</b> Styles are referenced by name (<span class="tok">.font(.caption)</span>), and tvOS renders them at its own Dynamic Type sizes — larger than iOS for couch viewing. Hard-coding pixels would break that contract. The samples above are scaled for the web only.</div>
+</section>
+
+<!-- SPACING -->
+<section id="spacing">
+  <div class="h-sec">Foundations</div>
+  <h2>Spacing</h2>
+  <p class="sec-intro">A soft 2-based ramp. Two values carry most of the layout: <strong>50</strong> for the horizontal screen safe-margin and <strong>30</strong> for vertical rhythm and grid gutters.</p>
+  <div class="panel">
+    <div class="ramp" id="ramp"></div>
+  </div>
+  <table>
+    <tr><th>Token</th><th>Value</th><th>Primary use</th></tr>
+    <tr><td><span class="tok">space.6</span></td><td>6</td><td>Badge insets, card corner padding</td></tr>
+    <tr><td><span class="tok">space.8</span> – <span class="tok">space.12</span></td><td>8–12</td><td>Inner stack spacing, card info padding</td></tr>
+    <tr><td><span class="tok">space.16</span> – <span class="tok">space.20</span></td><td>16–20</td><td>Chip gaps, row padding</td></tr>
+    <tr><td><span class="tok">space.30</span></td><td>30</td><td>Grid column gutter, vertical section padding</td></tr>
+    <tr><td><span class="tok">space.35</span></td><td>35</td><td>Grid row gutter</td></tr>
+    <tr><td><span class="tok">space.50</span></td><td>50</td><td><strong>Screen horizontal safe-margin</strong> (every scroll view)</td></tr>
+  </table>
+</section>
+
+<!-- RADIUS -->
+<section id="radius">
+  <div class="h-sec">Foundations</div>
+  <h2>Radius &amp; Shape</h2>
+  <p class="sec-intro">Cards and surfaces are gently rounded; anything interactive and pill-shaped is a full Capsule. Tiny radii (2–4) keep glass pills and progress accents crisp.</p>
+  <div class="panel">
+    <div class="radii">
+      <div><div class="r" style="border-radius:4px"></div><div class="lbl">4 · pills</div></div>
+      <div><div class="r" style="border-radius:6px"></div><div class="lbl">6 · badges</div></div>
+      <div><div class="r" style="border-radius:8px"></div><div class="lbl">8 · tiles</div></div>
+      <div><div class="r" style="border-radius:12px"></div><div class="lbl">12 · cards</div></div>
+      <div><div class="r" style="border-radius:24px"></div><div class="lbl">24 · sheets</div></div>
+      <div><div class="r" style="border-radius:999px"></div><div class="lbl">full · capsule</div></div>
+    </div>
+  </div>
+  <p class="muted" style="margin-top:14px;font-size:14px">Glass duration pills and NSFW labels use <span class="tok">radius 4</span>. Kudos and "Bekeken" badges use <span class="tok">radius 6</span>. Video cards and skeletons clip to <span class="tok">radius 12</span>. Buttons, chips, toasts, tab bar and banners are all <span class="tok">Capsule</span>.</p>
+</section>
+
+<!-- ELEVATION & FOCUS -->
+<section id="elevation">
+  <div class="h-sec">Foundations</div>
+  <h2>Elevation &amp; Focus</h2>
+  <p class="sec-intro">There is no ambient drop-shadow language — depth comes from translucency and, above all, from <strong>focus</strong>. On Apple TV the focused element lifts toward the viewer. Hover a swatch below to see it.</p>
+  <div class="stage">
+    <span class="stage-label">hover to focus</span>
+    <button class="btn green">Bekijk video</button>
+    <div class="vcard" style="width:240px"><div class="thumb"><span class="pill-dur">2:14</span></div></div>
+    <button class="chip chip--active"><svg class="icon"><use href="#i-flame"/></svg>Toppers</button>
+  </div>
+  <div class="grid cols-2" style="margin-top:18px">
+    <div class="panel"><h4 style="color:#fff;font-size:15px">Focus treatment</h4>
+      <dl class="spec-grid">
+        <dt>Scale</dt><dd>1.08 (cards via <span class="tok">.card</span>), pressed 0.96</dd>
+        <dt>Border</dt><dd>3&nbsp;pt solid white (capsule controls)</dd>
+        <dt>Glow — card</dt><dd>dumpiGreen @ 30% · radius 15</dd>
+        <dt>Glow — control</dt><dd>white @ 25% · radius 14</dd>
+        <dt>Thumbnail</dt><dd>brightness +0.05 · saturation 1.15</dd>
+        <dt>Animation</dt><dd>spring(0.25–0.35, bounce 0.2)</dd>
+      </dl>
+    </div>
+    <div class="panel"><h4 style="color:#fff;font-size:15px">Translucency tiers</h4>
+      <p class="muted" style="font-size:14px">Instead of shadows, overlapping content separates with material:</p>
+      <div class="pill-list" style="margin-top:14px">
+        <span>Liquid Glass (tvOS 26+)</span><span>ultraThinMaterial</span><span>black 75% pill</span><span>white 5–15% fills</span>
+      </div>
+      <p class="muted" style="font-size:13px;margin-top:14px">Glass effects always ship with a pre-26 fallback — see <a href="#platform" style="color:var(--green-light)">Platform</a>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MOTION -->
+<section id="motion">
+  <div class="h-sec">Foundations</div>
+  <h2>Motion</h2>
+  <p class="sec-intro">Springy and quick. Focus and selection use a gentle spring; appearance/dismissal use ease-out; the brand has a couple of signature moments. Hover a tile to play it. Every motion has a <strong>Reduce Motion</strong> alternative.</p>
+  <div class="motiongrid">
+    <div class="mdemo"><div class="ball spring"></div><div class="mname">motion.focus</div><div class="mval">spring · 0.25 · bounce .2</div></div>
+    <div class="mdemo"><div class="ball spring"></div><div class="mname">motion.card</div><div class="mval">spring · 0.35</div></div>
+    <div class="mdemo"><div class="ball smooth"></div><div class="mname">motion.standard</div><div class="mval">easeOut · 0.3</div></div>
+    <div class="mdemo"><div class="ball fast"></div><div class="mname">motion.press</div><div class="mval">easeOut · 0.12</div></div>
+    <div class="mdemo"><div class="ball smooth"></div><div class="mname">motion.toast</div><div class="mval">spring · 0.4 · bounce .2</div></div>
+    <div class="mdemo"><div class="ball spring"></div><div class="mname">motion.logo</div><div class="mval">spring · 1.2 · bounce .3</div></div>
+  </div>
+  <div class="callout"><b>Signature moments.</b> The launch logo springs in, then beats a realistic two-step <em>lub-dub</em> heartbeat (scale 1.12 → 0.92 → 1.06 → 0.85) and exits with a 50× zoom-burst. The shimmer skeleton sweeps a green gradient on a 1.5s linear loop. Under Reduce Motion both collapse to a calm cross-fade.</div>
+</section>
+
+<!-- ICONOGRAPHY -->
+<section id="icons">
+  <div class="h-sec">Foundations</div>
+  <h2>Iconography</h2>
+  <p class="sec-intro">Icons are <strong>SF&nbsp;Symbols</strong> exclusively — no custom icon set. Filled variants are preferred, and a symbol's <span class="tok">.fill</span> form signals its active/on state (e.g. <span class="tok">eye</span> → <span class="tok">eye.fill</span>). The web stand-ins below approximate the real symbols.</p>
+  <div class="icongrid">
+    <div class="icell"><svg class="icon"><use href="#i-flame"/></svg><div class="iname">flame.fill</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-sparkles"/></svg><div class="iname">sparkles</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-grid"/></svg><div class="iname">square.grid.2x2.fill</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-eye"/></svg><div class="iname">eye.fill</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-search"/></svg><div class="iname">magnifyingglass</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-gear"/></svg><div class="iname">gearshape.fill</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-thumbup"/></svg><div class="iname">hand.thumbsup.fill</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-check"/></svg><div class="iname">checkmark.circle.fill</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-wifislash"/></svg><div class="iname">wifi.slash</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-videoslash"/></svg><div class="iname">video.slash</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-clock"/></svg><div class="iname">timer</div></div>
+    <div class="icell"><svg class="icon"><use href="#i-photo"/></svg><div class="iname">photo.fill</div></div>
+  </div>
+</section>
+
+<!-- ============================ COMPONENTS ============================ -->
+<section id="components">
+  <div class="h-sec">Library</div>
+  <h2>Components</h2>
+  <p class="sec-intro">Live reproductions of the app's reusable SwiftUI views, each with its anatomy, states and source file. Hover anything interactive to see its focus state.</p>
+
+  <!-- Tab bar -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Tab bar</h3><span class="src">ContentView.swift</span></div>
+    <p class="muted" style="font-size:14px">Top-anchored Liquid Glass capsule. Six destinations, each an SF Symbol + label. The focused tab fills with a near-white capsule.</p>
+    <div class="stage"><div class="tabbar">
+      <div class="t active"><svg class="icon"><use href="#i-flame"/></svg>Toppers</div>
+      <div class="t"><svg class="icon"><use href="#i-sparkles"/></svg>Nieuw</div>
+      <div class="t"><svg class="icon"><use href="#i-grid"/></svg>Categorieën</div>
+      <div class="t"><svg class="icon"><use href="#i-eye"/></svg>Gekeken</div>
+      <div class="t"><svg class="icon"><use href="#i-search"/></svg>Zoeken</div>
+      <div class="t"><svg class="icon"><use href="#i-gear"/></svg></div>
+    </div></div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Button</h3><span class="src">FocusableCapsuleButtonStyle.swift</span></div>
+    <p class="muted" style="font-size:14px">Capsule with an explicit, couch-legible focus state — because <span class="tok">.plain</span> gives no focus cue on tvOS.</p>
+    <div class="stage">
+      <button class="btn green">Bekijk video</button>
+      <button class="btn">Secondary</button>
+      <button class="btn bordered">Reset</button>
+    </div>
+    <div class="grid cols-2" style="margin-top:16px">
+      <div class="panel" style="padding:18px"><h4 style="margin-top:0">States</h4><dl class="spec-grid"><dt>Default</dt><dd>Capsule, no border</dd><dt>Focused</dt><dd>scale 1.08 · 3pt white border · white glow</dd><dt>Pressed</dt><dd>scale 0.96 · easeOut 0.12</dd></dl></div>
+      <div class="panel" style="padding:18px"><h4 style="margin-top:0">Accessibility</h4><p class="muted" style="font-size:13.5px;margin:0">Verb-first label. Focus is conveyed visually <em>and</em> via the system focus ring; never rely on color alone.</p></div>
+    </div>
+<pre><span class="k">struct</span> <span class="t">FocusableCapsuleButtonStyle</span>: <span class="t">ButtonStyle</span> {
+  <span class="c">// scale + white border + glow keep focus unambiguous</span>
+  .<span class="p">scaleEffect</span>(isPressed ? <span class="s">0.96</span> : (isFocused ? <span class="s">1.08</span> : <span class="s">1.0</span>))
+  .<span class="p">animation</span>(.<span class="p">spring</span>(duration: <span class="s">0.25</span>, bounce: <span class="s">0.2</span>), value: isFocused)
+}</pre>
+  </div>
+
+  <!-- Filter chips -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Filter chip</h3><span class="src">SearchFilterBar.swift</span></div>
+    <p class="muted" style="font-size:14px">A <span class="tok">Menu</span> that shows every option on open (the active one checked). Active filters fill green and go semibold so refinement is never hidden behind guesswork.</p>
+    <div class="stage">
+      <button class="chip chip--active"><svg class="icon"><use href="#i-photo"/></svg>Video</button>
+      <button class="chip"><svg class="icon"><use href="#i-clock"/></svg>Alle periodes</button>
+      <button class="chip chip--active"><svg class="icon"><use href="#i-thumbup"/></svg>100+ kudos</button>
+      <button class="chip"><svg class="icon"><use href="#i-clock"/></svg>Elke duur</button>
+    </div>
+  </div>
+
+  <!-- Video card -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Video card</h3><span class="src">VideoCardView.swift</span></div>
+    <p class="muted" style="font-size:14px">The atom of the whole app. A 16:9 face-centered thumbnail (which silently upgrades to a better frame and plays a muted preview after 1.5s of focus), corner badges, a green progress bar, then title + kudos/views/date.</p>
+    <div class="stage" style="gap:34px">
+      <div class="vcard">
+        <div class="thumb">
+          <span class="badge nsfw">NSFW</span>
+          <span class="badge watched"><svg class="icon" style="font-size:11px"><use href="#i-eye"/></svg>BEKEKEN</span>
+          <span class="pill-dur">0:35</span>
+          <div class="progress"><i style="width:38%"></i></div>
+        </div>
+        <div class="info">
+          <div class="vtitle">Die ene NSB-collega — je mag ook niks meer tegenwoordig</div>
+          <div class="vmeta">
+            <span class="kudos"><svg class="icon" style="font-size:9px"><use href="#i-thumbup"/></svg>1.2k</span>
+            <span class="views"><svg class="icon" style="font-size:9px"><use href="#i-eye"/></svg>30.2k</span>
+            <span class="dot">·</span><span>14 uur geleden</span>
+          </div>
+        </div>
+      </div>
+      <div class="vcard">
+        <div class="thumb"><span class="pill-dur">2:48</span></div>
+        <div class="info">
+          <div class="vtitle">Politieachtervolging eindigt op de A2</div>
+          <div class="vmeta">
+            <span class="kudos" style="color:var(--gray)"><svg class="icon" style="font-size:9px"><use href="#i-thumbup"/></svg>84</span>
+            <span class="views"><svg class="icon" style="font-size:9px"><use href="#i-eye"/></svg>5.1k</span>
+            <span class="dot">·</span><span>2 dagen geleden</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="grid cols-2" style="margin-top:16px">
+      <div class="panel" style="padding:18px"><h4 style="margin-top:0">Anatomy</h4><dl class="spec-grid"><dt>Thumbnail</dt><dd>16:9, face-centered, smart-upgraded</dd><dt>Top-left</dt><dd>NSFW (red), mute indicator</dd><dt>Top-right</dt><dd>Bekeken glass badge</dd><dt>Bottom</dt><dd>duration pill · progress bar · year</dd><dt>Info</dt><dd>title (2 lines) · kudos · views · date</dd></dl></div>
+      <div class="panel" style="padding:18px"><h4 style="margin-top:0">States &amp; a11y</h4><p class="muted" style="font-size:13.5px;margin:0 0 8px">Focused → lift, green glow, brighter thumbnail, preview after 1.5s. Watched → title goes secondary. Combined into one VoiceOver element: <em>"NSFW, {title}, Video, 0:35, 1.2k kudos, 38% bekeken"</em>.</p></div>
+    </div>
+  </div>
+
+  <!-- Badges -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Kudos &amp; Watched badges</h3><span class="src">KudosBadgeView · WatchedBadgeView</span></div>
+    <p class="muted" style="font-size:14px">Kudos pill (radius 6) colors itself by score. "Bekeken" is an uppercase glass badge.</p>
+    <div class="stage">
+      <span class="kbadge pos"><svg class="icon" style="font-size:12px"><use href="#i-thumbup"/></svg>1.2k</span>
+      <span class="kbadge neu"><svg class="icon" style="font-size:12px"><use href="#i-thumbup"/></svg>84</span>
+      <span class="kbadge neg"><svg class="icon" style="font-size:12px"><use href="#i-thumbdown"/></svg>-19</span>
+      <span class="badge watched" style="position:static"><svg class="icon" style="font-size:11px"><use href="#i-eye"/></svg>BEKEKEN</span>
+    </div>
+  </div>
+
+  <!-- Section title -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Section title</h3><span class="src">SectionTitleView.swift</span></div>
+    <p class="muted" style="font-size:14px">Bold label over a green underline that's exactly one-third of the text width — the system's most recognizable signature (used for every section heading on this page too).</p>
+    <div class="stage"><div class="sectitle"><b>Trending Nu</b><i></i></div></div>
+  </div>
+
+  <!-- Toast & banner -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Toast &amp; Offline banner</h3><span class="src">ToastView · ContentView</span></div>
+    <p class="muted" style="font-size:14px">Transient confirmation rises from the bottom on a glass capsule and auto-dismisses after 3s (also posted to VoiceOver). The offline banner is a red glass capsule that floats without reflowing the tab bar.</p>
+    <div class="stage col" style="gap:18px">
+      <button class="btn green" id="toastBtn" style="font-size:14px;padding:10px 20px">Replay toast ▸</button>
+      <div class="toast" id="toastEl"><svg class="icon"><use href="#i-check"/></svg>Toegevoegd aan kijklijst</div>
+      <div class="offline"><svg class="icon"><use href="#i-wifislash"/></svg>Geen internetverbinding</div>
+    </div>
+  </div>
+
+  <!-- Skeleton -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Skeleton</h3><span class="src">SkeletonView.swift</span></div>
+    <p class="muted" style="font-size:14px">Loading placeholders mirror the <em>exact</em> card layout (16:9 + 2 title lines + meta row) with a green shimmer sweep, so content swaps in without a reflow.</p>
+    <div class="stage">
+      <div class="skel">
+        <div class="sthumb shimmer"></div>
+        <div style="padding-top:10px"><div class="sline shimmer"></div><div class="sline s2"></div><div class="srow"></div></div>
+      </div>
+      <div class="skel">
+        <div class="sthumb shimmer"></div>
+        <div style="padding-top:10px"><div class="sline shimmer"></div><div class="sline s2" style="width:48%"></div><div class="srow" style="width:70%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Empty state</h3><span class="src">EmptyStateView.swift</span></div>
+    <p class="muted" style="font-size:14px">Pulsing 56pt SF Symbol, a title that says what happened, a description that says what to do, and an optional retry. Covers empty, first-use and error.</p>
+    <div class="stage"><div class="empty">
+      <svg class="icon eicon"><use href="#i-videoslash"/></svg>
+      <div class="etitle">Geen video's gevonden</div>
+      <div class="edesc">Er zijn nog geen video's in deze categorie. Probeer het later opnieuw.</div>
+      <button class="btn green" style="margin-top:18px;font-size:14px;padding:10px 22px">Opnieuw proberen</button>
+    </div></div>
+  </div>
+
+  <!-- Settings rows -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Settings list</h3><span class="src">SettingsComponents.swift</span></div>
+    <p class="muted" style="font-size:14px">A uniform row grammar: leading 28pt icon, title + description, trailing value or control. Toggle icons turn green and swap to their <span class="tok">.fill</span> form when on. Destructive rows are red and always confirm.</p>
+    <div class="stage"><div class="slist">
+      <div class="shead">Content</div>
+      <div class="srow"><div class="sic"><svg class="icon"><use href="#i-thumbup"/></svg></div><div class="stext"><b>Minimale kudos</b><span>Verberg video's onder dit aantal</span></div><div class="sval">Alles tonen ›</div></div>
+      <div class="srow"><div class="sic"><svg class="icon"><use href="#i-warn"/></svg></div><div class="stext"><b>NSFW-content tonen</b><span>Toon content die als niet-veilig is gemarkeerd</span></div><div class="toggle"><i></i></div></div>
+      <div class="srow"><div class="sic on"><svg class="icon"><use href="#i-eyeslash"/></svg></div><div class="stext"><b>Bekeken verbergen</b><span>Verberg video's die je al hebt gezien</span></div><div class="toggle on"><i></i></div></div>
+      <div class="shead">Beheer</div>
+      <div class="srow"><div class="sic danger"><svg class="icon"><use href="#i-clock"/></svg></div><div class="stext"><b class="danger">Wis cache</b><span>Verwijdert opgeslagen thumbnails en data</span></div></div>
+    </div></div>
+  </div>
+
+  <!-- Hero -->
+  <div class="comp">
+    <div class="comp-head"><h3 style="margin:0">Hero banner</h3><span class="src">ToppersSectionView.swift</span></div>
+    <p class="muted" style="font-size:14px">The Toppers showcase: a large auto-rotating card with a bottom gradient, large title, subtitle, the standard kudos/views/duration/date meta row, and carousel dots.</p>
+    <div class="stage"><div class="hero">
+      <div class="dots"><b class="on"></b><b></b><b></b><b></b></div>
+      <div class="hbody">
+        <h3>Die ene NSB-collega</h3>
+        <div class="hsub">Je mag ook niks meer</div>
+        <div class="hmeta">
+          <span class="kbadge pos" style="font-size:12px"><svg class="icon" style="font-size:11px"><use href="#i-thumbup"/></svg>1.2k</span>
+          <span style="display:flex;align-items:center;gap:4px"><svg class="icon" style="font-size:12px"><use href="#i-eye"/></svg>30.2k</span>
+          <span>0:35</span><span style="color:rgba(255,255,255,.6)">14 uur geleden</span>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- PATTERNS -->
+<section id="patterns">
+  <div class="h-sec">Library</div>
+  <h2>Patterns</h2>
+  <p class="sec-intro">How components combine into the flows that define the experience. On a TV, patterns matter more than isolated parts — the platform's expectations are strong.</p>
+  <div class="grid cols-2">
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Loading</h4><p class="muted" style="font-size:14px">Launch shows the animated logo screen (a threshold, not a timer — gone the instant data is ready, with a 0.6s floor). In-content loads use shimmer skeletons that match the final layout. A "skip" hint only appears if a load is genuinely slow (3s+).</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Empty &amp; error</h4><p class="muted" style="font-size:14px">One component (EmptyStateView) serves no-content, first-run and error, always with a recovery action. Errors name cause + fix, never "Something went wrong".</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Offline</h4><p class="muted" style="font-size:14px">A network monitor surfaces a floating red banner; cached content stays browsable. ETag caching and exponential-backoff retry keep things resilient.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Search</h4><p class="muted" style="font-size:14px">Recent searches, a horizontal filter bar (type · period · kudos · duration), live results, and an empty-result state. Filters use the Menu chip so every option is visible.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Playback</h4><p class="muted" style="font-size:14px">Autoplay + preload-next, playback speed, a resume overlay for partially-watched videos, an Up-Next overlay, a top-comment overlay, and Now Playing on the remote/Control Center.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Settings &amp; sync</h4><p class="muted" style="font-size:14px">Grouped list with toggles, navigation pickers and a tile-size preview. Watch progress, settings, curation and search history sync via CloudKit across Apple TVs.</p></div>
+  </div>
+</section>
+
+<!-- PLATFORM -->
+<section id="platform">
+  <div class="h-sec">Standards</div>
+  <h2>Platform — tvOS</h2>
+  <p class="sec-intro">This is a focus-driven, lean-back platform: no touch, no hover, no keyboard — a Siri Remote moving focus across a 10-foot screen. The system embraces that rather than porting a phone UI.</p>
+  <div class="grid cols-2">
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Focus engine</h4><p class="muted" style="font-size:14px">Every interactive element must show focus (scale, border, glow). Cards use the system <span class="tok">.card</span> button style for parallax + lift; custom controls use FocusableCapsuleButtonStyle. Swipe gestures on the remote skip previous/next.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Liquid Glass + fallbacks</h4><p class="muted" style="font-size:14px">On tvOS 26+ pills/badges/toasts use <span class="tok">.glassEffect</span>; every use ships a graceful fallback (<span class="tok">ultraThinMaterial</span> or a black-75% pill) so older tvOS still looks right.</p>
+<pre><span class="k">if</span> #available(tvOS <span class="s">26</span>, *) {
+  content.<span class="p">glassEffect</span>(<span class="k">in</span>: <span class="t">RoundedRectangle</span>(cornerRadius: <span class="s">4</span>))
+} <span class="k">else</span> {
+  content.<span class="p">background</span>(.black.<span class="p">opacity</span>(<span class="s">0.75</span>)).<span class="p">cornerRadius</span>(<span class="s">4</span>)
+}</pre></div>
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Safe areas &amp; layout</h4><p class="muted" style="font-size:14px">Content honors the 50pt horizontal / 30pt vertical screen margins. Top Shelf integration surfaces fresh content above the app icon. Immersive blurred backdrops sit behind the TabView.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:16px">Architecture</h4><p class="muted" style="font-size:14px">SwiftUI + <span class="tok">@Observable</span> with Environment injection; an actor-based API client; a single <span class="tok">VideoRepository</span> source of truth. 120+ tests guard behavior.</p></div>
+  </div>
+</section>
+
+<!-- ACCESSIBILITY -->
+<section id="a11y">
+  <div class="h-sec">Standards</div>
+  <h2>Accessibility</h2>
+  <p class="sec-intro">Not a separate page — a requirement baked into every component. The rules below are guaranteed system-wide.</p>
+  <table>
+    <tr><th>Area</th><th>Guarantee</th></tr>
+    <tr><td><strong>VoiceOver</strong></td><td>Every control has a label; cards combine children into one element with a rich description (type, duration, kudos, watched %). Filters expose active/inactive state.</td></tr>
+    <tr><td><strong>Reduce Motion</strong></td><td>Honored via <span class="tok">@Environment(\.accessibilityReduceMotion)</span>: the logo zoom-burst, heartbeat and card upgrade collapse to calm cross-fades.</td></tr>
+    <tr><td><strong>Dynamic Type</strong></td><td>All text uses semantic styles, so it scales with the system text-size setting. No fixed font sizes in layout.</td></tr>
+    <tr><td><strong>Announcements</strong></td><td>Toasts post an <span class="tok">AccessibilityNotification.Announcement</span> so confirmations are spoken, not just shown.</td></tr>
+    <tr><td><strong>Don't rely on color</strong></td><td>Kudos sentiment pairs color with a thumbs-up/down glyph; focus pairs the green glow with scale + border.</td></tr>
+    <tr><td><strong>Localization</strong></td><td>Dutch + English via String Catalogs, with comments for translators and plural-aware count strings.</td></tr>
+  </table>
+</section>
+
+<!-- CONTENT -->
+<section id="content">
+  <div class="h-sec">Standards</div>
+  <h2>Content &amp; Voice</h2>
+  <p class="sec-intro">The words are part of the design. Dutch-first, short, human, never corporate.</p>
+  <div class="dd">
+    <div class="card2 do"><h5>Do</h5><p>Name the cause and the fix.<br><span style="color:#fff">"Er zijn nog geen video's. Probeer het later opnieuw."</span><br>Use verb-first actions: <span style="color:#fff">"Opnieuw proberen", "Bekijk video"</span>. Keep the section names playful (Toppers, Reeten, VrijMiCo).</p></div>
+    <div class="card2 dont"><h5>Don't</h5><p>Ship vague failures.<br><span style="color:var(--text-tertiary)">"Er is iets misgegaan."</span><br>Avoid jargon, long sentences, or title-case English buttons. Don't imply any affiliation with Dumpert / DPG Media.</p></div>
+  </div>
+  <table style="margin-top:24px">
+    <tr><th>Surface</th><th>Rule</th><th>Example</th></tr>
+    <tr><td>Buttons</td><td>Verb-first, concise</td><td>Opnieuw proberen</td></tr>
+    <tr><td>Empty states</td><td>What happened + what next</td><td>Geen video's gevonden</td></tr>
+    <tr><td>Errors</td><td>Cause · effect · recovery</td><td>Geen internetverbinding</td></tr>
+    <tr><td>Toasts</td><td>Confirm in ≤ 4 words</td><td>Toegevoegd aan kijklijst</td></tr>
+    <tr><td>Dates</td><td>Relative, locale-aware</td><td>14 uur geleden</td></tr>
+  </table>
+</section>
+
+<!-- TOKEN OUTPUT -->
+<section id="tokens">
+  <div class="h-sec">Standards</div>
+  <h2>Token Output</h2>
+  <p class="sec-intro">One concept, three renderings. The product meaning stays identical; each platform expresses it natively. The CSS variables at the top of this file <em>are</em> the web output.</p>
+  <table>
+    <tr><th>Concept</th><th>Web (CSS)</th><th>iOS (Swift)</th><th>Value</th></tr>
+    <tr><td><span class="tok">color.brand.primary</span></td><td><code>--green</code></td><td><code>Color.dumpiGreen</code></td><td><span class="swatch-dot" style="background:#65B32E"></span>#65B32E</td></tr>
+    <tr><td><span class="tok">color.intent.error</span></td><td><code>--red</code></td><td><code>Color(.systemRed)</code></td><td><span class="swatch-dot" style="background:#FF453A"></span>#FF453A</td></tr>
+    <tr><td><span class="tok">surface.glass</span></td><td><code>--glass</code></td><td><code>.glassEffect()</code></td><td>white 8% / Liquid Glass</td></tr>
+    <tr><td><span class="tok">radius.card</span></td><td><code>--r-12</code></td><td><code>cornerRadius: 12</code></td><td>12</td></tr>
+    <tr><td><span class="tok">space.screen</span></td><td><code>--s-50</code></td><td><code>.padding(.horizontal, 50)</code></td><td>50</td></tr>
+    <tr><td><span class="tok">motion.focus</span></td><td><code>--ease-spring</code></td><td><code>.spring(0.25, bounce:0.2)</code></td><td>spring</td></tr>
+  </table>
+  <h4>Source of truth — the actual brand definition</h4>
+<pre><span class="c">// Dumpert/Extensions/Color+Dumpert.swift</span>
+<span class="k">extension</span> <span class="t">Color</span> {
+  <span class="c">/// Dumpert brand green (#65B32E)</span>
+  <span class="k">static let</span> <span class="p">dumpiGreen</span>      = <span class="t">Color</span>(red: <span class="s">0.396</span>, green: <span class="s">0.702</span>, blue: <span class="s">0.180</span>)
+  <span class="k">static let</span> <span class="p">dumpiGreenLight</span> = <span class="t">Color</span>(red: <span class="s">0.45</span>,  green: <span class="s">0.78</span>,  blue: <span class="s">0.25</span>)
+  <span class="k">static let</span> <span class="p">dumpiGreenDark</span>  = <span class="t">Color</span>(red: <span class="s">0.30</span>,  green: <span class="s">0.55</span>,  blue: <span class="s">0.12</span>)
+}</pre>
+</section>
+
+<!-- GOVERNANCE -->
+<section id="governance">
+  <div class="h-sec">Standards</div>
+  <h2>Governance</h2>
+  <p class="sec-intro">How the system stays coherent as the app grows.</p>
+  <div class="grid cols-3">
+    <div class="panel"><h4 style="color:#fff;font-size:15px">Single source</h4><p class="muted" style="font-size:13.5px">Tokens live in Swift (<span class="tok">Color+Dumpert</span>, asset catalog). This page is generated <em>from</em> that reality — no parallel definitions to drift.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:15px">Reuse over redo</h4><p class="muted" style="font-size:13.5px">Shared primitives (DurationFormatter, GlassPillModifier, badges) are extracted, not re-implemented. New UI should ask "which pattern applies?" first.</p></div>
+    <div class="panel"><h4 style="color:#fff;font-size:15px">Quality gates</h4><p class="muted" style="font-size:13.5px">122+ tests, accessibility labels per view, and Reduce-Motion/fallback paths are part of "done" — not follow-ups.</p></div>
+  </div>
+  <div class="callout" style="margin-top:24px"><b>The bar.</b> The system succeeds when contributors stop asking "what should this look like?" and start asking "which pattern applies here?" — and the answer is already on this page.</div>
+</section>
+
+<footer>
+  Dumpert Design System · extracted from the DumpertTV source · unofficial — not affiliated with Dumpert or DPG&nbsp;Media&nbsp;B.V.
+</footer>
+
+</main>
+</div>
+
+<script>
+/* Spacing ramp */
+(function(){
+  var vals=[2,4,6,8,12,16,20,24,30,40,50,60];
+  var html=vals.map(function(v){
+    return '<div class="unit"><div class="box" style="width:'+Math.max(14,v)+'px;height:'+Math.max(14,v)+'px"></div><div class="lbl">'+v+'</div></div>';
+  }).join('');
+  document.getElementById('ramp').innerHTML=html;
+})();
+
+/* Copy hex on swatch click */
+document.querySelectorAll('.swatch .chip').forEach(function(c){
+  c.addEventListener('click',function(){
+    var hex=c.getAttribute('data-hex');
+    navigator.clipboard&&navigator.clipboard.writeText(hex);
+    var hint=c.parentElement.querySelector('.copyhint');
+    if(hint){var t=hint.textContent;hint.textContent='copied ✓';hint.style.opacity=1;setTimeout(function(){hint.textContent=t;hint.style.opacity='';},1100);}
+  });
+});
+
+/* Toast replay */
+var tb=document.getElementById('toastBtn'),te=document.getElementById('toastEl');
+if(tb&&te){tb.addEventListener('click',function(){te.classList.remove('show');void te.offsetWidth;te.classList.add('show');});}
+
+/* Mobile menu */
+var mb=document.getElementById('menuBtn'),sb=document.getElementById('sidebar');
+if(mb){mb.addEventListener('click',function(){sb.classList.toggle('open');});
+  sb.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){sb.classList.remove('open');});});}
+
+/* Scroll-spy */
+var links=[].slice.call(document.querySelectorAll('.nav a'));
+var map={};links.forEach(function(a){var id=a.getAttribute('href').slice(1);var el=document.getElementById(id);if(el)map[id]=a;});
+var obs=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){
+      links.forEach(function(l){l.classList.remove('active');});
+      var a=map[e.target.id];if(a)a.classList.add('active');
+    }
+  });
+},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+Object.keys(map).forEach(function(id){var el=document.getElementById(id);if(el)obs.observe(el);});
+</script>
+</body>
+</html>
