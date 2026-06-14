@@ -267,4 +267,50 @@ struct AutoNextPlayTests {
         #expect(repo.isWatched(last.id), "Previous video must remain marked as watched")
         #expect(repo.progressFor(related.id) > 0, "Related video should have its own progress recorded")
     }
+
+    // MARK: - Watched-on-finish
+
+    @Test("Finishing a video marks it watched even when autoplay does not advance")
+    func finishMarksWatchedWithoutAdvancing() {
+        // Regression: reaching the end only marked the video watched when
+        // `playNext` ran. With autoplay off (or on the last/only video) the
+        // finish path never called `markAsWatched`, leaving fully-watched
+        // videos stuck as unwatched.
+        let repo = VideoRepository()
+        repo.settings.autoplayEnabled = false
+        let v = makeVideo(id: "v1", duration: 120)
+        let vm = VideoPlayerViewModel(video: v, playlist: [v], repository: repo)
+
+        #expect(!repo.isWatched(v.id))
+        vm.onVideoFinished(playedToEnd: true)
+        #expect(repo.isWatched(v.id), "Reaching the end must mark the video watched")
+    }
+
+    @Test("Short clip watched to the end is marked watched despite the 90% threshold")
+    func finishMarksShortClipWatched() {
+        // An 8s clip's last 1s-interval progress tick lands around 7s
+        // (7/8 = 0.875), below the 0.9 completion threshold — so before the fix
+        // it stayed unwatched. Seed that sub-threshold progress, then finish.
+        let repo = VideoRepository()
+        repo.settings.autoplayEnabled = false
+        let v = makeVideo(id: "short", duration: 8)
+        let vm = VideoPlayerViewModel(video: v, playlist: [v], repository: repo)
+
+        repo.updateWatchProgress(videoId: v.id, watchedSeconds: 7, totalSeconds: 8)
+        #expect(!repo.isWatched(v.id), "Precondition: 7/8 is below the 0.9 threshold")
+
+        vm.onVideoFinished(playedToEnd: true)
+        #expect(repo.isWatched(v.id))
+    }
+
+    @Test("A playback failure does not mark an unfinished video as watched")
+    func failedPlaybackDoesNotMarkWatched() {
+        let repo = VideoRepository()
+        repo.settings.autoplayEnabled = false
+        let v = makeVideo(id: "v1", duration: 120)
+        let vm = VideoPlayerViewModel(video: v, playlist: [v], repository: repo)
+
+        vm.onVideoFinished(playedToEnd: false)
+        #expect(!repo.isWatched(v.id), "Failing to reach the end must not mark watched")
+    }
 }

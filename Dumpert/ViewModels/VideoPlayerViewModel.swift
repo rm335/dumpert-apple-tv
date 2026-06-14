@@ -233,7 +233,7 @@ final class VideoPlayerViewModel {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
-                self?.onVideoFinished()
+                self?.onVideoFinished(playedToEnd: true)
             }
         }
         failedEndObserver = NotificationCenter.default.addObserver(
@@ -242,7 +242,7 @@ final class VideoPlayerViewModel {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor [weak self] in
-                self?.onVideoFinished()
+                self?.onVideoFinished(playedToEnd: false)
             }
         }
     }
@@ -332,8 +332,22 @@ final class VideoPlayerViewModel {
         }
     }
 
-    private func onVideoFinished() {
+    /// Internal (not private) so unit tests can drive the end-of-playback path
+    /// without an `AVPlayer` runtime; production code reaches it only through the
+    /// `AVPlayerItemDidPlayToEndTime` / `…FailedToPlayToEndTime` observers.
+    func onVideoFinished(playedToEnd: Bool) {
         saveProgress(force: true)
+
+        // Reaching the end of playback is the definitive signal that the video
+        // was watched in full, so mark it explicitly. Relying on the 90%
+        // threshold in WatchProgress.update is unreliable here: `currentTime`
+        // is sampled by a 1s periodic observer and lags the true end by up to a
+        // tick, so short clips never cross 0.9 and stay "unwatched". `playNext`
+        // marks the current video too, but only when autoplay advances — with
+        // autoplay off or on the last/only video, this is the only mark.
+        if playedToEnd {
+            repository.markAsWatched(videoId: currentVideo.id)
+        }
         showUpNext = false
 
         guard autoplayEnabled && !upNextCancelled else { return }
