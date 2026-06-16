@@ -94,9 +94,16 @@ struct ToppersSectionView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 40) {
+                        // Computed once per render: `heroItems` re-runs the kudos +
+                        // NSFW filters over `hotshiz` on every read, and the hero
+                        // subviews read it (and `safeHeroIndex`, which reads it
+                        // twice more) ~20× per layout pass. Bind it once and thread
+                        // it through.
+                        let heroItems = self.heroItems
+
                         // Hero Carousel
                         if !heroItems.isEmpty {
-                            heroCarousel
+                            heroCarousel(items: heroItems)
                         }
 
                         let dayItems = repository.filteredItems(repository.topDay)
@@ -164,11 +171,17 @@ struct ToppersSectionView: View {
         .onChange(of: focusedItem) { _, newId in
             Task { @MainActor in
                 if let id = newId {
-                    let allItems = repository.filteredItems(repository.hotshiz)
-                        + repository.filteredItems(repository.topDay)
-                        + repository.filteredItems(repository.topWeek)
-                        + repository.filteredItems(repository.topMonth)
-                    if let item = allItems.first(where: { $0.id == id }) {
+                    // Fires on every focus move (constant during tvOS navigation).
+                    // Search the raw feeds with short-circuiting `??` rather than
+                    // building four filtered arrays + a concatenation each time —
+                    // the focused id is already an on-screen (filtered) item, so an
+                    // unfiltered lookup resolves the same MediaItem with no extra
+                    // allocation or filter passes.
+                    let item = repository.hotshiz.first(where: { $0.id == id })
+                        ?? repository.topDay.first(where: { $0.id == id })
+                        ?? repository.topWeek.first(where: { $0.id == id })
+                        ?? repository.topMonth.first(where: { $0.id == id })
+                    if let item {
                         backgroundState.update(for: item)
                     }
                 } else if !heroItems.isEmpty {
@@ -216,8 +229,9 @@ struct ToppersSectionView: View {
 
     // MARK: - Hero Carousel
 
-    private var heroCarousel: some View {
-        Button {
+    private func heroCarousel(items heroItems: [MediaItem]) -> some View {
+        let safeHeroIndex = heroItems.isEmpty ? 0 : heroIndex % heroItems.count
+        return Button {
             heroItems[safeHeroIndex].present(selectedVideo: $selectedVideo, selectedPhoto: $selectedPhoto)
         } label: {
             ZStack(alignment: .bottomLeading) {
@@ -243,7 +257,7 @@ struct ToppersSectionView: View {
 
                 // Page indicators
                 if heroItems.count > 1 {
-                    pageIndicators
+                    pageIndicators(count: heroItems.count, safeHeroIndex: safeHeroIndex)
                 }
             }
             .aspectRatio(16/6, contentMode: .fit)
@@ -288,9 +302,9 @@ struct ToppersSectionView: View {
         }
     }
 
-    private var pageIndicators: some View {
+    private func pageIndicators(count: Int, safeHeroIndex: Int) -> some View {
         HStack(spacing: 8) {
-            ForEach(0..<heroItems.count, id: \.self) { i in
+            ForEach(0..<count, id: \.self) { i in
                 Circle()
                     .fill(i == safeHeroIndex ? Color.white : Color.white.opacity(0.4))
                     .frame(width: 10, height: 10)

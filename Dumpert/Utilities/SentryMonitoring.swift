@@ -22,8 +22,13 @@ enum SentryMonitoring {
             options.enableNetworkBreadcrumbs = false
             options.enableCaptureFailedRequests = false
 
-            options.attachScreenshot = false
-            options.attachViewHierarchy = false
+            // App Hangs surface as a pure SwiftUI/UIKit layout stack whose only
+            // in-app frame is `$main` — Sentry cannot name the offending view
+            // without the captured hierarchy. Attaching it (plus a screenshot)
+            // is what makes the next hang report actually actionable. Both are
+            // captured only at crash/hang time, so there is no steady-state cost.
+            options.attachScreenshot = true
+            options.attachViewHierarchy = true
         }
 
         if ProcessInfo.processInfo.arguments.contains("--sentry-test-event") {
