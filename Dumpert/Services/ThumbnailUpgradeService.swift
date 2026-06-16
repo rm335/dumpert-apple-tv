@@ -84,6 +84,17 @@ actor ThumbnailUpgradeService {
             // 2. Wait for extraction slot, then extract and score video frames
             Logger.thumbnail.info("[\(itemId)] no face in thumbnail, waiting for extraction slot...")
             await acquireExtractionSlot()
+
+            // A full-screen or PiP player may have started while we waited in the
+            // (serialized, maxConcurrent=1) queue. Spinning up a decoder now would
+            // starve its audio render thread, so stand down — the requesting card
+            // re-runs this once playback ends. Backstops the View-level gate for
+            // extractions already queued before the player appeared.
+            if await PlaybackCoordinator.shared.isPlaybackActive {
+                Logger.thumbnail.info("[\(itemId)] deferred: playback active")
+                releaseExtractionSlot()
+                return nil
+            }
             Logger.thumbnail.info("[\(itemId)] extraction slot acquired, extracting frames...")
 
             let bestFrame: UIImage?

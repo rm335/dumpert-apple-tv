@@ -225,17 +225,25 @@ struct VideoCardView: View {
                 }
             }
         }
-        .task {
+        .task(id: deferThumbnailUpgrade) {
             guard smartThumbnailsEnabled, item.isVideo,
                   case .video(let video) = item,
                   video.streamURL != nil else { return }
 
-            // Check disk cache first
+            // Check disk cache first — cheap, always allowed.
             if let cached = await ThumbnailUpgradeService.shared.cachedImage(for: item.id) {
                 let center = await detectFaceCenter(in: cached)
                 applyUpgrade(image: cached, faceCenter: center)
                 return
             }
+
+            // Frame extraction spins up a second AVPlayer/decoder. Never run it
+            // while a player is active: a long upgrade queue keeps decoding behind
+            // the cover and starves the foreground player's audio render thread —
+            // stuttering sound while the video itself stays smooth. Gating on
+            // `deferThumbnailUpgrade` cancels any in-flight extraction (this .task
+            // restarts) and re-runs once playback ends.
+            guard !deferThumbnailUpgrade else { return }
 
             // Run upgrade analysis in background
             if let upgraded = await ThumbnailUpgradeService.shared.upgradeIfNeeded(
@@ -250,15 +258,27 @@ struct VideoCardView: View {
         }
     }
 
-    /// Whether the focus video preview should be running. Gated on the suspend
-    /// flag so presenting the player tears the preview's `AVPlayer` down instead
-    /// of letting it decode behind the active player.
+    /// Whether the focus video preview should be running. Gated on both the
+    /// per-section suspend flag and the global `PlaybackCoordinator` so the
+    /// preview's `AVPlayer` is torn down whenever *any* primary player is live —
+    /// including deep-link / Top Shelf videos and PiP, which `suspendPreview`
+    /// (driven by this section's `selectedVideo`) never sees. A live preview
+    /// decoder behind the player starves its audio render thread.
     private var previewActive: Bool {
         isFocused
             && item.isVideo
             && item.streamURL != nil
             && thumbnailPreviewEnabled
             && !suspendPreview
+            && !PlaybackCoordinator.shared.isPlaybackActive
+    }
+
+    /// Whether smart-thumbnail frame extraction must stand down. Same reasoning
+    /// as `previewActive`: the extractor spins up a second decoder, so defer it
+    /// while a player is active (per-section *or* via any other playback path).
+    /// Used as the `.task` id so extraction re-runs once playback ends.
+    private var deferThumbnailUpgrade: Bool {
+        suspendPreview || PlaybackCoordinator.shared.isPlaybackActive
     }
 
     /// Preview shows at most 10% of the video, but never less than 10 seconds.

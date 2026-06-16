@@ -27,6 +27,10 @@ final class VideoPlayerViewModel {
 
     var player: AVPlayer?
     weak var playerViewController: AVPlayerViewController?
+    /// Tracks whether this view model has registered a live player with
+    /// `PlaybackCoordinator`, so begin/end stays balanced even when `setupPlayer`
+    /// bails early (no stream URL) or `cleanup` runs more than once.
+    private var didRegisterPlayback = false
     private(set) var isPlaying = false
     private(set) var currentTime: Double = 0
     private(set) var duration: Double = 0
@@ -123,6 +127,13 @@ final class VideoPlayerViewModel {
         let playerItem = AVPlayerItem(url: url)
         setMetadata(for: currentVideo, on: playerItem)
         player = AVPlayer(playerItem: playerItem)
+
+        // Announce a live player so background decoders (focus previews, smart
+        // thumbnail extraction) stand down — otherwise they starve this player's
+        // audio render thread and the sound drops out or turns robotic.
+        PlaybackCoordinator.shared.playbackBegan()
+        didRegisterPlayback = true
+
         observePlaybackStatus()
 
         if !startFromBeginning {
@@ -181,6 +192,13 @@ final class VideoPlayerViewModel {
         playerViewController?.player = nil
         player = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+
+        // Released only on true teardown — the early `isInPiP` return above keeps
+        // the gate closed while a PiP player is still playing in the corner.
+        if didRegisterPlayback {
+            PlaybackCoordinator.shared.playbackEnded()
+            didRegisterPlayback = false
+        }
     }
 
     // MARK: - Up Next Actions
