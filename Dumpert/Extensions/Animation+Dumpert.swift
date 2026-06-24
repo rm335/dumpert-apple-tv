@@ -24,9 +24,6 @@ extension Animation {
     /// Toast rising from the bottom. (motion.toast)
     static let dumpiToast = Animation.spring(duration: 0.4, bounce: 0.2)
 
-    /// Launch logo spring-in. (motion.logo)
-    static let dumpiLogo = Animation.spring(duration: 1.2, bounce: 0.3)
-
     /// Selection changes in lists — sort order, load-more, category tab. (motion.selection)
     static let dumpiSelection = Animation.spring(duration: 0.5)
 
@@ -35,18 +32,4 @@ extension Animation {
 
     /// Player overlays fading in/out — resume, comment, now-playing, SharePlay. (motion.overlay)
     static let dumpiOverlay = Animation.easeInOut(duration: 0.5)
-}
-
-extension View {
-    /// Applies a motion token to `value`, disabling the animated transition entirely
-    /// when Reduce Motion is enabled. The end state still applies — only the in-between
-    /// motion is removed — so focus indication (scale, border) stays intact. This is the
-    /// Reduce-Motion-safe replacement for `.animation(_:value:)`.
-    func dumpiAnimation<V: Equatable>(
-        _ animation: Animation,
-        value: V,
-        reduceMotion: Bool
-    ) -> some View {
-        self.animation(reduceMotion ? nil : animation, value: value)
-    }
 }

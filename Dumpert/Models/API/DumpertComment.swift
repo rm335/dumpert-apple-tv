@@ -3,7 +3,6 @@ import Foundation
 struct CommentsAPIResponse: Codable, Sendable {
     let authors: [CommentAuthor]?
     let comments: [RawComment]?
-    let summary: CommentsSummary?
 }
 
 struct CommentAuthor: Codable, Sendable {
@@ -25,14 +24,6 @@ struct RawComment: Codable, Sendable {
         case kudosCount = "kudos_count"
         case creationDatetime = "creation_datetime"
         case author
-    }
-}
-
-struct CommentsSummary: Codable, Sendable {
-    let commentCount: Int?
-
-    private enum CodingKeys: String, CodingKey {
-        case commentCount = "comment_count"
     }
 }
 
