@@ -29,6 +29,11 @@ final class VideoRepository {
     /// endpoint starts repeating items so pagination can stop. Bookkeeping only —
     /// views never read it, so it's excluded from observation.
     @ObservationIgnored private var categorySeenRawIDs: [VideoCategory: Set<String>] = [:]
+    /// Categories currently doing a clear-and-refetch (periodic refresh, sort
+    /// change, Reeten-minimum change). `loadMoreForCategory` stands down for these
+    /// so a page it appends isn't silently discarded by the refetch's overwrite.
+    /// Bookkeeping only — excluded from observation.
+    @ObservationIgnored private var categoryRefreshing: Set<VideoCategory> = []
     private(set) var classicsPage = 0
     private(set) var classicsHasMore = true
     private(set) var isClassicsLoadingMore = false
@@ -147,12 +152,19 @@ final class VideoRepository {
     // MARK: - Refresh
 
     func refreshAll() async {
+        // Set isLoading = true before the offline guard so the offline path still
+        // produces a true→false transition. LoadingScreenView dismisses on that
+        // transition; without it the loading screen (re-shown on background-return)
+        // hangs until its 10s timeout. The yield lets SwiftUI observe the `true`
+        // before we flip it back, so the change isn't coalesced away.
+        isLoading = true
+
         if let networkMonitor, !networkMonitor.isConnected {
+            await Task.yield()
             isLoading = false
             return
         }
 
-        isLoading = true
         error = nil
 
         await withTaskGroup(of: Void.self) { group in
@@ -195,6 +207,12 @@ final class VideoRepository {
                         watchedSeconds: record["watchedSeconds"] as? Double ?? 0,
                         totalSeconds: record["totalSeconds"] as? Double ?? 0
                     )
+                    // The initializer derives isCompleted from the >=0.9 ratio, but
+                    // markAsWatched/toggleWatched store it explicitly (e.g. 0/0 marked
+                    // complete). Honor the stored flag so a manual toggle survives sync.
+                    if let completed = record["isCompleted"] as? Int {
+                        remote.isCompleted = completed == 1
+                    }
                     if let remoteDate = record["lastWatchedDate"] as? Date {
                         remote.lastWatchedDate = remoteDate
                     }
@@ -213,9 +231,13 @@ final class VideoRepository {
                    let categoryRaw = record["category"] as? String,
                    let category = VideoCategory(rawValue: categoryRaw),
                    let actionRaw = record["action"] as? String,
-                   let action = CurationAction(rawValue: actionRaw) {
-                    let entry = CurationEntry(videoId: videoId, category: category, action: action)
-                    if !curationEntries.contains(where: { $0.videoId == videoId && $0.category == category && $0.action == action }) {
+                   let action = CurationAction(rawValue: actionRaw),
+                   let id = UUID(uuidString: record.recordID.recordName) {
+                    // Preserve the CloudKit record id so a later deletion tombstone
+                    // (matched by recordName UUID) actually finds this local entry.
+                    let timestamp = record["timestamp"] as? Date ?? Date()
+                    let entry = CurationEntry(id: id, videoId: videoId, category: category, action: action, timestamp: timestamp)
+                    if !curationEntries.contains(where: { $0.id == id }) {
                         curationEntries.append(entry)
                         curationDirty = true
                     }
@@ -344,8 +366,11 @@ final class VideoRepository {
 
         var orders: [VideoCategory: SortOrder] = [:]
         for category in VideoCategory.allCases {
-            categoryPages[category] = 0
-            categoryHasMore[category] = true
+            // Mark as refreshing up front (synchronously, before any await) so a
+            // loadMore that starts during the fetch stands down. Crucially, do NOT
+            // reopen categoryHasMore here — only after results are applied — so the
+            // window where loadMore could slip a page in never opens.
+            categoryRefreshing.insert(category)
             orders[category] = categorySortOrder[category] ?? .dateNewest
         }
 
@@ -373,12 +398,16 @@ final class VideoRepository {
 
             for await (category, page, errorMessage) in group {
                 if let page {
+                    // Apply atomically: items and page index first, then reopen
+                    // pagination last so hasMore is never true with stale items.
                     categoryVideos[category] = page.items
-                    categoryHasMore[category] = !page.rawIDs.isEmpty
+                    categoryPages[category] = 0
                     categorySeenRawIDs[category] = Set(page.rawIDs)
+                    categoryHasMore[category] = !page.rawIDs.isEmpty
                 } else if let errorMessage {
                     self.error = errorMessage
                 }
+                categoryRefreshing.remove(category)
             }
         }
     }
@@ -416,7 +445,8 @@ final class VideoRepository {
     // MARK: - Pagination
 
     func loadMoreForCategory(_ category: VideoCategory) async {
-        guard isCategoryLoadingMore[category] != true,
+        guard !categoryRefreshing.contains(category),
+              isCategoryLoadingMore[category] != true,
               categoryHasMore[category] == true else { return }
 
         isCategoryLoadingMore[category] = true
@@ -432,7 +462,11 @@ final class VideoRepository {
                 reetenMinimumMinutes: settings.reetenMinimumMinutes
             )
 
-            if page.rawIDs.isEmpty {
+            if categoryRefreshing.contains(category) {
+                // A refresh (or sort/Reeten change) started while we were fetching.
+                // Its results are authoritative — drop this page so we don't append
+                // onto items it's about to overwrite, snapping the list back.
+            } else if page.rawIDs.isEmpty {
                 // The endpoint has no more items.
                 categoryHasMore[category] = false
             } else {
@@ -518,11 +552,13 @@ final class VideoRepository {
         // trigger a needless clear-and-refetch.
         guard category.supportsSorting else { return }
         categorySortOrder[category] = order
+        categoryRefreshing.insert(category)
         categoryPages[category] = 0
         categoryHasMore[category] = true
         categoryVideos[category] = []
         categorySeenRawIDs[category] = []
         Task {
+            defer { categoryRefreshing.remove(category) }
             do {
                 let page = try await categoryService.fetchItems(
                     for: category,
@@ -548,11 +584,13 @@ final class VideoRepository {
         guard settings.reetenMinimumMinutes != minutes else { return }
         settings.reetenMinimumMinutes = minutes
         let category = VideoCategory.reeten
+        categoryRefreshing.insert(category)
         categoryPages[category] = 0
         categoryHasMore[category] = true
         categoryVideos[category] = []
         categorySeenRawIDs[category] = []
         Task {
+            defer { categoryRefreshing.remove(category) }
             do {
                 let page = try await categoryService.fetchItems(
                     for: category,
@@ -861,38 +899,5 @@ final class VideoRepository {
         let imageCacheBytes = await ImageCacheService.shared.diskSize()
         let thumbnailUpgradeBytes = await ThumbnailUpgradeService.shared.cacheSize()
         return apiCacheBytes + imageCacheBytes + thumbnailUpgradeBytes
-    }
-
-    // MARK: - Sync Helpers
-
-    private func mergeWatchProgress(remote: [String: WatchProgress]) {
-        for (videoId, remoteProgress) in remote {
-            if let local = watchProgress[videoId] {
-                if remoteProgress.lastWatchedDate > local.lastWatchedDate {
-                    watchProgress[videoId] = remoteProgress
-                }
-            } else {
-                watchProgress[videoId] = remoteProgress
-            }
-        }
-        Task { await cacheService.saveWatchProgress(watchProgress) }
-    }
-
-    private func mergeSearchHistory(remote: [SearchHistoryEntry]) {
-        let existingIds = Set(searchHistory.map(\.id))
-        let newEntries = remote.filter { !existingIds.contains($0.id) }
-        searchHistory.append(contentsOf: newEntries)
-        searchHistory.sort { $0.timestamp > $1.timestamp }
-        if searchHistory.count > 20 {
-            searchHistory = Array(searchHistory.prefix(20))
-        }
-        Task { await cacheService.saveSearchHistory(searchHistory) }
-    }
-
-    private func mergeCurationEntries(remote: [CurationEntry]) {
-        let existingIds = Set(curationEntries.map(\.id))
-        let newEntries = remote.filter { !existingIds.contains($0.id) }
-        curationEntries.append(contentsOf: newEntries)
-        Task { await cacheService.saveCurationEntries(curationEntries) }
     }
 }
