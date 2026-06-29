@@ -13,7 +13,10 @@ final class NetworkMonitor {
     init() {
         monitor.pathUpdateHandler = { [weak self] path in
             Task { @MainActor in
-                self?.isConnected = path.status == .satisfied || path.status == .requiresConnection
+                // Only .satisfied means the path is actually usable. .requiresConnection
+                // is a not-yet-up path (e.g. on-demand VPN/cellular) and must not read
+                // as online, or the offline banner hides while requests still fail.
+                self?.isConnected = path.status == .satisfied
                 self?.connectionType = path.availableInterfaces.first?.type
             }
         }
