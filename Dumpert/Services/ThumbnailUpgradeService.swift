@@ -280,6 +280,14 @@ actor ThumbnailUpgradeService {
         var frames: [CGImage] = []
 
         for fraction in fractions {
+            try Task.checkCancellation()
+            // The pre-extraction gate only fires once, but readyToPlay + seeks
+            // span several seconds. If a player went live in the meantime, this
+            // decoder now starves its audio thread — stop sampling and pause.
+            if await PlaybackCoordinator.shared.isPlaybackActive {
+                Logger.thumbnail.info("extractFrames: playback became active mid-extraction, stopping")
+                break
+            }
             let targetTime = CMTime(seconds: duration * fraction, preferredTimescale: 600)
             await player.seek(to: targetTime, toleranceBefore: tolerance, toleranceAfter: tolerance)
 
