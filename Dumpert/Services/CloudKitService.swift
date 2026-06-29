@@ -1,5 +1,6 @@
 import Foundation
 import CloudKit
+import os
 
 actor CloudKitService {
     private let container: CKContainer
@@ -9,11 +10,31 @@ actor CloudKitService {
     private var isAvailable = false
 
     private static let zoneName = "DumpertZone"
+    private static let changeTokenKey = "cloudkit_change_token"
 
     init() {
         self.container = CKContainer.default()
         self.privateDB = container.privateCloudDatabase
         self.zoneID = CKRecordZone.ID(zoneName: Self.zoneName, ownerName: CKCurrentUserDefaultName)
+        // Restore the persisted change token so a cold launch resumes delta sync
+        // from where it left off — a tokenless fetch returns no deletion
+        // tombstones, so without this records deleted elsewhere resurrect here.
+        self.changeToken = Self.loadPersistedChangeToken()
+    }
+
+    private static func loadPersistedChangeToken() -> CKServerChangeToken? {
+        guard let data = UserDefaults.standard.data(forKey: changeTokenKey) else { return nil }
+        return try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: data)
+    }
+
+    private func persistChangeToken(_ token: CKServerChangeToken) {
+        guard let data = try? NSKeyedArchiver.archivedData(withRootObject: token, requiringSecureCoding: true) else { return }
+        UserDefaults.standard.set(data, forKey: Self.changeTokenKey)
+    }
+
+    private func clearPersistedChangeToken() {
+        changeToken = nil
+        UserDefaults.standard.removeObject(forKey: Self.changeTokenKey)
     }
 
     // MARK: - Account Check
@@ -55,25 +76,6 @@ actor CloudKitService {
         record["lastWatchedDate"] = progress.lastWatchedDate as CKRecordValue
 
         _ = try await privateDB.modifyRecords(saving: [record], deleting: [], savePolicy: .changedKeys)
-    }
-
-    func fetchAllWatchProgress() async throws -> [String: WatchProgress] {
-        try guardAvailable()
-        let query = CKQuery(recordType: "WatchProgress", predicate: NSPredicate(value: true))
-        let (results, _) = try await privateDB.records(matching: query, inZoneWith: zoneID)
-
-        var progress: [String: WatchProgress] = [:]
-        for (_, result) in results {
-            guard let record = try? result.get(),
-                  let videoId = record["videoId"] as? String else { continue }
-            let watched = record["watchedSeconds"] as? Double ?? 0
-            let total = record["totalSeconds"] as? Double ?? 0
-            var wp = WatchProgress(videoId: videoId, watchedSeconds: watched, totalSeconds: total)
-            wp.isCompleted = (record["isCompleted"] as? Int ?? 0) == 1
-            wp.lastWatchedDate = record["lastWatchedDate"] as? Date ?? Date()
-            progress[videoId] = wp
-        }
-        return progress
     }
 
     // MARK: - User Settings
@@ -167,25 +169,6 @@ actor CloudKitService {
         _ = try await privateDB.modifyRecords(saving: [record], deleting: [], savePolicy: .changedKeys)
     }
 
-    func fetchAllCurationEntries() async throws -> [CurationEntry] {
-        try guardAvailable()
-        let query = CKQuery(recordType: "CurationEntry", predicate: NSPredicate(value: true))
-        let (results, _) = try await privateDB.records(matching: query, inZoneWith: zoneID)
-
-        var entries: [CurationEntry] = []
-        for (_, result) in results {
-            guard let record = try? result.get(),
-                  let videoId = record["videoId"] as? String,
-                  let categoryRaw = record["category"] as? String,
-                  let category = VideoCategory(rawValue: categoryRaw),
-                  let actionRaw = record["action"] as? String,
-                  let action = CurationAction(rawValue: actionRaw) else { continue }
-            let entry = CurationEntry(videoId: videoId, category: category, action: action)
-            entries.append(entry)
-        }
-        return entries
-    }
-
     // MARK: - Search History
 
     func saveSearchEntry(_ entry: SearchHistoryEntry) async throws {
@@ -211,29 +194,22 @@ actor CloudKitService {
         _ = try await privateDB.modifyRecords(saving: [], deleting: recordIDs)
     }
 
-    func fetchAllSearchHistory() async throws -> [SearchHistoryEntry] {
-        try guardAvailable()
-        let query = CKQuery(recordType: "SearchHistory", predicate: NSPredicate(value: true))
-        query.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
-        let (results, _) = try await privateDB.records(matching: query, inZoneWith: zoneID)
-
-        var entries: [SearchHistoryEntry] = []
-        for (recordID, result) in results {
-            guard let record = try? result.get(),
-                  let query = record["query"] as? String else { continue }
-            let idString = recordID.recordName.replacingOccurrences(of: "search_", with: "")
-            guard let uuid = UUID(uuidString: idString) else { continue }
-            let timestamp = record["timestamp"] as? Date ?? Date()
-            let entry = SearchHistoryEntry(id: uuid, query: query, timestamp: timestamp)
-            entries.append(entry)
-        }
-        return entries
-    }
-
     // MARK: - Delta Sync
 
     func fetchChanges() async throws -> CloudKitChanges {
         try guardAvailable()
+        do {
+            return try await performFetchChanges()
+        } catch let error as CKError where error.code == .changeTokenExpired {
+            // The server purged our persisted token (too old, or the zone was
+            // re-created elsewhere). Discard it and re-fetch the whole zone.
+            Logger.cloudKit.info("CloudKit change token expired; resetting and re-fetching full zone")
+            clearPersistedChangeToken()
+            return try await performFetchChanges()
+        }
+    }
+
+    private func performFetchChanges() async throws -> CloudKitChanges {
         let config = CKFetchRecordZoneChangesOperation.ZoneConfiguration()
         config.previousServerChangeToken = changeToken
 
@@ -261,8 +237,14 @@ actor CloudKitService {
         }
 
         operation.recordZoneFetchResultBlock = { _, result in
-            if case .success(let (token, _, _)) = result {
+            switch result {
+            case .success(let (token, _, _)):
                 collector.setToken(token)
+            case .failure(let error):
+                // Per-zone failures (e.g. an expired token) aren't always
+                // rethrown by the operation-level result block; capture it so
+                // fetchChanges can react.
+                collector.setError(error)
             }
         }
 
@@ -278,7 +260,17 @@ actor CloudKitService {
             privateDB.add(operation)
         }
 
-        self.changeToken = collector.token
+        if let zoneError = collector.error {
+            throw zoneError
+        }
+
+        // Only advance and persist the token after a fully successful fetch.
+        // Persisting lets the next cold launch resume from here and receive
+        // deletion tombstones instead of doing a tokenless full re-fetch.
+        if let token = collector.token {
+            self.changeToken = token
+            persistChangeToken(token)
+        }
         return CloudKitChanges(
             changedRecords: collector.changedRecords,
             deletedRecordIDs: collector.deletedRecordIDs
@@ -297,6 +289,7 @@ private final class ChangeCollector: @unchecked Sendable {
     private var _changedRecords: [CKRecord] = []
     private var _deletedRecordIDs: [CKRecord.ID] = []
     private var _token: CKServerChangeToken?
+    private var _error: Error?
 
     var changedRecords: [CKRecord] {
         lock.withLock { _changedRecords }
@@ -310,6 +303,10 @@ private final class ChangeCollector: @unchecked Sendable {
         lock.withLock { _token }
     }
 
+    var error: Error? {
+        lock.withLock { _error }
+    }
+
     func addChanged(_ record: CKRecord) {
         lock.withLock { _changedRecords.append(record) }
     }
@@ -320,5 +317,9 @@ private final class ChangeCollector: @unchecked Sendable {
 
     func setToken(_ token: CKServerChangeToken) {
         lock.withLock { _token = token }
+    }
+
+    func setError(_ error: Error) {
+        lock.withLock { _error = error }
     }
 }
