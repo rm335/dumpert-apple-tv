@@ -63,6 +63,7 @@ final class VideoPlayerViewModel {
     private(set) var showTopComment = false
     private var topCommentsFetched = false
     private var topCommentCarouselTask: Task<Void, Never>?
+    private var topCommentFetchTask: Task<Void, Never>?
 
     // MARK: - Now Playing State
 
@@ -107,7 +108,10 @@ final class VideoPlayerViewModel {
         self.video = video
         self.playlist = playlist
         self.repository = repository
-        let startIndex = playlist.firstIndex(of: video) ?? 0
+        // Match by id, not full value-equality: Video is Hashable over every
+        // field (incl. kudos/views stats), so a stats-divergent copy of the same
+        // video would fail `firstIndex(of:)` and silently start at index 0.
+        let startIndex = playlist.firstIndex { $0.id == video.id } ?? 0
         self.currentIndex = startIndex
         self.currentVideo = playlist.isEmpty ? video : playlist[startIndex]
         self.startFromBeginning = startFromBeginning
@@ -135,6 +139,10 @@ final class VideoPlayerViewModel {
         didRegisterPlayback = true
 
         observePlaybackStatus()
+
+        // Fresh per-video state: a cancellation only suppresses the current
+        // video's Up Next countdown, never autoplay for the rest of the session.
+        upNextCancelled = false
 
         if !startFromBeginning {
             resumeIfNeeded(for: currentVideo)
@@ -178,6 +186,8 @@ final class VideoPlayerViewModel {
         statusObservation = nil
         resumeDismissTask?.cancel()
         resumeDismissTask = nil
+        topCommentFetchTask?.cancel()
+        topCommentFetchTask = nil
         topCommentCarouselTask?.cancel()
         topCommentCarouselTask = nil
         nowPlayingDismissTask?.cancel()
@@ -522,10 +532,16 @@ final class VideoPlayerViewModel {
     private func fetchTopCommentsIfNeeded(for itemId: String) {
         guard repository.settings.topCommentMode != .off else { return }
         topCommentsFetched = false
-        Task {
+        // Cancel any in-flight fetch for the previous video: without this, a fast
+        // A→B switch lets A's fetch resolve and write A's comments onto B. The
+        // weak capture also lets the view model deinit while a fetch is suspended.
+        topCommentFetchTask?.cancel()
+        topCommentFetchTask = Task { [weak self] in
+            guard let self else { return }
             do {
-                let allComments = try await repository.fetchTopComments(for: itemId)
-                let mode = repository.settings.topCommentMode
+                let allComments = try await self.repository.fetchTopComments(for: itemId)
+                guard !Task.isCancelled else { return }
+                let mode = self.repository.settings.topCommentMode
                 switch mode {
                 case .off:
                     self.topComments = []
@@ -542,16 +558,18 @@ final class VideoPlayerViewModel {
                 }
                 Logger.network.debug("Fetched \(allComments.count) comments for \(itemId), filtered to \(self.topComments.count)")
             } catch {
+                guard !Task.isCancelled else { return }
                 Logger.network.error("Failed to fetch comments for \(itemId): \(error)")
                 self.topComments = []
             }
+            guard !Task.isCancelled else { return }
             self.topCommentsFetched = true
 
             // If video resumed past the 10-15s timing window, start carousel after a brief delay
-            if !topComments.isEmpty && currentTime >= 15 && topCommentCarouselTask == nil {
+            if !self.topComments.isEmpty && self.currentTime >= 15 && self.topCommentCarouselTask == nil {
                 try? await Task.sleep(for: .seconds(3))
-                guard !Task.isCancelled, topCommentCarouselTask == nil else { return }
-                startTopCommentCarousel()
+                guard !Task.isCancelled, self.topCommentCarouselTask == nil else { return }
+                self.startTopCommentCarousel()
             }
         }
     }
@@ -575,8 +593,12 @@ final class VideoPlayerViewModel {
             guard let self else { return }
             let speed = self.repository.settings.readingSpeed
             do {
+                // topComments can be emptied (a new video's fetch resolving) while
+                // a pauseAwareSleep is suspended, so re-check the bounds right after
+                // every await before indexing — otherwise topComments[index] traps.
+                guard let first = self.topComments.first else { return }
                 // Show first comment for dynamic duration based on text length
-                let firstDuration = speed.readingDuration(for: self.topComments[0].displayContent)
+                let firstDuration = speed.readingDuration(for: first.displayContent)
                 try await self.pauseAwareSleep(seconds: firstDuration)
                 self.showTopComment = false
 
@@ -585,6 +607,7 @@ final class VideoPlayerViewModel {
                 while index < self.topComments.count {
                     // 5 second gap between comments
                     try await self.pauseAwareSleep(seconds: 5)
+                    guard !Task.isCancelled, index < self.topComments.count else { return }
                     self.currentCommentIndex = index
                     self.showTopComment = true
 
@@ -614,6 +637,8 @@ final class VideoPlayerViewModel {
     }
 
     private func resetTopComment() {
+        topCommentFetchTask?.cancel()
+        topCommentFetchTask = nil
         topCommentCarouselTask?.cancel()
         topCommentCarouselTask = nil
         topComments = []
@@ -625,8 +650,14 @@ final class VideoPlayerViewModel {
     // MARK: - Resume Playback
 
     private func resumeIfNeeded(for video: Video) {
+        // Don't resume within ~10s of the end: a near-complete clip would seek to
+        // just before the end and immediately fire AVPlayerItemDidPlayToEndTime.
+        // totalSeconds <= 0 means we have no duration to compare against (e.g. a
+        // 0/0 markAsWatched entry), so treat it as "resume position is fine".
         guard let progress = repository.watchProgress[video.id],
-              progress.watchedSeconds >= 5 else { return }
+              progress.watchedSeconds >= 5,
+              progress.totalSeconds <= 0 || progress.watchedSeconds < progress.totalSeconds - 10
+        else { return }
 
         let seekTime = CMTime(seconds: progress.watchedSeconds, preferredTimescale: 600)
         player?.seek(to: seekTime, toleranceBefore: .zero, toleranceAfter: .zero)
