@@ -71,9 +71,10 @@ The easiest way to install DumpertTV on your Apple TV:
 - **Now Playing** info on the Lock Screen and Control Center
 - **Swipe gestures** on the Siri Remote to skip to previous/next video
 - Watched badge indicator on already-viewed content
+- Background video decoders (focus previews, thumbnail extraction) stand down during playback to prevent audio dropout
 
 ### Watched Items
-- **Gekeken** (Watched) sub-tab under Categories, showing previously watched videos
+- **Gekeken** (Watched) top-level tab, showing previously watched videos
 - Track and manage watch history
 
 ### SharePlay
@@ -209,8 +210,7 @@ Build and run on an Apple TV or the tvOS Simulator.
 │                   (SwiftUI @main entry)                      │
 │                                                              │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │  LoadingScreenView → ContentView (TabView, 5 tabs)     │  │
-│  │  Toppers │ Nieuw │ Categorieën │ Zoeken │ Instellingen │  │
+│  │  LoadingScreenView → ContentView (TabView, 6 tabs)     │  │
 │  └──────────────────────┬─────────────────────────────────┘  │
 │                         │                                    │
 │                 @Environment                                 │
@@ -233,10 +233,10 @@ Build and run on an Apple TV or the tvOS Simulator.
 
 | Pattern | Usage |
 |---|---|
-| `@Observable` + `@MainActor` | `VideoRepository`, `NetworkMonitor`, `UserSettings`, `SharePlayService`, `ImmersiveBackgroundState` — reactive state on main thread |
+| `@Observable` + `@MainActor` | `VideoRepository`, `NetworkMonitor`, `UserSettings`, `SharePlayService`, `ImmersiveBackgroundState`, `PlaybackCoordinator` — reactive state on main thread |
 | Actor isolation | `DumpertAPIClient`, `CacheService`, `CloudKitService`, `ImageCacheService` — thread-safe services |
 | Environment injection | `VideoRepository`, `NetworkMonitor`, `ImmersiveBackgroundState`, `LoadingSoundPlayer` injected via `.environment()` |
-| Protocol-based DI | `APIClientProtocol`, `CacheServiceProtocol` for testability |
+| Protocol-based DI | `APIClientProtocol` for testability |
 | Swift 6 strict concurrency | `SWIFT_STRICT_CONCURRENCY: complete` across all targets |
 
 ### Data Flow
@@ -259,7 +259,7 @@ dumpert/
 ├── Dumpert/                        # Main app target
 │   ├── App/
 │   │   ├── DumpertApp.swift        # @main entry, environment setup, deep linking
-│   │   └── ContentView.swift       # Root TabView with 5 tabs + offline banner
+│   │   └── ContentView.swift       # Root TabView with 6 tabs + offline banner
 │   ├── Models/
 │   │   ├── API/                    # Codable API response models
 │   │   │   ├── DumpertAPIResponse.swift
@@ -287,7 +287,6 @@ dumpert/
 │   ├── Services/
 │   │   ├── VideoRepository.swift   # @Observable source of truth
 │   │   ├── CacheService.swift      # Disk cache (50MB LRU)
-│   │   ├── CacheServiceProtocol.swift
 │   │   ├── CloudKitService.swift   # iCloud delta sync
 │   │   ├── CategoryService.swift   # Category filtering
 │   │   ├── ImageCacheService.swift # Two-layer image cache (80MB mem + 200MB disk)
@@ -297,6 +296,7 @@ dumpert/
 │   │   ├── RefreshScheduler.swift
 │   │   ├── SharePlayService.swift  # GroupActivities coordination
 │   │   ├── NowPlayingService.swift # MPNowPlayingInfoCenter + remote commands
+│   │   ├── PlaybackCoordinator.swift # Gates background decoders while a player is live
 │   │   ├── LoadingSoundPlayer.swift  # Random startup sound (NSFW-filtered)
 │   │   ├── LoadingSoundCatalog.swift # Sounds.json manifest → NSFW classification
 │   │   ├── ImmersiveBackgroundState.swift
@@ -338,7 +338,7 @@ dumpert/
 │   │   │   └── SearchFilterBar.swift
 │   │   ├── Sections/
 │   │   │   ├── ToppersSectionView.swift
-│   │   │   ├── CategoriesSectionView.swift  # Pill-bar container for Reeten/VrijMiCo/Dashcam/Classics/Gekeken
+│   │   │   ├── CategoriesSectionView.swift  # Pill-bar container for Reeten/VrijMiCo/Dashcam/Classics/DumpertTV
 │   │   │   ├── CategorySectionView.swift
 │   │   │   ├── ClassicsSectionView.swift
 │   │   │   └── WatchedSectionView.swift
@@ -348,11 +348,13 @@ dumpert/
 │   │       ├── SettingsPickerDestination.swift
 │   │       └── UpNextSettingsView.swift
 │   ├── Extensions/
+│   │   ├── Animation+Dumpert.swift  # Motion tokens (mirrors Color+Dumpert)
 │   │   ├── String+HTML.swift       # HTML tag/entity stripping
 │   │   ├── Color+Dumpert.swift     # Brand colors (#65B32E)
 │   │   └── Date+Formatting.swift
 │   ├── Utilities/
 │   │   ├── AppLogger.swift         # os.Logger categories
+│   │   ├── SentryMonitoring.swift  # Sentry crash/error reporting (opt-in)
 │   │   ├── DurationFormatter.swift # MM:SS formatting
 │   │   └── MediaItem+Present.swift
 │   ├── Assets.xcassets/
@@ -366,7 +368,7 @@ dumpert/
 │   ├── TopShelfItem.swift
 │   ├── TopShelfDataStore.swift     # App Group UserDefaults
 │   └── TopShelfFetcher.swift
-├── DumpertTests/                   # Unit tests (122 tests, 15 suites)
+├── DumpertTests/                   # Unit tests (125 tests, 15 suites)
 │   ├── ModelTests.swift
 │   ├── APIDecodingTests.swift
 │   ├── DumpertDateTests.swift
@@ -419,13 +421,13 @@ The project has 3 targets, defined in `project.yml`:
 |---|---|---|---|
 | **Dumpert** | tvOS Application | `nl.dumpert.tvos` | Main app |
 | **DumpertTopShelf** | App Extension | `nl.dumpert.tvos.topshelf` | Top Shelf content provider |
-| **DumpertTests** | Unit Test Bundle | `nl.dumpert.tvos.tests` | 122 tests across 15 suites |
+| **DumpertTests** | Unit Test Bundle | `nl.dumpert.tvos.tests` | 125 tests across 15 suites |
 
 ---
 
 ## Tests
 
-122 tests across 15 suites, using Swift Testing framework:
+125 tests across 15 suites, using Swift Testing framework:
 
 | Suite | Tests | What it covers |
 |---|---|---|
@@ -443,7 +445,7 @@ The project has 3 targets, defined in `project.yml`:
 | **UserSettingsPersistenceTests** | 4 | Settings round-trip, defaults, migration |
 | **LoadingSoundCatalogTests** | 7 | NSFW classification of startup sounds (safe-by-default allowlist) + shipped manifest |
 | **ErrorCaseTests** | 5 | API error descriptions, network/decoding/HTTP error handling, 5xx retry |
-| **AutoNextPlayTests** | 16 | Playlist navigation, autoplay state, skip/previous, up-next overlay |
+| **AutoNextPlayTests** | 19 | Playlist navigation, autoplay state, skip/previous, up-next overlay |
 
 ### Running Tests
 
