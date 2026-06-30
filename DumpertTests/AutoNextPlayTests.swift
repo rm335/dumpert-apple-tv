@@ -206,6 +206,21 @@ struct AutoNextPlayTests {
         #expect(vm.currentVideo.id == "v2")
     }
 
+    @Test("Start index is matched by id, not full value-equality")
+    func startIndexMatchesById() {
+        let videos = (1...4).map { makeVideo(id: "v\($0)") }
+        // Same id as videos[2], but a diverging field. Video is Hashable over
+        // every field (incl. stats), so firstIndex(of:) would miss this copy and
+        // fall back to 0 — starting the wrong video.
+        let divergent = makeVideo(id: "v3", title: "A different cached copy")
+        let repo = VideoRepository()
+        let vm = VideoPlayerViewModel(video: divergent, playlist: videos, repository: repo)
+
+        #expect(vm.currentIndex == 2, "Should locate the matching id, not fall back to 0")
+        #expect(vm.currentVideo.id == "v3")
+        #expect(vm.nextVideo?.id == "v4")
+    }
+
     // MARK: - Related-video handoff
 
     @Test("playNext switches currentVideo to the related video once the playlist is exhausted")

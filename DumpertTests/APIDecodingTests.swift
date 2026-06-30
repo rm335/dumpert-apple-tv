@@ -220,14 +220,57 @@ struct APIDecodingTests {
         comps.day = 2
         let date = try #require(Calendar.current.date(from: comps))
 
-        let url = APIEndpoint.topDay(date: date).url
+        let url = try APIEndpoint.topDay(date: date).url
         #expect(url.absoluteString == "https://post.dumpert.nl/api/v1.0/top5/dag/2026-06-02")
     }
 
+    @Test("topMonth endpoint uses YYYYMM with no dash")
+    func topMonthEndpointURL() throws {
+        var comps = DateComponents()
+        comps.year = 2026
+        comps.month = 6
+        comps.day = 2
+        let date = try #require(Calendar.current.date(from: comps))
+
+        // A dashed "2026-06" makes the API return content from a year ago.
+        let url = try APIEndpoint.topMonth(date: date).url
+        #expect(url.absoluteString == "https://post.dumpert.nl/api/v1.0/top5/maand/202606")
+    }
+
+    @Test("topWeek endpoint uses YYYYWW with no dash")
+    func topWeekEndpointURL() throws {
+        var comps = DateComponents()
+        comps.year = 2026
+        comps.month = 6
+        comps.day = 2
+        let date = try #require(Calendar.current.date(from: comps))
+
+        // Exact ISO week depends on the host calendar; assert the dash-free
+        // 6-digit shape — a dash here is the "year ago" regression.
+        let url = try APIEndpoint.topWeek(date: date).url
+        let week = try #require(url.pathComponents.last)
+        #expect(week.count == 6)
+        #expect(!week.contains("-"))
+        #expect(week.hasPrefix("2026"))
+    }
+
     @Test("dumpertTV endpoint builds the /dumperttv path")
-    func dumpertTVEndpointURL() {
-        let url = APIEndpoint.dumpertTV(page: 2).url
+    func dumpertTVEndpointURL() throws {
+        let url = try APIEndpoint.dumpertTV(page: 2).url
         #expect(url.absoluteString == "https://post.dumpert.nl/api/v1.0/dumperttv/2")
+    }
+
+    @Test("search endpoint percent-encodes a slash instead of splitting the path")
+    func searchEndpointEncodesSlash() throws {
+        let url = try APIEndpoint.search(query: "AC/DC", page: 0, order: nil).url
+        #expect(url.absoluteString == "https://post.dumpert.nl/api/v1.0/search/AC%2FDC/0")
+    }
+
+    @Test("search endpoint appends the order query item")
+    func searchEndpointAppendsOrder() throws {
+        let url = try APIEndpoint.search(query: "kat", page: 1, order: .dateNewest).url
+        #expect(url.absoluteString.hasPrefix("https://post.dumpert.nl/api/v1.0/search/kat/1?"))
+        #expect(url.absoluteString.contains("order=\(SortOrder.dateNewest.rawValue)"))
     }
 
     @Test("DumpertTV category routes to its own endpoint and hides sorting")

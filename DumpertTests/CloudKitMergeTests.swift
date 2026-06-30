@@ -89,6 +89,64 @@ struct CloudKitMergeTests {
         #expect(!repo.searchHistory.contains(where: { $0.id == uuid }))
     }
 
+    @Test("CloudKit curation deletion removes the merged entry (un-curation syncs)")
+    func deletionRemovesCurationEntry() {
+        let repo = makeRepo()
+
+        // A curation entry created on another device: its CKRecord recordName is
+        // the entry's UUID, exactly how saveCurationEntry writes it.
+        let uuid = UUID()
+        let recordID = CKRecord.ID(recordName: uuid.uuidString, zoneID: zoneID)
+        let record = CKRecord(recordType: "CurationEntry", recordID: recordID)
+        record["videoId"] = "video-9" as CKRecordValue
+        record["category"] = VideoCategory.dashcam.rawValue as CKRecordValue
+        record["action"] = CurationAction.add.rawValue as CKRecordValue
+        record["timestamp"] = Date() as CKRecordValue
+
+        repo.applyCloudKitChanges(CloudKitChanges(changedRecords: [record], deletedRecordIDs: []))
+        #expect(repo.curationEntries.contains { $0.id == uuid },
+                "Merged entry must keep the record id, not mint a fresh UUID")
+
+        // Un-curated on the other device → tombstone carries the recordName UUID.
+        repo.applyCloudKitChanges(CloudKitChanges(changedRecords: [], deletedRecordIDs: [recordID]))
+        #expect(!repo.curationEntries.contains { $0.id == uuid },
+                "Deletion must match the local entry by id so un-curation syncs")
+    }
+
+    // MARK: - isCompleted flag survival
+
+    @Test("A stored isCompleted flag survives the delta merge regardless of the watched ratio")
+    func storedIsCompletedSurvivesMerge() {
+        let repo = makeRepo()
+
+        // markAsWatched scenario: explicitly completed but 0/0 seconds, so the
+        // ratio-derived value would be false.
+        let markedID = CKRecord.ID(recordName: "watch_marked", zoneID: zoneID)
+        let marked = CKRecord(recordType: "WatchProgress", recordID: markedID)
+        marked["videoId"] = "marked" as CKRecordValue
+        marked["watchedSeconds"] = 0.0 as CKRecordValue
+        marked["totalSeconds"] = 0.0 as CKRecordValue
+        marked["isCompleted"] = 1 as CKRecordValue
+        marked["lastWatchedDate"] = Date() as CKRecordValue
+
+        // toggleWatched scenario: watched 95% but explicitly un-completed, so the
+        // ratio-derived value would be true.
+        let toggledID = CKRecord.ID(recordName: "watch_toggled", zoneID: zoneID)
+        let toggled = CKRecord(recordType: "WatchProgress", recordID: toggledID)
+        toggled["videoId"] = "toggled" as CKRecordValue
+        toggled["watchedSeconds"] = 95.0 as CKRecordValue
+        toggled["totalSeconds"] = 100.0 as CKRecordValue
+        toggled["isCompleted"] = 0 as CKRecordValue
+        toggled["lastWatchedDate"] = Date() as CKRecordValue
+
+        repo.applyCloudKitChanges(CloudKitChanges(changedRecords: [marked, toggled], deletedRecordIDs: []))
+
+        #expect(repo.watchProgress["marked"]?.isCompleted == true,
+                "Explicit isCompleted=1 must survive even when the 0/0 ratio says incomplete")
+        #expect(repo.watchProgress["toggled"]?.isCompleted == false,
+                "Explicit isCompleted=0 must win over the >=0.9 ratio")
+    }
+
     // MARK: - Idempotency and conflict resolution
 
     @Test("Older remote watch progress does not overwrite newer local progress")

@@ -1,4 +1,5 @@
 import SwiftUI
+import os
 
 struct ContentView: View {
     @Environment(VideoRepository.self) private var repository
@@ -78,9 +79,10 @@ struct ContentView: View {
             guard let videoId else { return }
             Task { @MainActor in
                 deepLinkVideoId = nil
-                // Try local data first
+                // Try local data first. Include topDay (Top Vandaag) — a video that
+                // only lives there would otherwise miss the in-memory lookup.
                 let allItems = repository.hotshiz
-                    + repository.topWeek + repository.topMonth
+                    + repository.topWeek + repository.topMonth + repository.topDay
                     + (repository.categoryVideos[.nieuwBinnen] ?? [])
                 if let item = allItems.first(where: { $0.id == videoId }),
                    case let .video(video) = item {
@@ -94,7 +96,7 @@ struct ContentView: View {
                         deepLinkVideo = video
                     }
                 } catch {
-                    // Silently fail — video not available
+                    Logger.network.warning("Deep link fetch failed for \(videoId): \(error.localizedDescription)")
                 }
             }
         }
