@@ -31,7 +31,7 @@ actor DumpertAPIClient {
     }
 
     private func fetch(endpoint: APIEndpoint) async throws -> DumpertAPIResponse {
-        let url = endpoint.url
+        let url = try endpoint.url
         var request = URLRequest(url: url)
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue(APIConstants.userAgent, forHTTPHeaderField: "User-Agent")
