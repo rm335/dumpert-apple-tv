@@ -6,11 +6,18 @@ struct WatchedSectionView: View {
     var showsHeader: Bool = true
     @Environment(VideoRepository.self) private var repository
     @Environment(ImmersiveBackgroundState.self) private var backgroundState
+    @Environment(NetworkMonitor.self) private var networkMonitor
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selectedVideo: Video?
     @State private var selectedPhoto: Photo?
     @State private var toastMessage: String?
     @FocusState private var focusedItem: String?
+    /// Shelf snapshots taken while a player/photo cover is presented. Progress
+    /// saves land every ~5s during playback and would otherwise reshuffle the
+    /// shelves behind the cover — so on dismissal the originating card had
+    /// moved (or vanished) and tvOS focus jumped to an arbitrary card.
+    @State private var frozenContinueWatching: [MediaItem]?
+    @State private var frozenEarlier: [MediaItem]?
 
     /// In-progress items get a dedicated, prioritized shelf — resuming is the
     /// Library's whole reason to exist, so it leads.
@@ -46,17 +53,32 @@ struct WatchedSectionView: View {
                         watchedHeader
                     }
 
-                    EmptyStateView(
-                        title: "Nog niets bekeken",
-                        systemImage: "eye.slash",
-                        description: "Video's die je bekijkt verschijnen hier"
-                    ) {
-                        Task { await repository.fetchWatchedVideos() }
+                    if networkMonitor.isConnected {
+                        EmptyStateView(
+                            title: "Nog niets bekeken",
+                            systemImage: "eye.slash",
+                            description: "Video's die je bekijkt verschijnen hier"
+                        ) {
+                            Task { await repository.fetchWatchedVideos() }
+                        }
+                    } else {
+                        // Offline the per-item fetches silently drop out —
+                        // don't claim an intact history is empty.
+                        EmptyStateView(
+                            title: "Geen internetverbinding",
+                            systemImage: "wifi.slash",
+                            description: "Je kijkgeschiedenis kan niet geladen worden zonder internet"
+                        ) {
+                            Task { await repository.fetchWatchedVideos() }
+                        }
                     }
                 }
                 .transition(.opacity)
             } else {
                 ScrollViewReader { proxy in
+                    // Frozen snapshots win while a cover is up (see property docs).
+                    let continueWatching = frozenContinueWatching ?? self.continueWatching
+                    let earlier = frozenEarlier ?? self.earlier
                     ScrollView {
                         VStack(alignment: .leading, spacing: 40) {
                             Color.clear.frame(height: 0).id("top")
@@ -107,8 +129,26 @@ struct WatchedSectionView: View {
         }
         .animation(reduceMotion ? nil : .dumpiStandard, value: repository.isLoadingWatched)
         .task {
-            if repository.watchedVideos.isEmpty {
-                await repository.fetchWatchedVideos()
+            // Refresh on every visit: .refreshable has no gesture on tvOS and
+            // the 15-min scheduler doesn't cover this feed, so an isEmpty
+            // guard froze the list at the session's first fetch — videos
+            // watched later never appeared until app relaunch.
+            await repository.fetchWatchedVideos()
+        }
+        .onChange(of: selectedVideo != nil || selectedPhoto != nil) { _, coverUp in
+            if coverUp {
+                frozenContinueWatching = continueWatching
+                frozenEarlier = earlier
+            } else {
+                Task { @MainActor in
+                    // Let tvOS restore focus onto the unchanged layout first,
+                    // then re-sort the shelves under the user.
+                    try? await Task.sleep(for: .milliseconds(600))
+                    withAnimation(reduceMotion ? nil : .dumpiStandard) {
+                        frozenContinueWatching = nil
+                        frozenEarlier = nil
+                    }
+                }
             }
         }
         .fullScreenCover(item: $selectedVideo) { video in
@@ -118,17 +158,23 @@ struct WatchedSectionView: View {
             }
             // Finished videos replay from the start; in-progress videos resume
             // where you left off — resume is the point of a history view.
-            VideoPlayerView(viewModel: VideoPlayerViewModel(
+            VideoPlayerView(
                 video: video,
                 playlist: videoPlaylist,
                 repository: repository,
                 startFromBeginning: repository.isWatched(video.id)
-            ))
+            )
         }
         .fullScreenCover(item: $selectedPhoto) { photo in
             FullScreenImageView(photo: photo, repository: repository)
         }
         .toast(message: $toastMessage)
+        .onChange(of: PlaybackCoordinator.shared.deepLinkTakeoverID) {
+            // A Top Shelf/deep-link tap needs the stage: dismiss our covers
+            // so the root-level deep-link presentation can succeed.
+            selectedVideo = nil
+            selectedPhoto = nil
+        }
         .onChange(of: focusedItem) { _, newId in
             Task { @MainActor in
                 if let id = newId, let item = repository.watchedVideos.first(where: { $0.id == id }) {

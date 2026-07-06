@@ -467,7 +467,12 @@ final class VideoPlayerViewModel {
         preloadedItem = nil
         player?.replaceCurrentItem(with: item)
 
-        if !startFromBeginning {
+        // Per-video decision, not the session-wide `startFromBeginning` flag:
+        // that flag reflects the video the player was OPENED with. Carrying it
+        // into autoplay meant a session started on a finished video skipped
+        // resume for every next video — and the first 5s progress tick then
+        // overwrote the saved "Verder kijken" position with ~0:00.
+        if !repository.isWatched(video.id) {
             resumeIfNeeded(for: video)
         }
 
@@ -512,7 +517,8 @@ final class VideoPlayerViewModel {
         setMetadata(for: video, on: item)
         player?.replaceCurrentItem(with: item)
 
-        if !startFromBeginning {
+        // Per-video resume decision — see the identical note in playNext().
+        if !repository.isWatched(video.id) {
             resumeIfNeeded(for: video)
         }
 

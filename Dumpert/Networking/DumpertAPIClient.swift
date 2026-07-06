@@ -88,14 +88,18 @@ actor DumpertAPIClient {
                 // Only retry on 5xx server errors
                 if case .httpError(let statusCode) = error, (500...599).contains(statusCode) {
                     lastError = error
-                    let delay = UInt64(pow(2.0, Double(attempt))) * 1_000_000_000
-                    try await Task.sleep(nanoseconds: delay)
-                    continue
+                } else {
+                    throw error
                 }
-                throw error
+            } catch is CancellationError {
+                throw CancellationError()
             } catch {
                 // Retry on network errors
                 lastError = error
+            }
+            // No backoff sleep after the FINAL attempt — it only delayed the
+            // error/empty state by another 4s while the user stared at skeletons.
+            if attempt < maxRetries - 1 {
                 let delay = UInt64(pow(2.0, Double(attempt))) * 1_000_000_000
                 try await Task.sleep(nanoseconds: delay)
             }

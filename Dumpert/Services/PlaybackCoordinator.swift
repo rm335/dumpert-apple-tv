@@ -43,4 +43,17 @@ final class PlaybackCoordinator {
     func playbackEnded() {
         activePlayerCount = max(0, activePlayerCount - 1)
     }
+
+    // MARK: - Deep-link takeover
+
+    /// Bumped when a deep link (Top Shelf tap) needs the stage cleared. The
+    /// section views observe this and dismiss their own presented video/photo
+    /// covers — ContentView cannot reach that local @State, yet its root-level
+    /// deep-link cover can only present once every other cover is gone
+    /// (UIKit refuses a second concurrent presentation).
+    private(set) var deepLinkTakeoverID = 0
+
+    func requestDeepLinkTakeover() {
+        deepLinkTakeoverID += 1
+    }
 }

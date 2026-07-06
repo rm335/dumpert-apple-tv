@@ -48,16 +48,28 @@ struct CategorySectionView: View {
                 if case .video(let v) = item { return v }
                 return nil
             }
-            VideoPlayerView(viewModel: VideoPlayerViewModel(
+            VideoPlayerView(
                 video: video,
                 playlist: videoPlaylist,
                 repository: repository
-            ))
+            )
         }
         .fullScreenCover(item: $selectedPhoto) { photo in
             FullScreenImageView(photo: photo, repository: repository)
         }
         .toast(message: $toastMessage)
+        .onChange(of: PlaybackCoordinator.shared.deepLinkTakeoverID) {
+            // A Top Shelf/deep-link tap needs the stage: dismiss our covers
+            // so the root-level deep-link presentation can succeed.
+            selectedVideo = nil
+            selectedPhoto = nil
+        }
+        .onChange(of: repository.paginationError) { _, message in
+            // Load-more failures surface here as a toast; the list stays.
+            guard let message else { return }
+            toastMessage = message
+            repository.paginationError = nil
+        }
         .onChange(of: focusedItem) { _, newId in
             Task { @MainActor in
                 if let id = newId, let item = items.first(where: { $0.id == id }) {
@@ -93,7 +105,7 @@ struct CategorySectionView: View {
                     .padding(.horizontal, 50)
             }
 
-            if let error = repository.error {
+            if let error = repository.categoryErrors[category] ?? repository.error {
                 EmptyStateView(
                     title: "Er ging iets mis",
                     systemImage: "exclamationmark.triangle",
@@ -112,6 +124,17 @@ struct CategorySectionView: View {
             }
         }
         .transition(.opacity)
+        .task(id: repository.isLoading) {
+            // The first page(s) can be entirely filtered out (kudos/NSFW/
+            // Reeten-duur) while later pages qualify — without this the empty
+            // state is a dead end: the load-more trigger lives on result
+            // cards that don't exist. ponytail: 4-page cap per visit.
+            var attempts = 0
+            while items.isEmpty && hasMore && !repository.isLoading && attempts < 4 {
+                await repository.loadMoreForCategory(category)
+                attempts += 1
+            }
+        }
     }
 
     private var loadedState: some View {

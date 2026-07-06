@@ -35,7 +35,7 @@ struct ClassicsSectionView: View {
                         classicsHeader
                     }
 
-                    if let error = repository.error {
+                    if let error = repository.classicsError ?? repository.error {
                         EmptyStateView(
                             title: "Er ging iets mis",
                             systemImage: "exclamationmark.triangle",
@@ -111,16 +111,28 @@ struct ClassicsSectionView: View {
                 if case .video(let v) = item { return v }
                 return nil
             }
-            VideoPlayerView(viewModel: VideoPlayerViewModel(
+            VideoPlayerView(
                 video: video,
                 playlist: videoPlaylist,
                 repository: repository
-            ))
+            )
         }
         .fullScreenCover(item: $selectedPhoto) { photo in
             FullScreenImageView(photo: photo, repository: repository)
         }
         .toast(message: $toastMessage)
+        .onChange(of: PlaybackCoordinator.shared.deepLinkTakeoverID) {
+            // A Top Shelf/deep-link tap needs the stage: dismiss our covers
+            // so the root-level deep-link presentation can succeed.
+            selectedVideo = nil
+            selectedPhoto = nil
+        }
+        .onChange(of: repository.paginationError) { _, message in
+            // Load-more failures surface here as a toast; the list stays.
+            guard let message else { return }
+            toastMessage = message
+            repository.paginationError = nil
+        }
         .onChange(of: focusedItem) { _, newId in
             Task { @MainActor in
                 if let id = newId, let item = items.first(where: { $0.id == id }) {

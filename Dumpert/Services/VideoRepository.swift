@@ -40,7 +40,17 @@ final class VideoRepository {
 
     // State
     private(set) var isLoading = true
+    /// App-wide condition only (offline refresh). Feed-specific failures live
+    /// in the scoped errors below so a classics hiccup can't surface as
+    /// "Er ging iets mis" on an unrelated, legitimately-empty tab.
     private(set) var error: String?
+    private(set) var toppersError: String?
+    private(set) var classicsError: String?
+    private(set) var categoryErrors: [VideoCategory: String] = [:]
+    /// Transient load-more failure, surfaced as a toast by whichever section
+    /// triggered it (the list itself stays on screen). Writable so the view
+    /// can clear it after showing the toast.
+    var paginationError: String?
     private(set) var lastRefreshDate: Date?
 
     // Dependencies
@@ -132,6 +142,25 @@ final class VideoRepository {
         if let cachedClassics = await cacheService.loadCachedMediaItems(for: "classics") {
             classics = cachedClassics
         }
+
+        // Toppers were cached by refreshToppers but never read back, so an
+        // offline launch showed an error on the landing tab while every other
+        // tab happily served cache. Mirror refreshToppers' kudos filtering.
+        if let cached = await cacheService.loadCachedMediaItems(for: "hotshiz"), !cached.isEmpty {
+            hotshiz = filterByKudos(cached)
+        }
+        if let cached = await cacheService.loadCachedMediaItems(for: "topweek"), !cached.isEmpty {
+            topWeek = filterByKudos(cached)
+        }
+        if let cached = await cacheService.loadCachedMediaItems(for: "topmonth"), !cached.isEmpty {
+            topMonth = filterByKudos(cached)
+        }
+        if let cached = await cacheService.loadCachedMediaItems(for: "topday"), !cached.isEmpty {
+            topDay = filterByKudos(cached)
+        }
+        if !hotshiz.isEmpty {
+            recomputePopularTags()
+        }
     }
 
     private func setupCloudKit() async {
@@ -162,6 +191,10 @@ final class VideoRepository {
         if let networkMonitor, !networkMonitor.isConnected {
             await Task.yield()
             isLoading = false
+            // Without this, pressing "Opnieuw proberen" while offline flashed
+            // the skeleton for a frame and landed back on the same screen with
+            // zero feedback — only the bottom banner hinted why.
+            error = String(localized: "Geen internetverbinding", comment: "Offline banner message")
             return
         }
 
@@ -344,6 +377,7 @@ final class VideoRepository {
             topWeek = filterByKudos(weekResult)
             topMonth = filterByKudos(monthResult)
             topDay = filterByKudos(dayResult)
+            toppersError = nil
 
             recomputePopularTags()
 
@@ -352,7 +386,7 @@ final class VideoRepository {
             await cacheService.cacheMediaItems(monthResult, for: "topmonth")
             await cacheService.cacheMediaItems(dayResult, for: "topday")
         } catch {
-            self.error = error.localizedDescription
+            toppersError = error.localizedDescription
         }
     }
 
@@ -404,8 +438,9 @@ final class VideoRepository {
                     categoryPages[category] = 0
                     categorySeenRawIDs[category] = Set(page.rawIDs)
                     categoryHasMore[category] = !page.rawIDs.isEmpty
+                    categoryErrors[category] = nil
                 } else if let errorMessage {
-                    self.error = errorMessage
+                    categoryErrors[category] = errorMessage
                 }
                 categoryRefreshing.remove(category)
             }
@@ -419,9 +454,10 @@ final class VideoRepository {
             let items = try await apiClient.fetchClassics()
             classics = filterByKudos(items)
             classicsHasMore = !items.isEmpty
+            classicsError = nil
             await cacheService.cacheMediaItems(items, for: "classics")
         } catch {
-            self.error = error.localizedDescription
+            classicsError = error.localizedDescription
         }
     }
 
@@ -491,7 +527,10 @@ final class VideoRepository {
                 }
             }
         } catch {
-            self.error = error.localizedDescription
+            // Pagination failures were silent ("Meer laden…" just vanished)
+            // AND poisoned the app-wide error string that later surfaced on
+            // unrelated tabs. Toast it in the originating section instead.
+            paginationError = error.localizedDescription
         }
 
         isCategoryLoadingMore[category] = false
@@ -514,7 +553,8 @@ final class VideoRepository {
                 classicsPage = nextPage
             }
         } catch {
-            self.error = error.localizedDescription
+            // See loadMoreForCategory — toast, don't poison the global error.
+            paginationError = error.localizedDescription
         }
 
         isClassicsLoadingMore = false
@@ -555,8 +595,12 @@ final class VideoRepository {
         categoryRefreshing.insert(category)
         categoryPages[category] = 0
         categoryHasMore[category] = true
-        categoryVideos[category] = []
         categorySeenRawIDs[category] = []
+        // Deliberately NOT clearing categoryVideos here: emptying the array
+        // synchronously made the view flash "Geen video's" (or a stale error)
+        // for the whole refetch round-trip. The old list stays visible and is
+        // replaced wholesale below; `categoryRefreshing` already blocks
+        // load-more appends in the meantime.
         Task {
             defer { categoryRefreshing.remove(category) }
             do {
@@ -570,8 +614,9 @@ final class VideoRepository {
                 categoryVideos[category] = page.items
                 categoryHasMore[category] = !page.rawIDs.isEmpty
                 categorySeenRawIDs[category] = Set(page.rawIDs)
+                categoryErrors[category] = nil
             } catch {
-                self.error = error.localizedDescription
+                categoryErrors[category] = error.localizedDescription
             }
         }
     }
@@ -587,8 +632,8 @@ final class VideoRepository {
         categoryRefreshing.insert(category)
         categoryPages[category] = 0
         categoryHasMore[category] = true
-        categoryVideos[category] = []
         categorySeenRawIDs[category] = []
+        // Not clearing categoryVideos — see setSortOrder for why.
         Task {
             defer { categoryRefreshing.remove(category) }
             do {
@@ -602,8 +647,9 @@ final class VideoRepository {
                 categoryVideos[category] = page.items
                 categoryHasMore[category] = !page.rawIDs.isEmpty
                 categorySeenRawIDs[category] = Set(page.rawIDs)
+                categoryErrors[category] = nil
             } catch {
-                self.error = error.localizedDescription
+                categoryErrors[category] = error.localizedDescription
             }
         }
     }

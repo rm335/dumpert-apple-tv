@@ -108,7 +108,8 @@ class ContentProvider: TVTopShelfContentProvider {
 
     private static func formatKudos(_ kudos: Int) -> String {
         if abs(kudos) >= 1000 {
-            return String(format: "%.1fk", Double(kudos) / 1000)
+            // Locale-aware separator: "1,2k" for Dutch users, "1.2k" for English.
+            return String(format: "%.1fk", locale: .current, Double(kudos) / 1000)
         }
         return "\(kudos)"
     }

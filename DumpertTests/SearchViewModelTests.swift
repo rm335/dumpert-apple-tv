@@ -225,7 +225,12 @@ struct SearchViewModelTests {
         await vm.loadMore()
 
         #expect(vm.isLoadingMore == false)
-        #expect(vm.error != nil)
+        // A load-more failure must NOT set the full-screen `error` (that
+        // would wipe the on-screen results grid) — it surfaces as a toast
+        // via `loadMoreError` while the loaded results stay visible.
+        #expect(vm.error == nil)
+        #expect(vm.loadMoreError != nil)
+        #expect(vm.results.count == 1)
     }
 
     @Test("Cache hit returns without leaving isSearching stuck")

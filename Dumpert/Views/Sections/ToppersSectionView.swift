@@ -78,7 +78,7 @@ struct ToppersSectionView: View {
                     .padding(.vertical, 30)
                 }
                 .transition(.opacity)
-            } else if let error = repository.error, repository.hotshiz.isEmpty {
+            } else if let error = repository.toppersError ?? repository.error, repository.hotshiz.isEmpty {
                 errorView(message: error)
                     .transition(.opacity)
             } else if !repository.isLoading && repository.hotshiz.isEmpty
@@ -90,6 +90,20 @@ struct ToppersSectionView: View {
                 ) {
                     Task { await repository.refreshAll() }
                 }
+                .transition(.opacity)
+            } else if !repository.isLoading && heroItems.isEmpty
+                        && repository.filteredItems(repository.topDay).isEmpty
+                        && repository.filteredItems(repository.topWeek).isEmpty
+                        && repository.filteredItems(repository.topMonth).isEmpty {
+                // Raw feeds have items but the active filters (minimum kudos,
+                // NSFW, verberg bekeken) exclude every one of them. Without
+                // this branch the landing tab renders a blank, unfocusable
+                // screen: no hero, and every mediaRow collapses to nothing.
+                EmptyStateView(
+                    title: "Geen video's met deze filters",
+                    systemImage: "line.3.horizontal.decrease.circle",
+                    description: "Pas je filters aan in Instellingen om meer video's te zien"
+                )
                 .transition(.opacity)
             } else {
                 ScrollView {
@@ -128,16 +142,22 @@ struct ToppersSectionView: View {
                 if case .video(let v) = item { return v }
                 return nil
             }
-            VideoPlayerView(viewModel: VideoPlayerViewModel(
+            VideoPlayerView(
                 video: video,
                 playlist: videoPlaylist,
                 repository: repository
-            ))
+            )
         }
         .fullScreenCover(item: $selectedPhoto) { photo in
             FullScreenImageView(photo: photo, repository: repository)
         }
         .toast(message: $toastMessage)
+        .onChange(of: PlaybackCoordinator.shared.deepLinkTakeoverID) {
+            // A Top Shelf/deep-link tap needs the stage: dismiss our covers
+            // so the root-level deep-link presentation can succeed.
+            selectedVideo = nil
+            selectedPhoto = nil
+        }
         .task {
             if !heroItems.isEmpty {
                 backgroundState.update(for: heroItems[safeHeroIndex])
@@ -327,7 +347,7 @@ struct ToppersSectionView: View {
             if !hero.descriptionText.isEmpty {
                 Text(hero.descriptionText)
                     .font(.callout)
-                    .lineLimit(1)
+                    .lineLimit(2)
                     .foregroundStyle(.white.opacity(0.8))
             }
             HStack(spacing: 10) {

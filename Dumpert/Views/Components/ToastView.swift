@@ -34,13 +34,15 @@ struct ToastModifier: ViewModifier {
                 }
             }
             .animation(reduceMotion ? nil : .dumpiToast, value: message)
-            .onChange(of: message) {
+            // task(id:) cancels the previous timer when a new message arrives,
+            // so a second toast gets its full duration instead of being
+            // dismissed by the first toast's deadline.
+            .task(id: message) {
                 guard let msg = message else { return }
                 AccessibilityNotification.Announcement(msg).post()
-                Task { @MainActor in
-                    try? await Task.sleep(for: .seconds(duration))
-                    withAnimation(reduceMotion ? nil : .default) { self.message = nil }
-                }
+                try? await Task.sleep(for: .seconds(duration))
+                guard !Task.isCancelled else { return }
+                withAnimation(reduceMotion ? nil : .default) { self.message = nil }
             }
     }
 }

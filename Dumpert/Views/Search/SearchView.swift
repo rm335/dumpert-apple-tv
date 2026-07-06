@@ -14,6 +14,13 @@ struct SearchView: View {
         Group {
             if let viewModel {
                 searchNavigationStack(viewModel)
+                    .onChange(of: viewModel.loadMoreError) { _, message in
+                        // Pagination failures surface as a toast so the
+                        // loaded results grid stays on screen.
+                        guard let message else { return }
+                        toastMessage = message
+                        viewModel.loadMoreError = nil
+                    }
             } else {
                 ProgressView()
             }
@@ -34,16 +41,22 @@ struct SearchView: View {
                 if case .video(let v) = item { return v }
                 return nil
             }
-            VideoPlayerView(viewModel: VideoPlayerViewModel(
+            VideoPlayerView(
                 video: video,
                 playlist: videoPlaylist,
                 repository: repository
-            ))
+            )
         }
         .fullScreenCover(item: $selectedPhoto) { photo in
             FullScreenImageView(photo: photo, repository: repository)
         }
         .toast(message: $toastMessage)
+        .onChange(of: PlaybackCoordinator.shared.deepLinkTakeoverID) {
+            // A Top Shelf/deep-link tap needs the stage: dismiss our covers
+            // so the root-level deep-link presentation can succeed.
+            selectedVideo = nil
+            selectedPhoto = nil
+        }
         .onChange(of: focusedItem) { _, newId in
             Task { @MainActor in
                 if let id = newId,

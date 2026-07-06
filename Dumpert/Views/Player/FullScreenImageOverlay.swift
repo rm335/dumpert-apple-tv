@@ -20,10 +20,12 @@ extension FullScreenImageView {
                         .font(.headline)
                         .lineLimit(2)
                     if !photo.descriptionText.isEmpty {
+                        // Descriptions often carry the joke — give them room
+                        // instead of cutting them to a single line.
                         Text(photo.descriptionText)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                            .lineLimit(3)
                     }
                 }
 
@@ -66,10 +68,12 @@ extension FullScreenImageView {
                         .font(.headline)
                         .lineLimit(2)
                     if !photo.descriptionText.isEmpty {
+                        // Descriptions often carry the joke — give them room
+                        // instead of cutting them to a single line.
                         Text(photo.descriptionText)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                            .lineLimit(3)
                     }
                 }
 

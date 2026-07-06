@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import Dumpert
 
@@ -24,9 +25,12 @@ struct DurationFormatterTests {
         #expect(0.formattedDuration == "0:00")
     }
 
-    @Test("Formats long durations")
+    @Test("Formats long durations with an hour component")
     func formatsLongDuration() {
-        #expect(3661.formattedDuration == "61:01")
+        // 61 minutes must roll over into hours, not render as "61:01".
+        #expect(3661.formattedDuration == "1:01:01")
+        #expect(5400.formattedDuration == "1:30:00")
+        #expect(3599.formattedDuration == "59:59")
     }
 
     @Test("Pads seconds with leading zero")
@@ -42,20 +46,25 @@ struct DurationFormatterTests {
         #expect(999.formattedCount == "999")
     }
 
+    /// formattedCount follows the current locale's decimal separator
+    /// ("1,2k" for Dutch, "1.2k" for English), so expectations are built
+    /// with the same separator the formatter will use.
+    private var sep: String { Locale.current.decimalSeparator ?? "." }
+
     @Test("formattedCount abbreviates thousands")
     func countThousands() {
-        #expect(1_000.formattedCount == "1.0k")
-        #expect(63_759.formattedCount == "63.8k")
+        #expect(1_000.formattedCount == "1\(sep)0k")
+        #expect(63_759.formattedCount == "63\(sep)8k")
     }
 
     @Test("formattedCount abbreviates millions")
     func countMillions() {
-        #expect(1_200_000.formattedCount == "1.2M")
+        #expect(1_200_000.formattedCount == "1\(sep)2M")
     }
 
     @Test("formattedCount preserves sign for negative kudos")
     func countNegative() {
-        #expect((-1_500).formattedCount == "-1.5k")
+        #expect((-1_500).formattedCount == "-1\(sep)5k")
         #expect((-42).formattedCount == "-42")
     }
 }

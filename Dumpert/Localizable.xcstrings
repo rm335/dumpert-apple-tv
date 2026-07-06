@@ -1,43 +1,7 @@
 {
   "sourceLanguage" : "nl",
   "strings" : {
-    "" : {
-
-    },
-    "·" : {
-      "comment" : "Bullet separator between metadata items",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "·"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "·"
-          }
-        }
-      }
-    },
-    "@%@" : {
-      "comment" : "Username display format (e.g. @username)",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "@%@"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "@%@"
-          }
-        }
-      }
-    },
+    "" : {},
     "%@" : {
       "localizations" : {
         "en" : {
@@ -178,15 +142,39 @@
       "comment" : "Search result count",
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld results"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld result"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld results"
+                }
+              }
+            }
           }
         },
         "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld resultaten"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld resultaat"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld resultaten"
+                }
+              }
+            }
           }
         }
       }
@@ -276,91 +264,6 @@
         }
       }
     },
-    "2 minuten" : {
-      "comment" : "Duration option - 2 minutes",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2 minutes"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "2 minuten"
-          }
-        }
-      }
-    },
-    "3 seconden" : {
-      "comment" : "Countdown option - 3 seconds",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3 seconds"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "3 seconden"
-          }
-        }
-      }
-    },
-    "5 minuten" : {
-      "comment" : "Duration filter option - 5 minutes",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "5 minutes"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "5 minuten"
-          }
-        }
-      }
-    },
-    "5 seconden" : {
-      "comment" : "Countdown option - 5 seconds",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "5 seconds"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "5 seconden"
-          }
-        }
-      }
-    },
-    "5+ min" : {
-      "comment" : "Reeten minimum duration: 5 minutes",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "5+ min"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "5+ min"
-          }
-        }
-      }
-    },
     "10 minuten" : {
       "comment" : "Duration filter option - 10 minutes",
       "localizations" : {
@@ -429,6 +332,23 @@
         }
       }
     },
+    "100+ kudos" : {
+      "comment" : "Kudos filter option - 100 or more kudos",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "100+ kudos"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "100+ kudos"
+          }
+        }
+      }
+    },
     "15 minuten" : {
       "comment" : "Duration filter option - 15 minutes",
       "localizations" : {
@@ -459,6 +379,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "15+ min"
+          }
+        }
+      }
+    },
+    "2 minuten" : {
+      "comment" : "Duration option - 2 minutes",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 minutes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2 minuten"
           }
         }
       }
@@ -514,6 +451,40 @@
         }
       }
     },
+    "250+ kudos" : {
+      "comment" : "Kudos filter option - 250 or more kudos",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "250+ kudos"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "250+ kudos"
+          }
+        }
+      }
+    },
+    "3 seconden" : {
+      "comment" : "Countdown option - 3 seconds",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 seconds"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 seconden"
+          }
+        }
+      }
+    },
     "30 seconden" : {
       "comment" : "Duration option - 30 seconds",
       "localizations" : {
@@ -527,6 +498,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "30 seconden"
+          }
+        }
+      }
+    },
+    "5 minuten" : {
+      "comment" : "Duration filter option - 5 minutes",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 minutes"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 minuten"
+          }
+        }
+      }
+    },
+    "5 seconden" : {
+      "comment" : "Countdown option - 5 seconds",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 seconds"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5 seconden"
+          }
+        }
+      }
+    },
+    "5+ min" : {
+      "comment" : "Reeten minimum duration: 5 minutes",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5+ min"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5+ min"
           }
         }
       }
@@ -548,40 +570,6 @@
         }
       }
     },
-    "100+ kudos" : {
-      "comment" : "Kudos filter option - 100 or more kudos",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "100+ kudos"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "100+ kudos"
-          }
-        }
-      }
-    },
-    "250+ kudos" : {
-      "comment" : "Kudos filter option - 250 or more kudos",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "250+ kudos"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "250+ kudos"
-          }
-        }
-      }
-    },
     "500+ kudos" : {
       "comment" : "Kudos filter option - 500 or more kudos",
       "localizations" : {
@@ -595,6 +583,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "500+ kudos"
+          }
+        }
+      }
+    },
+    "@%@" : {
+      "comment" : "Username display format (e.g. @username)",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "@%@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "@%@"
           }
         }
       }
@@ -1621,6 +1626,16 @@
         }
       }
     },
+    "Geen video's met deze filters" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No videos with these filters"
+          }
+        }
+      }
+    },
     "Gekeken" : {
       "comment" : "Watched tab title\nWatched tab: section title",
       "localizations" : {
@@ -1791,23 +1806,6 @@
         }
       }
     },
-    "iCloud sync" : {
-      "comment" : "Settings: iCloud sync label",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iCloud sync"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iCloud sync"
-          }
-        }
-      }
-    },
     "Inactief" : {
       "comment" : "Accessibility: filter is inactive",
       "localizations" : {
@@ -1855,6 +1853,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Inzoomen"
+          }
+        }
+      }
+    },
+    "Je kijkgeschiedenis kan niet geladen worden zonder internet" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your watch history can't be loaded without an internet connection"
           }
         }
       }
@@ -1957,6 +1965,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Kon geen video's laden. Controleer je internetverbinding."
+          }
+        }
+      }
+    },
+    "Kon video niet laden" : {
+      "comment" : "Toast when a deep-linked video fails to load",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load video"
           }
         }
       }
@@ -2369,6 +2388,40 @@
         }
       }
     },
+    "NSFW" : {
+      "comment" : "Label for not-safe-for-work content badge",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NSFW"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NSFW"
+          }
+        }
+      }
+    },
+    "NSFW-content tonen" : {
+      "comment" : "Settings: NSFW toggle label",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show NSFW content"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NSFW-content tonen"
+          }
+        }
+      }
+    },
     "Naar boven" : {
       "comment" : "Scroll to top button",
       "localizations" : {
@@ -2501,40 +2554,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Normaal (3 woorden/sec)"
-          }
-        }
-      }
-    },
-    "NSFW" : {
-      "comment" : "Label for not-safe-for-work content badge",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NSFW"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NSFW"
-          }
-        }
-      }
-    },
-    "NSFW-content tonen" : {
-      "comment" : "Settings: NSFW toggle label",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show NSFW content"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "NSFW-content tonen"
           }
         }
       }
@@ -2688,6 +2707,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Overlay, aftelling en minimale videolengte"
+          }
+        }
+      }
+    },
+    "Pas je filters aan in Instellingen om meer video's te zien" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adjust your filters in Settings to see more videos"
           }
         }
       }
@@ -3305,23 +3334,6 @@
         }
       }
     },
-    "Top reaguursel van %@: %@" : {
-      "comment" : "Accessibility: top comment by author",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Top comment by %1$@: %2$@"
-          }
-        },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Top reaguursel van %1$@: %2$@"
-          }
-        }
-      }
-    },
     "Top Vandaag" : {
       "comment" : "Section title for today's top videos",
       "localizations" : {
@@ -3335,6 +3347,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Top Vandaag"
+          }
+        }
+      }
+    },
+    "Top reaguursel van %@: %@" : {
+      "comment" : "Accessibility: top comment by author",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top comment by %1$@: %2$@"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Top reaguursel van %1$@: %2$@"
           }
         }
       }
@@ -3573,6 +3602,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Video"
+          }
+        }
+      }
+    },
+    "Video niet gevonden" : {
+      "comment" : "Toast when a deep-linked video does not exist",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video not found"
           }
         }
       }
@@ -3947,6 +3987,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zoom resetten"
+          }
+        }
+      }
+    },
+    "iCloud sync" : {
+      "comment" : "Settings: iCloud sync label",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud sync"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iCloud sync"
+          }
+        }
+      }
+    },
+    "·" : {
+      "comment" : "Bullet separator between metadata items",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "·"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "·"
           }
         }
       }

@@ -3,7 +3,32 @@ import AVKit
 
 struct VideoPlayerView: View {
     @Environment(LoadingSoundPlayer.self) private var soundPlayer
-    let viewModel: VideoPlayerViewModel
+    /// Owned in @State so the SAME view model survives re-evaluations of the
+    /// enclosing `fullScreenCover` content closure. Those closures read
+    /// @Observable repository state (feeds, watchProgress) that mutates every
+    /// ~5s during playback (saveProgress); with a plain `let` each re-render
+    /// swapped in a fresh, inert view model while the real player kept running
+    /// on the original — so cleanup() ran on the wrong instance, leaving
+    /// PlaybackCoordinator wedged (focus previews dead for the session) and
+    /// PiP audio/now-playing torn down mid-session.
+    @State private var viewModel: VideoPlayerViewModel
+
+    init(
+        video: Video,
+        playlist: [Video] = [],
+        repository: VideoRepository,
+        startFromBeginning: Bool = false
+    ) {
+        // State(initialValue:) constructs a throwaway VM on each closure
+        // re-run, but VideoPlayerViewModel.init is side-effect free — only the
+        // first instance is retained and ever calls setupPlayer()/cleanup().
+        _viewModel = State(initialValue: VideoPlayerViewModel(
+            video: video,
+            playlist: playlist,
+            repository: repository,
+            startFromBeginning: startFromBeginning
+        ))
+    }
 
     var body: some View {
         PlayerRepresentable(viewModel: viewModel)

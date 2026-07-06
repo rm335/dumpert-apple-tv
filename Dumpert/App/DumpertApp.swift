@@ -36,6 +36,10 @@ struct DumpertApp: App {
             .environment(backgroundState)
             .environment(soundPlayer)
             .tint(.dumpiGreen)
+            // The whole app is designed on a black immersive background with
+            // semantic text colors — in the system Light appearance those flip
+            // to near-black-on-black. Dark is the only supported appearance.
+            .preferredColorScheme(.dark)
             .task {
                 videoRepository.networkMonitor = networkMonitor
             }
@@ -47,7 +51,12 @@ struct DumpertApp: App {
             case .active:
                 if let bgDate = backgroundDate,
                    Date().timeIntervalSince(bgDate) >= 300 {
-                    showLoadingScreen = true
+                    // With a player presented (full-screen or PiP) the loading
+                    // screen would be invisible behind the cover — but its
+                    // onAppear would still blast a random sound over the video.
+                    if !PlaybackCoordinator.shared.isPlaybackActive {
+                        showLoadingScreen = true
+                    }
                     Task { await videoRepository.refreshAll() }
                 }
                 backgroundDate = nil
