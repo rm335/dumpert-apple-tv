@@ -9,7 +9,17 @@ import SwiftUI
 /// - Gradient: strong bottom darkening for content readability,
 ///   moderate top darkening for tab bar area
 struct ImmersiveBackgroundView: View {
-    let imageURL: URL?
+    // Read the active URL from the environment object HERE rather than taking it
+    // as a parameter from ContentView. Under @Observable, whoever reads
+    // `backgroundState.activeURL` in its body is invalidated when it changes —
+    // and activeURL changes constantly (every focus hop drives currentImageURL).
+    // Reading it in ContentView recomputed the ZStack that hosts the TabView's
+    // UITabBarController on every focus move, which can reconcile/free the flip
+    // transition's destination view mid-animation and crash in
+    // setToViewXFlippedScreenShot:. Confining the read here keeps the tab-bar
+    // parent stable; only this background view redraws.
+    // ponytail: env read, not a param — that's the whole fix.
+    @Environment(ImmersiveBackgroundState.self) private var backgroundState
 
     // Double-buffer for crossfade: alternate between A and B layers
     @State private var imageA: UIImage?
@@ -37,8 +47,8 @@ struct ImmersiveBackgroundView: View {
             }
         }
         .ignoresSafeArea()
-        .task(id: imageURL) {
-            await loadImage()
+        .task(id: backgroundState.activeURL) {
+            await loadImage(backgroundState.activeURL)
         }
     }
 
@@ -77,7 +87,7 @@ struct ImmersiveBackgroundView: View {
 
     // MARK: - Image Loading with Crossfade
 
-    private func loadImage() async {
+    private func loadImage(_ imageURL: URL?) async {
         guard let url = imageURL, url != loadedURL else { return }
 
         guard let image = try? await ImageCacheService.shared.image(for: url) else { return }

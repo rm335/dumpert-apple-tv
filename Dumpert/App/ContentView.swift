@@ -14,7 +14,7 @@ struct ContentView: View {
 
     var body: some View {
         ZStack {
-            ImmersiveBackgroundView(imageURL: backgroundState.activeURL)
+            ImmersiveBackgroundView()
 
             TabView(selection: $selectedTab) {
                 ToppersSectionView()
