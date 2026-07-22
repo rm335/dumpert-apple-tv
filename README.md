@@ -38,10 +38,18 @@
   </a>
 </p>
 
+<p align="center">
+  <a href="https://testflight.apple.com/join/TXTUMzEq">
+    <img src="assets/testflight-qr.png" alt="QR code linking to the DumpertTV TestFlight beta invite" width="200">
+  </a>
+  <br>
+  <sub>Scan with your iPhone camera — TestFlight opens the invite automatically.</sub>
+</p>
+
 The easiest way to install DumpertTV on your Apple TV:
 
 1. Install **TestFlight** from the App Store on your Apple TV and iPhone
-2. Open the [TestFlight invite link](https://testflight.apple.com/join/TXTUMzEq) on your iPhone and accept the invite
+2. Open the [TestFlight invite link](https://testflight.apple.com/join/TXTUMzEq) on your iPhone — or scan the QR code above with your iPhone camera — and accept the invite
 3. Open **TestFlight** on your Apple TV and install the app
 
 ---

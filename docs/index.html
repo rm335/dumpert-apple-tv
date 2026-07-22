@@ -97,7 +97,11 @@
     .card .ic{font-size:22px;margin-bottom:10px;display:block}
 
     /* install */
-    .steps{counter-reset:step;display:grid;gap:14px;max-width:680px}
+    .install{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+    .steps{counter-reset:step;display:grid;gap:14px;max-width:680px;flex:1 1 420px}
+    .qr{margin:0;text-align:center}
+    .qr img{display:block;background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px}
+    .qr figcaption{color:var(--dim);font-size:13px;margin-top:8px;max-width:200px}
     .step{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px 16px 58px;position:relative}
     .step::before{counter-increment:step;content:counter(step);position:absolute;left:16px;top:14px;
       width:28px;height:28px;border-radius:50%;background:var(--accent);color:#0a0d08;
@@ -170,10 +174,18 @@
     <div class="wrap">
       <h2>Install via TestFlight</h2>
       <p class="lead">The app is in a free, public TestFlight beta.</p>
-      <div class="steps">
-        <div class="step">Install <strong>TestFlight</strong> from the App Store on your Apple TV and iPhone.</div>
-        <div class="step">Open the <a href="https://testflight.apple.com/join/TXTUMzEq">TestFlight invite link</a> on your iPhone and accept the invite.</div>
-        <div class="step">Open <strong>TestFlight</strong> on your Apple TV and install DumpertTV.</div>
+      <div class="install">
+        <div class="steps">
+          <div class="step">Install <strong>TestFlight</strong> from the App Store on your Apple TV and iPhone.</div>
+          <div class="step">Open the <a href="https://testflight.apple.com/join/TXTUMzEq">TestFlight invite link</a> on your iPhone — or scan the QR code with your iPhone camera — and accept the invite.</div>
+          <div class="step">Open <strong>TestFlight</strong> on your Apple TV and install DumpertTV.</div>
+        </div>
+        <figure class="qr">
+          <a href="https://testflight.apple.com/join/TXTUMzEq">
+            <img src="testflight-qr.png" alt="QR code linking to the DumpertTV TestFlight beta invite" width="200" height="200" loading="lazy">
+          </a>
+          <figcaption>Scan with your iPhone camera — TestFlight opens the invite automatically.</figcaption>
+        </figure>
       </div>
     </div>
   </section>
