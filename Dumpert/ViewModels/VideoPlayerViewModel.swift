@@ -111,9 +111,20 @@ final class VideoPlayerViewModel {
         // Match by id, not full value-equality: Video is Hashable over every
         // field (incl. kudos/views stats), so a stats-divergent copy of the same
         // video would fail `firstIndex(of:)` and silently start at index 0.
-        let startIndex = playlist.firstIndex { $0.id == video.id } ?? 0
-        self.currentIndex = startIndex
-        self.currentVideo = playlist.isEmpty ? video : playlist[startIndex]
+        //
+        // When `video` isn't in `playlist` at all, currentVideo MUST stay the
+        // tapped `video` — never fall back to playlist[0]. setupPlayer loads
+        // `video.streamURL`, while every progress read/write and the resume seek
+        // key off `currentVideo`; if those name different clips the saved position
+        // of playlist[0] seeks onto the video actually playing (positions "bleed"
+        // between clips) and this clip's progress is written under playlist[0]'s
+        // id, so it never remembers its own resume point. This happens in the
+        // Toppers tab, whose Top-dag/week/maand rows present clips but hand the
+        // player the hotshiz-only playlist. The old `?? 0` fallback hid the
+        // mismatch.
+        let startIndex = playlist.firstIndex { $0.id == video.id }
+        self.currentIndex = startIndex ?? 0
+        self.currentVideo = startIndex.map { playlist[$0] } ?? video
         self.startFromBeginning = startFromBeginning
     }
 
@@ -667,6 +678,18 @@ final class VideoPlayerViewModel {
 
         let seekTime = CMTime(seconds: progress.watchedSeconds, preferredTimescale: 600)
         player?.seek(to: seekTime, toleranceBefore: .zero, toleranceAfter: .zero)
+        Logger.playback.debug("resume id=\(video.id, privacy: .public) to=\(progress.watchedSeconds)s of=\(progress.totalSeconds)s")
+
+        // Guard the resume position from the first periodic tick: the seek above
+        // may not have landed on an HLS stream by the time the ~1s observer fires,
+        // so currentTime can still read ~0. Without priming the throttle, that
+        // first saveProgress() would persist ~0:00 over the position we just
+        // resumed to (watchedSeconds regresses) — the clip then "restarts at 0"
+        // next time. Priming suppresses non-forced saves until the seek settles
+        // and currentTime reflects it. ponytail: a forced save (pause/exit) inside
+        // this window can still race a slow seek; acceptable, seeks land well
+        // under 5s on the paths that resume at all.
+        lastSaveTime = Date()
 
         if repository.settings.showResumeOverlay {
             resumeTimeFormatted = Int(progress.watchedSeconds).formattedDuration

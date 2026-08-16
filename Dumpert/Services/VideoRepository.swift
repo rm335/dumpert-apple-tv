@@ -675,6 +675,7 @@ final class VideoRepository {
     // MARK: - Watch Progress
 
     func updateWatchProgress(videoId: String, watchedSeconds: Double, totalSeconds: Double) {
+        Logger.playback.debug("save progress id=\(videoId, privacy: .public) watched=\(watchedSeconds)s total=\(totalSeconds)s")
         var progress = watchProgress[videoId] ?? WatchProgress(videoId: videoId)
         progress.update(watchedSeconds: watchedSeconds, totalSeconds: totalSeconds)
         watchProgress[videoId] = progress

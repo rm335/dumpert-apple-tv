@@ -8,4 +8,5 @@ extension Logger {
     static let network = Logger(subsystem: subsystem, category: "Network")
     static let thumbnail = Logger(subsystem: subsystem, category: "Thumbnail")
     static let monitoring = Logger(subsystem: subsystem, category: "Monitoring")
+    static let playback = Logger(subsystem: subsystem, category: "Playback")
 }
