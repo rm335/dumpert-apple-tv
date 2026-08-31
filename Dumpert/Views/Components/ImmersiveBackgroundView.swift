@@ -55,12 +55,13 @@ struct ImmersiveBackgroundView: View {
     // MARK: - Image Layer
 
     private func backgroundLayer(_ image: UIImage, size: CGSize) -> some View {
+        // Blur + saturation are baked into the bitmap by BackgroundBlur, NOT
+        // applied live here. A live `.blur` re-rasterized a full-screen 4K
+        // gaussian on every layout pass and hung the main thread (DUMPERT-APPLE-TV-4).
         Image(uiImage: image)
             .resizable()
             .aspectRatio(contentMode: .fill)
             .frame(width: size.width, height: size.height)
-            .blur(radius: 20)
-            .saturation(0.8)
             .clipped()
     }
 
@@ -90,7 +91,7 @@ struct ImmersiveBackgroundView: View {
     private func loadImage(_ imageURL: URL?) async {
         guard let url = imageURL, url != loadedURL else { return }
 
-        guard let image = try? await ImageCacheService.shared.image(for: url) else { return }
+        guard let image = try? await ImageCacheService.shared.blurredBackgroundImage(for: url) else { return }
 
         loadedURL = url
 

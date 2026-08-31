@@ -76,6 +76,23 @@ actor ImageCacheService {
         return image
     }
 
+    /// Returns a pre-blurred, downsampled background image for `url`.
+    /// Blurring happens here on the actor (off the main thread) so the immersive
+    /// background never runs a live SwiftUI `.blur` during layout — see
+    /// `BackgroundBlur` for why that hung the main thread (DUMPERT-APPLE-TV-4).
+    /// The blurred bitmap is cached separately so repeated focus hops are free.
+    func blurredBackgroundImage(for url: URL) async throws -> UIImage {
+        let blurKey = "blur:\(cacheKey(for: url))" as NSString
+        if let cached = memoryCache.object(forKey: blurKey) {
+            return cached
+        }
+        let source = try await image(for: url)
+        let blurred = BackgroundBlur.apply(to: source)
+        // Downsampled bitmap: ~480px longest edge, so ~1MB cost at most.
+        memoryCache.setObject(blurred, forKey: blurKey, cost: 480 * 480 * 4)
+        return blurred
+    }
+
     func clearAll() {
         memoryCache.removeAllObjects()
         try? FileManager.default.removeItem(at: diskCacheURL)
