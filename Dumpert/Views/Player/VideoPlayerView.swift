@@ -102,7 +102,9 @@ private struct PlayerRepresentable: UIViewControllerRepresentable {
         controller.view.addGestureRecognizer(swipeLeft)
         context.coordinator.swipeLeftGesture = swipeLeft
 
+        // Builds transport bar speeds + custom menu (comments, prev/next).
         viewModel.configureTransportBar()
+
         viewModel.play()
         return controller
     }
@@ -165,15 +167,19 @@ private struct PlayerRepresentable: UIViewControllerRepresentable {
             // and there is actually a next/previous video to skip to.
             if gestureRecognizer === swipeRightGesture {
                 let noOverlay = !viewModel.showUpNext && !viewModel.showResumeOverlay
+                    && !viewModel.showCommentsPanel
                 return noOverlay && viewModel.isSwipeSkipEnabled && viewModel.hasNextVideo
             }
             if gestureRecognizer === swipeLeftGesture {
                 let noOverlay = !viewModel.showUpNext && !viewModel.showResumeOverlay
+                    && !viewModel.showCommentsPanel
                 return noOverlay && viewModel.isSwipeSkipEnabled && viewModel.hasPreviousVideo
             }
 
-            // Select gesture: only when controls hidden (to reveal them)
+            // Select gesture: only when controls hidden (to reveal them) and the
+            // comments panel isn't holding focus.
             return viewModel.playerViewController?.showsPlaybackControls == false
+                && !viewModel.showCommentsPanel
         }
 
         @objc func handlePlayPause() {
@@ -238,6 +244,7 @@ private struct UpNextOverlayContainer: View {
             TopCommentOverlayView(
                 comment: viewModel.currentTopComment,
                 isVisible: viewModel.showTopComment && !viewModel.showUpNext
+                    && !viewModel.showCommentsPanel
             )
 
             // Up next overlay (bottom-right)
@@ -252,6 +259,19 @@ private struct UpNextOverlayContainer: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .animation(reduceMotion ? nil : .spring(duration: 0.5, bounce: 0.2), value: viewModel.showUpNext)
             }
+
+            // Comments panel (right side, read-only thread)
+            if viewModel.showCommentsPanel {
+                CommentsPanelView(
+                    comments: viewModel.allComments,
+                    totalCount: viewModel.commentThreadCount,
+                    isLoading: !viewModel.topCommentsFetched,
+                    loadFailed: viewModel.commentsLoadFailed,
+                    onClose: { viewModel.closeCommentsPanel() }
+                )
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
         }
+        .animation(reduceMotion ? nil : .dumpiOverlay, value: viewModel.showCommentsPanel)
     }
 }

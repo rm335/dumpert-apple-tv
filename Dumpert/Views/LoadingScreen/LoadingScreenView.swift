@@ -187,8 +187,12 @@ struct LoadingScreenView: View {
             return
         }
 
-        logoRotation = Double.random(in: -25...25)
+        // The tilt has to travel INSIDE the transaction. Assigned outside it the
+        // logo snapped to the random angle on one frame and only then zoomed —
+        // a visible pop at the exact moment the app hands over to the UI.
+        let exitTilt = Double.random(in: -25...25)
         withAnimation(.easeIn(duration: 0.6)) {
+            logoRotation = exitTilt
             isExiting = true
         }
 

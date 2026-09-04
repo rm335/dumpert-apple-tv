@@ -61,9 +61,22 @@ final class VideoPlayerViewModel {
     private(set) var topComments: [DumpertComment] = []
     private(set) var currentCommentIndex = 0
     private(set) var showTopComment = false
-    private var topCommentsFetched = false
+    private(set) var topCommentsFetched = false
     private var topCommentCarouselTask: Task<Void, Never>?
     private var topCommentFetchTask: Task<Void, Never>?
+
+    // MARK: - Comments Panel State
+
+    /// The full, unfiltered thread (top-level + nested replies) for the panel.
+    /// `topComments` is the mode-filtered subset the playback carousel shows.
+    private(set) var allComments: [DumpertComment] = []
+    private(set) var showCommentsPanel = false
+    private(set) var commentsLoadFailed = false
+
+    /// Total comment count including replies, for the panel header.
+    var commentThreadCount: Int {
+        allComments.reduce(allComments.count) { $0 + $1.replies.count }
+    }
 
     // MARK: - Now Playing State
 
@@ -179,6 +192,41 @@ final class VideoPlayerViewModel {
             AVPlaybackSpeed(rate: 1.5, localizedName: "1.5×"),
             AVPlaybackSpeed(rate: 2.0, localizedName: "2×"),
         ]
+        rebuildTransportBarMenu()
+    }
+
+    /// (Re)builds the transport bar's custom menu. Prev/Next are included only
+    /// when a target exists, so no dead buttons ever show — must be called again
+    /// whenever the current video changes (playNext/playPrevious), since the menu
+    /// is a static snapshot, unlike the observed overlays.
+    func rebuildTransportBarMenu() {
+        guard let controller = playerViewController else { return }
+        var items: [UIAction] = []
+
+        if hasPreviousVideo {
+            items.append(UIAction(
+                title: String(localized: "Vorige", comment: "Transport bar: previous video"),
+                image: UIImage(systemName: "backward.end.fill")
+            ) { [weak self] _ in
+                MainActor.assumeIsolated { self?.playPrevious() }
+            })
+        }
+        if hasNextVideo {
+            items.append(UIAction(
+                title: String(localized: "Volgende", comment: "Transport bar: next video"),
+                image: UIImage(systemName: "forward.end.fill")
+            ) { [weak self] _ in
+                MainActor.assumeIsolated { self?.skipToNext() }
+            })
+        }
+        items.append(UIAction(
+            title: String(localized: "Reaguursels", comment: "Transport bar: open comments panel"),
+            image: UIImage(systemName: "text.bubble")
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.toggleCommentsPanel() }
+        })
+
+        controller.transportBarCustomMenuItems = items
     }
 
     func play() {
@@ -379,7 +427,11 @@ final class VideoPlayerViewModel {
             preloadedItem = AVPlayerItem(url: url)
         }
 
+        // No Up Next card while the comments panel is open: its "Afspelen"
+        // button would steal focus mid-read. Autoplay still advances at the end
+        // via onVideoFinished; only the preview card is suppressed.
         guard upNextOverlayEnabled,
+              !showCommentsPanel,
               upNextMinimumVideoSeconds == 0 || duration >= Double(upNextMinimumVideoSeconds) else { return }
 
         if remaining <= Double(upNextCountdownSeconds) && remaining > 0 {
@@ -495,6 +547,7 @@ final class VideoPlayerViewModel {
         playerViewController?.showsPlaybackControls = false
         showNowPlayingBriefly(video.title)
         configureNowPlaying(for: video)
+        rebuildTransportBarMenu()
         restorePlayerFocus()
     }
 
@@ -541,6 +594,7 @@ final class VideoPlayerViewModel {
         playerViewController?.showsPlaybackControls = false
         showNowPlayingBriefly(video.title)
         configureNowPlaying(for: video)
+        rebuildTransportBarMenu()
         restorePlayerFocus()
     }
 
@@ -548,7 +602,14 @@ final class VideoPlayerViewModel {
 
     private func fetchTopCommentsIfNeeded(for itemId: String) {
         guard repository.settings.topCommentMode != .off else { return }
+        startCommentsFetch(for: itemId)
+    }
+
+    /// Fetches the full thread regardless of `topCommentMode` — the carousel
+    /// applies the mode filter to `topComments`; the panel reads `allComments`.
+    private func startCommentsFetch(for itemId: String) {
         topCommentsFetched = false
+        commentsLoadFailed = false
         // Cancel any in-flight fetch for the previous video: without this, a fast
         // A→B switch lets A's fetch resolve and write A's comments onto B. The
         // weak capture also lets the view model deinit while a fetch is suspended.
@@ -556,28 +617,31 @@ final class VideoPlayerViewModel {
         topCommentFetchTask = Task { [weak self] in
             guard let self else { return }
             do {
-                let allComments = try await self.repository.fetchTopComments(for: itemId)
+                let fetched = try await self.repository.fetchTopComments(for: itemId)
                 guard !Task.isCancelled else { return }
+                self.allComments = fetched
                 let mode = self.repository.settings.topCommentMode
                 switch mode {
                 case .off:
                     self.topComments = []
                 case .single:
                     // Highest kudos, no minimum
-                    if let top = allComments.first {
+                    if let top = fetched.first {
                         self.topComments = [top]
                     } else {
                         self.topComments = []
                     }
                 case .all:
                     // All comments with >= 20 kudos
-                    self.topComments = allComments.filter { $0.kudosCount >= 20 }
+                    self.topComments = fetched.filter { $0.kudosCount >= 20 }
                 }
-                Logger.network.debug("Fetched \(allComments.count) comments for \(itemId), filtered to \(self.topComments.count)")
+                Logger.network.debug("Fetched \(fetched.count) comments for \(itemId), filtered to \(self.topComments.count)")
             } catch {
                 guard !Task.isCancelled else { return }
                 Logger.network.error("Failed to fetch comments for \(itemId): \(error)")
                 self.topComments = []
+                self.allComments = []
+                self.commentsLoadFailed = true
             }
             guard !Task.isCancelled else { return }
             self.topCommentsFetched = true
@@ -662,6 +726,33 @@ final class VideoPlayerViewModel {
         currentCommentIndex = 0
         showTopComment = false
         topCommentsFetched = false
+        allComments = []
+        commentsLoadFailed = false
+        // The thread belongs to the previous video — close instead of showing a
+        // stale (or, with mode .off, forever-loading) panel. The callers'
+        // restorePlayerFocus() then rescues the focus from the removed panel.
+        showCommentsPanel = false
+    }
+
+    // MARK: - Comments Panel
+
+    func toggleCommentsPanel() {
+        if showCommentsPanel {
+            closeCommentsPanel()
+            return
+        }
+        showCommentsPanel = true
+        playerViewController?.showsPlaybackControls = false
+        // With "Reaguursels: Uit" no automatic fetch ran — load on demand.
+        if !topCommentsFetched && topCommentFetchTask == nil {
+            startCommentsFetch(for: currentVideo.id)
+        }
+    }
+
+    func closeCommentsPanel() {
+        guard showCommentsPanel else { return }
+        showCommentsPanel = false
+        restorePlayerFocus()
     }
 
     // MARK: - Resume Playback

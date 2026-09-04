@@ -188,26 +188,7 @@ actor DumpertAPIClient {
                 }
 
                 let apiResponse = try decoder.decode(CommentsAPIResponse.self, from: data)
-                let rawComments = apiResponse.comments ?? []
-                let authors = apiResponse.authors ?? []
-
-                // Build author lookup by ID
-                let authorMap = Dictionary(uniqueKeysWithValues: authors.map { ($0.id, $0) })
-                let bannedAuthorIds = Set(authors.filter { $0.banned == true }.map(\.id))
-
-                // Map raw comments to DumpertComment, filtering banned authors
-                return rawComments
-                    .filter { !bannedAuthorIds.contains($0.author) }
-                    .map { raw in
-                        DumpertComment(
-                            id: raw.id,
-                            authorUsername: authorMap[raw.author]?.username ?? "Onbekend",
-                            displayContent: raw.content,
-                            kudosCount: raw.kudosCount,
-                            creationDatetime: raw.creationDatetime
-                        )
-                    }
-                    .sorted { $0.kudosCount > $1.kudosCount }
+                return DumpertComment.comments(from: apiResponse)
             } catch let error as APIError {
                 throw error
             } catch {

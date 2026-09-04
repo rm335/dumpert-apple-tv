@@ -34,7 +34,6 @@ struct ToppersSectionView: View {
                                 RoundedRectangle(cornerRadius: 4)
                                     .fill(.white.opacity(0.1))
                                     .frame(width: 320, height: 22)
-                                    .shimmering()
                                 RoundedRectangle(cornerRadius: 3)
                                     .fill(.white.opacity(0.06))
                                     .frame(width: 200, height: 14)
@@ -256,6 +255,15 @@ struct ToppersSectionView: View {
         } label: {
             ZStack(alignment: .bottomLeading) {
                 // All hero thumbnails stacked, crossfading via opacity
+                // Choreography by speed, not by delay: the image cross-fade is
+                // the shortest curve so it lands first and leads; the info block
+                // rides the longer carousel spring and settles after it (it moves
+                // in space, so it earns the spring); the dots snap. Driving all
+                // three off the one 0.7s spring made the whole hero arrive on a
+                // single frame — the clearest tell of unconsidered motion.
+                // A `.delay()` on the info was tried and rejected: it delays the
+                // *removal* too, so the outgoing title popped out instead of
+                // fading.
                 ZStack {
                     ForEach(Array(heroItems.enumerated()), id: \.element.id) { index, item in
                         FaceCenteredThumbnailView(
@@ -266,6 +274,7 @@ struct ToppersSectionView: View {
                         .opacity(index == safeHeroIndex ? 1 : 0)
                     }
                 }
+                .animation(reduceMotion ? nil : .dumpiCrossfade, value: safeHeroIndex)
 
                 // Info overlay crossfades with the thumbnail
                 heroInfoOverlay(for: heroItems[safeHeroIndex])
@@ -278,6 +287,7 @@ struct ToppersSectionView: View {
                 // Page indicators
                 if heroItems.count > 1 {
                     pageIndicators(count: heroItems.count, safeHeroIndex: safeHeroIndex)
+                        .animation(reduceMotion ? nil : .dumpiFocus, value: safeHeroIndex)
                 }
             }
             .aspectRatio(16/6, contentMode: .fit)

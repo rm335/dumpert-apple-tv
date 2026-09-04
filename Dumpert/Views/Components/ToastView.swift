@@ -42,7 +42,7 @@ struct ToastModifier: ViewModifier {
                 AccessibilityNotification.Announcement(msg).post()
                 try? await Task.sleep(for: .seconds(duration))
                 guard !Task.isCancelled else { return }
-                withAnimation(reduceMotion ? nil : .default) { self.message = nil }
+                withAnimation(reduceMotion ? nil : .dumpiToast) { self.message = nil }
             }
     }
 }

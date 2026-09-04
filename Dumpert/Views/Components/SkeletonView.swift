@@ -1,9 +1,12 @@
 import SwiftUI
 
 /// Shimmer animation modifier for skeleton loading states.
+/// Each application runs its own `repeatForever` animation, so apply it to ONE
+/// element per skeleton card. Sprinkling it over every placeholder multiplied the
+/// running animation count by 3 and made each card sweep three times out of phase
+/// — noisier to look at and needlessly expensive on the oldest supported hardware.
 struct ShimmerModifier: ViewModifier {
     @State private var phase: CGFloat = -0.3
-    @State private var isActive = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
@@ -24,13 +27,11 @@ struct ShimmerModifier: ViewModifier {
                 .clipped()
             }
             .onAppear {
-                isActive = true
                 withAnimation(reduceMotion ? nil : .linear(duration: 1.5).repeatForever(autoreverses: false)) {
                     phase = 1.3
                 }
             }
             .onDisappear {
-                isActive = false
                 withAnimation(.linear(duration: 0)) { phase = -0.3 }
             }
     }
@@ -67,7 +68,6 @@ private struct SkeletonCardView: View {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(.white.opacity(0.06))
                     .frame(width: 42, height: 16)
-                    .shimmering()
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                     .padding(6)
             }
@@ -79,7 +79,6 @@ private struct SkeletonCardView: View {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(.white.opacity(0.08))
                     .frame(height: 12)
-                    .shimmering()
 
                 // Title line 2: .caption, varied width per card
                 RoundedRectangle(cornerRadius: 3)

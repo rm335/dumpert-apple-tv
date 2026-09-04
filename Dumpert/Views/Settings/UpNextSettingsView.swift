@@ -99,7 +99,7 @@ struct UpNextSettingsView: View {
             }
         }
         .navigationTitle(Text("Volgende video", comment: "Up next settings screen title"))
-        .animation(reduceMotion ? nil : .smooth, value: settings.upNextOverlayEnabled)
+        .animation(reduceMotion ? nil : .dumpiStandard, value: settings.upNextOverlayEnabled)
     }
 
     private func minimumVideoLengthLabel(_ seconds: Int) -> LocalizedStringKey {

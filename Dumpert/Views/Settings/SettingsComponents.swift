@@ -103,7 +103,7 @@ extension SettingsView {
         }
         .frame(maxHeight: 100)
         .padding(.vertical, 12)
-        .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: tileSize)
+        .animation(reduceMotion ? nil : .dumpiStandard, value: tileSize)
         .listRowBackground(Color.clear)
         .accessibilityLabel(Text("Voorbeeld: \(columnCount) kolommen", comment: "Accessibility: tile preview with column count"))
     }

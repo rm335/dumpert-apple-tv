@@ -1,0 +1,43 @@
+{
+  "authors": [
+    {"id": 1, "username": "topper", "active": true, "newbie": false, "banned": false, "premium": false, "registered_at": "2022-01-29T10:37:24.930637Z"},
+    {"id": 2, "username": "reaguurder", "active": true, "newbie": false, "banned": false, "premium": true, "registered_at": "2021-01-01T00:00:00Z"},
+    {"id": 3, "username": "geband", "active": false, "newbie": false, "banned": true, "premium": false, "registered_at": "2020-01-01T00:00:00Z"}
+  ],
+  "comments": [
+    {
+      "id": 101,
+      "approved": true,
+      "creation_datetime": "2026-09-04T06:54:46Z",
+      "content": "eerste reaguursel",
+      "kudos_count": 8,
+      "reference_id": 0,
+      "author": 2,
+      "child_comments": [
+        {"id": 201, "approved": true, "creation_datetime": "2026-09-04T07:05:39Z", "content": "reactie op eerste", "kudos_count": 1, "reference_id": 0, "author": 1},
+        {"id": 202, "approved": true, "creation_datetime": "2026-09-04T07:06:00Z", "content": "reactie van geband", "kudos_count": 3, "reference_id": 0, "author": 3},
+        {"id": 203, "approved": true, "creation_datetime": "2026-09-04T07:07:00Z", "content": "reactie van onbekende auteur", "kudos_count": 0, "reference_id": 0, "author": 999}
+      ]
+    },
+    {
+      "id": 102,
+      "approved": true,
+      "creation_datetime": "2026-09-04T08:00:00Z",
+      "content": "beste reaguursel",
+      "kudos_count": 42,
+      "reference_id": 0,
+      "author": 1,
+      "top_comment": true
+    },
+    {
+      "id": 103,
+      "approved": true,
+      "creation_datetime": "2026-09-04T08:30:00Z",
+      "content": "topreaguursel van geband",
+      "kudos_count": 100,
+      "reference_id": 0,
+      "author": 3
+    }
+  ],
+  "summary": {"id": 100160890, "title": "Testartikel", "link": "", "comment_count": 6, "can_comment": true, "moderated_at": "2026-09-03T20:59:28Z"}
+}

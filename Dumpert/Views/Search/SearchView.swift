@@ -32,6 +32,12 @@ struct SearchView: View {
                     repository: repository
                 )
             }
+            // First mount: a context-menu tag tap may have switched to this tab
+            // before the view model existed — the onChange below never fired.
+            consumePendingTagSearch()
+        }
+        .onChange(of: PlaybackCoordinator.shared.pendingSearchQuery) {
+            consumePendingTagSearch()
         }
         .onAppear {
             backgroundState.useFallback()
@@ -67,6 +73,15 @@ struct SearchView: View {
                 }
             }
         }
+    }
+
+    /// Runs a search handed over from a "Zoek op tag" context-menu action.
+    /// Assigning `searchQuery` is the whole trigger: its didSet debounce fires
+    /// the actual search, exactly like typing in the search bar.
+    private func consumePendingTagSearch() {
+        guard let viewModel,
+              let query = PlaybackCoordinator.shared.consumePendingSearchQuery() else { return }
+        viewModel.searchQuery = query
     }
 
     @ViewBuilder

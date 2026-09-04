@@ -170,7 +170,7 @@ struct FullScreenImageView: View {
         guard !topComments.isEmpty else { return }
 
         currentCommentIndex = 0
-        withAnimation(reduceMotion ? nil : .default) { showTopComment = true }
+        withAnimation(reduceMotion ? nil : .dumpiOverlay) { showTopComment = true }
 
         // Carousel: show each comment for dynamic duration, 5 second gap between
         let speed = repository.settings.readingSpeed
@@ -178,14 +178,14 @@ struct FullScreenImageView: View {
             // Show first comment for dynamic duration based on text length
             let firstDuration = speed.readingDuration(for: topComments[0].displayContent)
             try? await Task.sleep(for: .seconds(firstDuration))
-            withAnimation(reduceMotion ? nil : .default) { showTopComment = false }
+            withAnimation(reduceMotion ? nil : .dumpiOverlay) { showTopComment = false }
 
             // Cycle through remaining comments
             var index = 1
             while index < topComments.count {
                 // 5 second gap between comments
                 try? await Task.sleep(for: .seconds(5))
-                withAnimation(reduceMotion ? nil : .default) {
+                withAnimation(reduceMotion ? nil : .dumpiOverlay) {
                     currentCommentIndex = index
                     showTopComment = true
                 }
@@ -193,7 +193,7 @@ struct FullScreenImageView: View {
                 // Show comment for dynamic duration based on text length
                 let duration = speed.readingDuration(for: topComments[index].displayContent)
                 try? await Task.sleep(for: .seconds(duration))
-                withAnimation(reduceMotion ? nil : .default) { showTopComment = false }
+                withAnimation(reduceMotion ? nil : .dumpiOverlay) { showTopComment = false }
                 index += 1
             }
         }

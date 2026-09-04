@@ -56,4 +56,21 @@ final class PlaybackCoordinator {
     func requestDeepLinkTakeover() {
         deepLinkTakeoverID += 1
     }
+
+    // MARK: - Tag search hand-off
+
+    /// Set when a context-menu "Zoek op tag" action wants the Zoeken tab to run
+    /// a query. SearchView owns its view model as private @State, so this is
+    /// the relay: the menu publishes here and switches the tab; SearchView
+    /// consumes (and clears) the query when it sees it.
+    private(set) var pendingSearchQuery: String?
+
+    func requestTagSearch(_ query: String) {
+        pendingSearchQuery = query
+    }
+
+    func consumePendingSearchQuery() -> String? {
+        defer { pendingSearchQuery = nil }
+        return pendingSearchQuery
+    }
 }

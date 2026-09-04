@@ -22,7 +22,7 @@ private struct AutoDismissModifier: ViewModifier {
                 let reduceMotion = reduceMotion
                 Task {
                     try? await Task.sleep(for: .seconds(duration))
-                    withAnimation(reduceMotion ? nil : .smooth) { isShowing.wrappedValue = false }
+                    withAnimation(reduceMotion ? nil : .dumpiStandard) { isShowing.wrappedValue = false }
                 }
             }
         }

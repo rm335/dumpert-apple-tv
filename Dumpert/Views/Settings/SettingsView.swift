@@ -342,7 +342,7 @@ struct SettingsView: View {
                 }
                 .confirmationDialog(Text("Standaardwaarden herstellen", comment: "Reset defaults confirmation title"), isPresented: $showResetConfirmation) {
                     Button(String(localized: "Herstel standaardwaarden", comment: "Reset defaults button"), role: .destructive) {
-                        withAnimation(reduceMotion ? nil : .smooth) {
+                        withAnimation(reduceMotion ? nil : .dumpiStandard) {
                             settings.resetToDefaults()
                         }
                         showResetFeedback = true
@@ -375,7 +375,7 @@ struct SettingsView: View {
             if showCacheClearedFeedback {
                 Task {
                     try? await Task.sleep(for: .seconds(4))
-                    withAnimation(reduceMotion ? nil : .smooth) { showCacheClearedFeedback = false }
+                    withAnimation(reduceMotion ? nil : .dumpiStandard) { showCacheClearedFeedback = false }
                     await loadCacheSize()
                 }
             }

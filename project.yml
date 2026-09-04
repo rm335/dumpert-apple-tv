@@ -34,6 +34,7 @@ schemes:
       config: Debug
       targets:
         - DumpertTests
+        - DumpertUITests
     profile:
       config: Release
     analyze:
@@ -111,6 +112,20 @@ targets:
       properties:
         com.apple.security.application-groups:
           - group.nl.dumpert.tvos
+
+  DumpertUITests:
+    type: bundle.ui-testing
+    platform: tvOS
+    sources:
+      - path: DumpertUITests
+    dependencies:
+      - target: Dumpert
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: nl.dumpert.tvos.uitests
+        GENERATE_INFOPLIST_FILE: "YES"
+        SWIFT_STRICT_CONCURRENCY: complete
+        TEST_TARGET_NAME: Dumpert
 
   DumpertTests:
     type: bundle.unit-test

@@ -11,6 +11,9 @@ struct CategoriesSectionView: View {
     @SceneStorage("categoriesSelectedTab") private var rawSelection: String = CategoryTab.reeten.rawValue
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @FocusState private var focusedPill: CategoryTab?
+    /// Tabs the user has opened this scene. Their section views stay mounted
+    /// (hidden, disabled) so switching back restores scroll and focus position.
+    @State private var visited: Set<CategoryTab> = []
 
     private var selection: CategoryTab {
         CategoryTab(rawValue: rawSelection) ?? .reeten
@@ -23,27 +26,40 @@ struct CategoriesSectionView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 4)
 
+            // Visited sections stay mounted but hidden instead of being torn
+            // down (the old `.id(selection)` reset scroll + focus on every
+            // pill switch). Hidden sections are disabled so the tvOS focus
+            // engine and VoiceOver cannot reach them.
             ZStack {
-                switch selection {
-                case .reeten:
-                    CategorySectionView(category: .reeten, showsTitle: false)
-                        .transition(.opacity)
-                case .vrijmico:
-                    CategorySectionView(category: .vrijmico, showsTitle: false)
-                        .transition(.opacity)
-                case .dashcam:
-                    CategorySectionView(category: .dashcam, showsTitle: false)
-                        .transition(.opacity)
-                case .classics:
-                    ClassicsSectionView(showsHeader: false)
-                        .transition(.opacity)
-                case .dumperttv:
-                    CategorySectionView(category: .dumperttv, showsTitle: false)
-                        .transition(.opacity)
+                ForEach(CategoryTab.allCases) { tab in
+                    if tab == selection || visited.contains(tab) {
+                        sectionView(for: tab)
+                            .opacity(tab == selection ? 1 : 0)
+                            .disabled(tab != selection)
+                            .accessibilityHidden(tab != selection)
+                    }
                 }
             }
-            .id(selection)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: selection)
+            .onChange(of: selection) { previous, _ in
+                visited.insert(previous)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func sectionView(for tab: CategoryTab) -> some View {
+        switch tab {
+        case .reeten:
+            CategorySectionView(category: .reeten, showsTitle: false)
+        case .vrijmico:
+            CategorySectionView(category: .vrijmico, showsTitle: false)
+        case .dashcam:
+            CategorySectionView(category: .dashcam, showsTitle: false)
+        case .classics:
+            ClassicsSectionView(showsHeader: false)
+        case .dumperttv:
+            CategorySectionView(category: .dumperttv, showsTitle: false)
         }
     }
 

@@ -7,6 +7,8 @@ struct VideoContextMenuModifier: ViewModifier {
     let repository: VideoRepository
     @Binding var toastMessage: String?
     var currentCategory: VideoCategory?
+    // ContentView's TabView binds the same scene-storage key; 4 = Zoeken.
+    @SceneStorage("selectedTab") private var selectedTab = 0
 
     func body(content: Content) -> some View {
         content.contextMenu {
@@ -29,6 +31,14 @@ struct VideoContextMenuModifier: ViewModifier {
                 Button(String(localized: "Voeg toe aan \(category.displayName)", comment: "Context menu: add to category")) {
                     repository.addToCategory(videoId: item.id, category: category)
                     toastMessage = String(localized: "Toegevoegd aan \(category.displayName)", comment: "Toast: added to category")
+                }
+            }
+
+            // ponytail: first 5 tags; a submenu for the long tail isn't worth it
+            ForEach(Array(item.tags.prefix(5)), id: \.self) { tag in
+                Button(String(localized: "Zoek op \"\(tag)\"", comment: "Context menu: search by tag")) {
+                    PlaybackCoordinator.shared.requestTagSearch(tag)
+                    selectedTab = 4
                 }
             }
         }

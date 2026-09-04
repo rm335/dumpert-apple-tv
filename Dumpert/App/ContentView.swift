@@ -60,7 +60,7 @@ struct ContentView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(reduceMotion ? nil : .smooth, value: networkMonitor.isConnected)
+        .animation(reduceMotion ? nil : .dumpiToast, value: networkMonitor.isConnected)
         .onChange(of: repository.classics) {
             Task { @MainActor in
                 backgroundState.shuffleFallback(from: repository.classics)

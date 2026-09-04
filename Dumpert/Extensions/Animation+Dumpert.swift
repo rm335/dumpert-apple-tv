@@ -30,6 +30,11 @@ extension Animation {
     /// Hero carousel rotation. (motion.carousel)
     static let dumpiCarousel = Animation.spring(duration: 0.7, bounce: 0.15)
 
+    /// Image cross-fades — hero thumbnails, immersive background. A timing curve,
+    /// not a spring: a spring's bounce is invisible on opacity and only stretches
+    /// the fade. (motion.crossfade)
+    static let dumpiCrossfade = Animation.easeInOut(duration: 0.45)
+
     /// Player overlays fading in/out — resume, comment, now-playing, SharePlay. (motion.overlay)
     static let dumpiOverlay = Animation.easeInOut(duration: 0.5)
 }

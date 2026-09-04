@@ -96,7 +96,7 @@ struct ImmersiveBackgroundView: View {
         loadedURL = url
 
         // Calm by default; instant swap under Reduce Motion (no crossfade).
-        let crossfade: Animation? = reduceMotion ? nil : .easeInOut(duration: 0.6)
+        let crossfade: Animation? = reduceMotion ? nil : .dumpiCrossfade
 
         if showingA {
             // Currently showing A → load into B, crossfade to B
