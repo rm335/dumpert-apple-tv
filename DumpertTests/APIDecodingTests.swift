@@ -218,7 +218,7 @@ struct APIDecodingTests {
         comps.year = 2026
         comps.month = 6
         comps.day = 2
-        let date = try #require(Calendar.current.date(from: comps))
+        let date = try #require(Calendar(identifier: .gregorian).date(from: comps))
 
         let url = try APIEndpoint.topDay(date: date).url
         #expect(url.absoluteString == "https://post.dumpert.nl/api/v1.0/top5/dag/2026-06-02")
@@ -230,7 +230,7 @@ struct APIDecodingTests {
         comps.year = 2026
         comps.month = 6
         comps.day = 2
-        let date = try #require(Calendar.current.date(from: comps))
+        let date = try #require(Calendar(identifier: .gregorian).date(from: comps))
 
         // A dashed "2026-06" makes the API return content from a year ago.
         let url = try APIEndpoint.topMonth(date: date).url
@@ -243,7 +243,7 @@ struct APIDecodingTests {
         comps.year = 2026
         comps.month = 6
         comps.day = 2
-        let date = try #require(Calendar.current.date(from: comps))
+        let date = try #require(Calendar(identifier: .gregorian).date(from: comps))
 
         // Exact ISO week depends on the host calendar; assert the dash-free
         // 6-digit shape — a dash here is the "year ago" regression.

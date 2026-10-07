@@ -51,6 +51,28 @@ struct CloudKitMergeTests {
         #expect(timestamps == timestamps.sorted(by: >), "Newest-first ordering required for UI")
     }
 
+    @Test("CloudKit search history merge keeps one entry per query, newest wins")
+    func searchHistoryMergeDedupesQueries() {
+        let repo = makeRepo()
+        let now = Date()
+
+        func record(_ query: String, ago: TimeInterval) -> CKRecord {
+            let recordID = CKRecord.ID(recordName: "search_\(UUID().uuidString)", zoneID: zoneID)
+            let record = CKRecord(recordType: "SearchHistory", recordID: recordID)
+            record["query"] = query as CKRecordValue
+            record["timestamp"] = now.addingTimeInterval(-ago) as CKRecordValue
+            return record
+        }
+
+        // Device A searched "cats", then searched "Cats" again. recordSearch keeps
+        // only the newest locally, but both records exist in CloudKit. Device B
+        // receives them in two separate delta syncs.
+        repo.applyCloudKitChanges(CloudKitChanges(changedRecords: [record("cats", ago: 100)], deletedRecordIDs: []))
+        repo.applyCloudKitChanges(CloudKitChanges(changedRecords: [record("Cats", ago: 10)], deletedRecordIDs: []))
+
+        #expect(repo.searchHistory.map(\.query) == ["Cats"], "recordSearch allows one entry per query (case-insensitive)")
+    }
+
     // MARK: - Deletion handling
 
     @Test("CloudKit watch-progress deletion removes the local entry")

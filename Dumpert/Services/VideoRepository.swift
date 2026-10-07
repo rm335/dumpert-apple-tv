@@ -337,6 +337,11 @@ final class VideoRepository {
             // recordSearch — otherwise merging cloud entries would leave the
             // list unsorted and unbounded.
             searchHistory.sort { $0.timestamp > $1.timestamp }
+            // recordSearch keeps one entry per query (case-insensitive) but never
+            // deletes the replaced CloudKit record, so remote merges can bring
+            // duplicates back. Keep the newest of each.
+            var seenQueries = Set<String>()
+            searchHistory = searchHistory.filter { seenQueries.insert($0.query.lowercased()).inserted }
             if searchHistory.count > 20 {
                 searchHistory = Array(searchHistory.prefix(20))
             }

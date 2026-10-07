@@ -192,9 +192,14 @@ actor CacheService {
 
     // MARK: - Cache Management
 
+    /// Removes cached API responses only. Watch progress, curation entries and
+    /// search history share this directory but are user data, so they stay.
     func clearCache() {
-        try? FileManager.default.removeItem(at: cacheDirectory)
-        try? FileManager.default.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
+        let fm = FileManager.default
+        let files = (try? fm.contentsOfDirectory(at: cacheDirectory, includingPropertiesForKeys: nil)) ?? []
+        for file in files where file.lastPathComponent.hasPrefix("videos_") {
+            try? fm.removeItem(at: file)
+        }
         cachedDiskSize = nil
     }
 

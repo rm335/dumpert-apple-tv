@@ -48,7 +48,10 @@ actor ThumbnailUpgradeService {
         duration: Int
     ) async -> UIImage? {
         // Skip if already processed or in-flight
-        guard !inFlightItems.contains(itemId) else { return nil }
+        // Claim the slot before the first `await`: the actor is re-entrant, so a
+        // second caller could otherwise pass this check while we wait on the disk cache.
+        guard inFlightItems.insert(itemId).inserted else { return nil }
+        defer { inFlightItems.remove(itemId) }
         guard await diskCache.cachedFileURL(for: itemId) == nil else { return nil }
 
         // Need both thumbnail and stream to evaluate
@@ -56,9 +59,6 @@ actor ThumbnailUpgradeService {
             Logger.thumbnail.info("[\(itemId)] skipped: missing thumbnailURL or streamURL")
             return nil
         }
-
-        inFlightItems.insert(itemId)
-        defer { inFlightItems.remove(itemId) }
 
         Logger.thumbnail.info("[\(itemId)] starting analysis (duration=\(duration))")
 

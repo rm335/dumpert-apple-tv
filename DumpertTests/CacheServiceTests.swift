@@ -99,6 +99,27 @@ struct CacheServiceTests {
         #expect(loaded?.first?.kudosTotal == 7)
     }
 
+    @Test("clearCache removes cached API data but keeps user data")
+    func clearCacheKeepsUserData() async {
+        let cache = makeIsolatedCache()
+        let video = Video(
+            id: "v1", title: "Test", descriptionText: "", date: nil,
+            duration: 42, kudosTotal: 7, viewsTotal: 1,
+            thumbnailURL: nil, streamURL: nil, tags: [], isNSFW: false
+        )
+        await cache.cacheMediaItems([.video(video)], for: "k1")
+        await cache.saveWatchProgress(["v1": WatchProgress(videoId: "v1", watchedSeconds: 30, totalSeconds: 100)])
+        await cache.saveCurationEntries([CurationEntry(videoId: "v1", category: .reeten, action: .add)])
+        await cache.saveSearchHistory([SearchHistoryEntry(query: "dashcam")])
+
+        await cache.clearCache()
+
+        #expect(await cache.loadCachedMediaItems(for: "k1") == nil)
+        #expect(await cache.loadWatchProgress()["v1"]?.watchedSeconds == 30)
+        #expect(await cache.loadCurationEntries().count == 1)
+        #expect(await cache.loadSearchHistory().count == 1)
+    }
+
     @Test("Legacy cached media without viewsTotal decodes as zero")
     func legacyCacheBackwardCompatible() async throws {
         let dir = FileManager.default.temporaryDirectory

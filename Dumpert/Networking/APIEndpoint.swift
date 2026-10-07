@@ -18,21 +18,29 @@ enum APIEndpoint {
     // top5/week and top5/maand want YYYYWW / YYYYMM with NO separator — a dash
     // (e.g. "2026-27") makes the API return content from a year ago. Only
     // top5/dag uses dashes (yyyy-MM-dd), hence the separate formatter below.
-    private nonisolated(unsafe) static let monthFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyyMM"
-        return f
-    }()
+    //
+    // The path is an API token, not UI text: pin the Gregorian calendar and
+    // POSIX digits, otherwise a Thai/Saudi region yields "2569-10-06" or Arabic
+    // numerals and the API answers 200 with zero items.
+    private nonisolated(unsafe) static let monthFormatter: DateFormatter = pathFormatter("yyyyMM")
 
-    private nonisolated(unsafe) static let dayFormatter: DateFormatter = {
+    private nonisolated(unsafe) static let dayFormatter: DateFormatter = pathFormatter("yyyy-MM-dd")
+
+    private static func pathFormatter(_ format: String) -> DateFormatter {
         let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.dateFormat = format
         return f
-    }()
+    }
 
     private static func weekString(from date: Date) -> String {
-        let year = Calendar.current.component(.yearForWeekOfYear, from: date)
-        let week = Calendar.current.component(.weekOfYear, from: date)
+        // Gregorian, but keep the user's locale so firstWeekday/minimumDays
+        // (the week-numbering rules) stay what Calendar.current gave before.
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale.current
+        let year = calendar.component(.yearForWeekOfYear, from: date)
+        let week = calendar.component(.weekOfYear, from: date)
         return String(format: "%04d%02d", year, week)
     }
 
