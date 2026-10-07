@@ -210,15 +210,19 @@ final class VideoRepository {
         lastRefreshDate = Date()
         updateTopShelf()
 
-        // Delta sync CloudKit changes in background
-        if cloudKitAvailable {
-            Task {
-                do {
-                    let changes = try await cloudKitService.fetchChanges()
-                    applyCloudKitChanges(changes)
-                } catch {
-                    Logger.cloudKit.warning("Delta sync failed: \(error.localizedDescription)")
-                }
+        // Delta sync CloudKit changes in background. If setup failed earlier
+        // (offline launch, transient CloudKit error) retry it here: nothing else
+        // ever flips cloudKitAvailable back, so sync would stay off until relaunch.
+        Task {
+            guard cloudKitAvailable else {
+                await setupCloudKit()
+                return
+            }
+            do {
+                let changes = try await cloudKitService.fetchChanges()
+                applyCloudKitChanges(changes)
+            } catch {
+                Logger.cloudKit.warning("Delta sync failed: \(error.localizedDescription)")
             }
         }
     }
