@@ -79,8 +79,13 @@ actor CategoryService {
         reetenMinimumMinutes: Int
     ) -> [MediaItem] {
         let categoryEntries = curationEntries.filter { $0.category == category }
-        let removedIds = Set(categoryEntries.filter { $0.action == .remove }.map(\.videoId))
-        let addedIds = Set(categoryEntries.filter { $0.action == .add }.map(\.videoId))
+        // Entries are append-only, so a video can have both an add and a remove.
+        // The newest one decides (ties go to the later array position).
+        let latestByVideo = Dictionary(categoryEntries.map { ($0.videoId, $0) }) {
+            $0.timestamp > $1.timestamp ? $0 : $1
+        }
+        let removedIds = Set(latestByVideo.values.filter { $0.action == .remove }.map(\.videoId))
+        let addedIds = Set(latestByVideo.values.filter { $0.action == .add }.map(\.videoId))
         let minimumDurationSeconds = reetenMinimumMinutes * 60
 
         let filtered = items.filter { item in

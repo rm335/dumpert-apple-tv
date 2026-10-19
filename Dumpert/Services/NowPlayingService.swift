@@ -4,6 +4,7 @@ import os
 @MainActor
 final class NowPlayingService {
     private var commandTargets: [Any] = []
+    private var artworkTask: Task<Void, Never>?
     private nonisolated static let logger = Logger(subsystem: "nl.dumpert.tvos", category: "nowplaying")
 
     func configure(
@@ -18,6 +19,9 @@ final class NowPlayingService {
         onNextTrack: (@MainActor () -> Void)? = nil,
         onPreviousTrack: (@MainActor () -> Void)? = nil
     ) {
+        // Reset first: cleanup() clears the info, so it must run before we publish the new title.
+        cleanup()
+
         let center = MPNowPlayingInfoCenter.default()
         center.nowPlayingInfo = [
             MPMediaItemPropertyTitle: title,
@@ -51,6 +55,8 @@ final class NowPlayingService {
     }
 
     func cleanup() {
+        artworkTask?.cancel()
+        artworkTask = nil
         let commandCenter = MPRemoteCommandCenter.shared()
         for target in commandTargets {
             commandCenter.playCommand.removeTarget(target)
@@ -76,9 +82,6 @@ final class NowPlayingService {
         onNextTrack: (@MainActor () -> Void)?,
         onPreviousTrack: (@MainActor () -> Void)?
     ) {
-        // Remove previous targets
-        cleanup()
-
         let commandCenter = MPRemoteCommandCenter.shared()
 
         commandCenter.playCommand.isEnabled = true
@@ -146,12 +149,14 @@ final class NowPlayingService {
     }
 
     private func loadArtwork(from url: URL) {
-        Task.detached(priority: .utility) {
+        artworkTask = Task.detached(priority: .utility) {
             do {
                 let (data, _) = try await URLSession.shared.data(from: url)
                 guard let image = UIImage(data: data) else { return }
                 let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
                 await MainActor.run {
+                    // cleanup() runs on the main actor too, so a cancel is seen here race-free.
+                    guard !Task.isCancelled else { return }
                     var info = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
                     info[MPMediaItemPropertyArtwork] = artwork
                     MPNowPlayingInfoCenter.default().nowPlayingInfo = info

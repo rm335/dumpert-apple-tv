@@ -9,8 +9,9 @@ actor DumpertAPIClient {
     private let maxCachedResponses = 50
     private var nsfwEnabled: Bool = true
 
-    init() {
+    init(protocolClasses: [AnyClass]? = nil) {
         let config = URLSessionConfiguration.default
+        config.protocolClasses = protocolClasses ?? config.protocolClasses
         config.timeoutIntervalForRequest = 30
         config.waitsForConnectivity = true
         config.timeoutIntervalForResource = 300
@@ -171,7 +172,8 @@ actor DumpertAPIClient {
         request.setValue(APIConstants.userAgent, forHTTPHeaderField: "User-Agent")
 
         var lastError: Error?
-        for attempt in 0..<3 {
+        let maxAttempts = 3
+        for attempt in 0..<maxAttempts {
             do {
                 let (data, response) = try await session.data(for: request)
 
@@ -180,8 +182,11 @@ actor DumpertAPIClient {
                     let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
                     if (500...599).contains(statusCode) {
                         lastError = APIError.httpError(statusCode: statusCode)
-                        let delay = UInt64(pow(2.0, Double(attempt))) * 1_000_000_000
-                        try await Task.sleep(nanoseconds: delay)
+                        // No backoff after the final attempt: it only delays the error.
+                        if attempt < maxAttempts - 1 {
+                            let delay = UInt64(pow(2.0, Double(attempt))) * 1_000_000_000
+                            try await Task.sleep(nanoseconds: delay)
+                        }
                         continue
                     }
                     throw APIError.httpError(statusCode: statusCode)
@@ -194,8 +199,10 @@ actor DumpertAPIClient {
             } catch {
                 // Retry on network errors (URLError, connection failures, etc.)
                 lastError = error
-                let delay = UInt64(pow(2.0, Double(attempt))) * 1_000_000_000
-                try await Task.sleep(nanoseconds: delay)
+                if attempt < maxAttempts - 1 {
+                    let delay = UInt64(pow(2.0, Double(attempt))) * 1_000_000_000
+                    try await Task.sleep(nanoseconds: delay)
+                }
             }
         }
         throw lastError ?? APIError.noData

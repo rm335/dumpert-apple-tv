@@ -198,4 +198,35 @@ struct CategoryServiceTests {
             #expect(category.supportsCuration == e.curation)
         }
     }
+
+    // MARK: - Curation ordering
+
+    @Test("Latest curation action per video wins: remove then re-add shows it again")
+    func latestCurationActionWins() async throws {
+        let mock = RoutingMockAPIClient()
+        mock.searchItems = [
+            makeVideo(id: "readded", date: nil),
+            makeVideo(id: "removed-after-add", date: nil),
+            makeVideo(id: "untouched", date: nil),
+        ]
+        let service = CategoryService(apiClient: mock, cacheService: makeIsolatedCache())
+        let t = Date(timeIntervalSince1970: 1_000_000)
+        func entry(_ id: String, _ action: CurationAction, _ offset: TimeInterval) -> CurationEntry {
+            CurationEntry(id: UUID(), videoId: id, category: .dashcam, action: action, timestamp: t.addingTimeInterval(offset))
+        }
+        // Entries arrive in arbitrary order (CloudKit merges append), so the
+        // timestamp, not array position, decides the winner.
+        let entries = [
+            entry("readded", .add, 20),
+            entry("readded", .remove, 10),
+            entry("removed-after-add", .remove, 20),
+            entry("removed-after-add", .add, 10),
+        ]
+
+        let page = try await service.fetchItems(
+            for: .dashcam, curationEntries: entries, minimumKudos: 0
+        )
+
+        #expect(Set(page.items.map(\.id)) == ["readded", "untouched"])
+    }
 }
