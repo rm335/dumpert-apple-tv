@@ -186,6 +186,7 @@ struct CategorySectionView: View {
                             withAnimation(reduceMotion ? nil : .dumpiSelection) {
                                 proxy.scrollTo("top", anchor: .top)
                             }
+                            moveFocusToFirstItem()
                         } label: {
                             Label("Naar boven", systemImage: "arrow.up")
                                 .font(.callout)
@@ -200,6 +201,20 @@ struct CategorySectionView: View {
             .refreshable {
                 await repository.refreshAll()
             }
+            .restoreFocusAfterPlayer(
+                presentedID: selectedVideo?.id,
+                ids: items.map(\.id),
+                focus: $focusedItem,
+                proxy: proxy
+            )
+        }
+    }
+
+    /// "Naar boven" must move focus too, or the next swipe scrolls straight back down.
+    private func moveFocusToFirstItem() {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))  // let the scroll realize the first row
+            focusedItem = items.first?.id
         }
     }
 

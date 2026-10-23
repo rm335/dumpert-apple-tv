@@ -50,6 +50,8 @@ extension SearchView {
             .padding(.vertical, 10)
         }
         .scrollClipDisabled()
+        // Up from any result column lands here, never skips past the menus.
+        .focusSection()
     }
 
     /// A single refinement control. Replaces the old blind "cycle button" with a

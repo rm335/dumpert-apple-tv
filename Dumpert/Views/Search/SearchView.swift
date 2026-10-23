@@ -9,6 +9,10 @@ struct SearchView: View {
     @State private var selectedPhoto: Photo?
     @State private var toastMessage: String?
     @FocusState private var focusedItem: String?
+    /// Query picked from a suggestion chip / tag. When its results arrive, focus
+    /// jumps to the first result (the chip you pressed is gone). Not set for typed
+    /// input, so focus never leaves the keyboard.
+    @State var focusFirstResultFor: String?
 
     var body: some View {
         Group {
@@ -63,6 +67,19 @@ struct SearchView: View {
             selectedVideo = nil
             selectedPhoto = nil
         }
+        .onChange(of: viewModel?.searchQuery) { _, query in
+            if query != focusFirstResultFor { focusFirstResultFor = nil }
+        }
+        .onChange(of: viewModel?.filteredResults.first?.id) { _, firstID in
+            guard let firstID, let viewModel, focusFirstResultFor == viewModel.searchQuery else { return }
+            focusFirstResultFor = nil
+            Task { @MainActor in focusedItem = firstID }
+        }
+        .restoreFocusAfterPlayer(
+            presentedID: selectedVideo?.id,
+            ids: (viewModel?.filteredResults ?? []).map(\.id),
+            focus: $focusedItem
+        )
         .onChange(of: focusedItem) { _, newId in
             Task { @MainActor in
                 if let id = newId,
@@ -81,6 +98,7 @@ struct SearchView: View {
     private func consumePendingTagSearch() {
         guard let viewModel,
               let query = PlaybackCoordinator.shared.consumePendingSearchQuery() else { return }
+        focusFirstResultFor = query
         viewModel.searchQuery = query
     }
 

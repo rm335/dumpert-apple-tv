@@ -165,21 +165,21 @@ private struct PlayerRepresentable: UIViewControllerRepresentable {
         func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
             // Swipe gestures: allowed when no overlay is active, setting is enabled,
             // and there is actually a next/previous video to skip to.
+            // With the transport bar up, a horizontal swipe means "scrub", not "skip clip".
+            let controlsHidden = viewModel.playerViewController?.showsPlaybackControls == false
+            let noOverlay = !viewModel.showUpNext && !viewModel.showResumeOverlay
+                && !viewModel.showCommentsPanel
             if gestureRecognizer === swipeRightGesture {
-                let noOverlay = !viewModel.showUpNext && !viewModel.showResumeOverlay
-                    && !viewModel.showCommentsPanel
-                return noOverlay && viewModel.isSwipeSkipEnabled && viewModel.hasNextVideo
+                return controlsHidden && noOverlay && viewModel.isSwipeSkipEnabled && viewModel.hasNextVideo
             }
             if gestureRecognizer === swipeLeftGesture {
-                let noOverlay = !viewModel.showUpNext && !viewModel.showResumeOverlay
-                    && !viewModel.showCommentsPanel
-                return noOverlay && viewModel.isSwipeSkipEnabled && viewModel.hasPreviousVideo
+                return controlsHidden && noOverlay && viewModel.isSwipeSkipEnabled && viewModel.hasPreviousVideo
             }
 
-            // Select gesture: only when controls hidden (to reveal them) and the
-            // comments panel isn't holding focus.
-            return viewModel.playerViewController?.showsPlaybackControls == false
-                && !viewModel.showCommentsPanel
+            // Select gesture: only when controls hidden (to reveal them) and no
+            // overlay holds focus. Overlay buttons (Afspelen, Annuleren, Speel
+            // vanaf begin) must get the press themselves.
+            return controlsHidden && noOverlay
         }
 
         @objc func handlePlayPause() {
@@ -189,7 +189,10 @@ private struct PlayerRepresentable: UIViewControllerRepresentable {
             } else {
                 player.pause()
             }
-            viewModel.playerViewController?.showsPlaybackControls = true
+            // Controls over the open comments panel would steal its focus.
+            if !viewModel.showCommentsPanel {
+                viewModel.playerViewController?.showsPlaybackControls = true
+            }
         }
 
         @objc func handleSelect() {

@@ -23,7 +23,10 @@ final class VideoPlayerViewModel {
     /// `playlist[currentIndex]` would keep returning the last playlist video
     /// while a related video is on screen — corrupting `saveProgress` and
     /// `markAsWatched` calls.
-    private(set) var currentVideo: Video
+    private(set) var currentVideo: Video {
+        // Browse sections restore focus to this clip when the player closes.
+        didSet { PlaybackCoordinator.shared.lastPlayedVideoID = currentVideo.id }
+    }
 
     var player: AVPlayer?
     weak var playerViewController: AVPlayerViewController?
@@ -32,8 +35,8 @@ final class VideoPlayerViewModel {
     /// bails early (no stream URL) or `cleanup` runs more than once.
     private var didRegisterPlayback = false
     private(set) var isPlaying = false
-    private(set) var currentTime: Double = 0
-    private(set) var duration: Double = 0
+    var currentTime: Double = 0  // internal setter: unit tests drive checkUpNext
+    var duration: Double = 0
     var isInPiP = false
 
     // MARK: - Up Next State
@@ -49,6 +52,13 @@ final class VideoPlayerViewModel {
     /// repository or network stack.
     var relatedVideos: [Video] = []
     private var isFetchingRelated = false
+    /// Id of the video whose related list was already requested. An empty answer
+    /// must not be re-fetched on every 1s tick while the clip is in its last 30s.
+    private var relatedRequestedFor: String?
+    /// Videos played through related autoplay: [last playlist video, r1, r2...].
+    /// Empty while playing from the playlist. Lets "Vorige" step back through the
+    /// autoplay tail (related autoplay does not advance `currentIndex`).
+    private var relatedTrail: [Video] = []
 
     // MARK: - Resume State
 
@@ -105,6 +115,7 @@ final class VideoPlayerViewModel {
     var hasNextVideo: Bool { nextVideo != nil }
 
     var previousVideo: Video? {
+        if relatedTrail.count >= 2 { return relatedTrail[relatedTrail.count - 2] }
         guard currentIndex > 0 else { return nil }
         return playlist[currentIndex - 1]
     }
@@ -143,6 +154,8 @@ final class VideoPlayerViewModel {
 
     func setupPlayer() {
         guard let url = video.streamURL else { return }
+        // Not in init: init must stay side-effect free (throwaway VMs on closure re-runs).
+        PlaybackCoordinator.shared.lastPlayedVideoID = currentVideo.id
 
         do {
             let session = AVAudioSession.sharedInstance()
@@ -397,7 +410,7 @@ final class VideoPlayerViewModel {
 
     // MARK: - Up Next Logic
 
-    private func checkUpNext() {
+    func checkUpNext() {
         guard autoplayEnabled,
               !upNextCancelled,
               !sharePlayService.isSharePlayActive else { return }
@@ -406,8 +419,10 @@ final class VideoPlayerViewModel {
 
         // Fetch related videos when near the end and playlist is exhausted
         if remaining <= 30 && currentIndex + 1 >= playlist.count
-            && relatedVideos.isEmpty && !isFetchingRelated {
+            && relatedVideos.isEmpty && !isFetchingRelated
+            && relatedRequestedFor != currentVideo.id {
             isFetchingRelated = true
+            relatedRequestedFor = currentVideo.id
             let videoId = currentVideo.id
             Task { [weak self] in
                 guard let self else { return }
@@ -416,6 +431,9 @@ final class VideoPlayerViewModel {
                 if self.preloadedItem == nil, let url = self.nextVideo?.streamURL {
                     self.preloadedItem = AVPlayerItem(url: url)
                 }
+                // hasNextVideo just flipped: refresh the static menu + remote commands.
+                self.rebuildTransportBarMenu()
+                self.configureNowPlaying(for: self.currentVideo)
             }
         }
 
@@ -439,6 +457,10 @@ final class VideoPlayerViewModel {
                 showUpNext = true
             }
             countdown = max(1, Int(remaining.rounded(.up)))
+        } else if showUpNext && remaining > Double(upNextCountdownSeconds) {
+            // User scrubbed back: drop the stale card (it may return near the end).
+            restorePlayerFocus()
+            showUpNext = false
         }
     }
 
@@ -509,6 +531,8 @@ final class VideoPlayerViewModel {
             currentIndex = newIndex
         } else {
             relatedVideos.removeFirst()
+            if relatedTrail.isEmpty { relatedTrail = [currentVideo] }
+            relatedTrail.append(video)
         }
         // Adopt the new video as the current one BEFORE the time observer is
         // re-added — otherwise the first saveProgress() tick would attribute
@@ -552,18 +576,22 @@ final class VideoPlayerViewModel {
     }
 
     func playPrevious() {
-        guard currentIndex > 0 else { return }
-
-        let newIndex = currentIndex - 1
-        let video = playlist[newIndex]
-        guard let url = video.streamURL else { return }
+        guard let video = previousVideo, let url = video.streamURL else { return }
+        let steppingBackInTail = relatedTrail.count >= 2
 
         saveProgress(force: true)
         repository.markAsWatched(videoId: currentVideo.id)
         currentTime = 0
         duration = 0
 
-        currentIndex = newIndex
+        if steppingBackInTail {
+            // Keep the clip we leave as the next autoplay candidate.
+            relatedVideos.insert(currentVideo, at: 0)
+            relatedTrail.removeLast()
+            if relatedTrail.count == 1 { relatedTrail.removeAll() } // back on the playlist tail
+        } else {
+            currentIndex -= 1
+        }
         currentVideo = video
 
         upNextCancelled = false
@@ -743,6 +771,9 @@ final class VideoPlayerViewModel {
         }
         showCommentsPanel = true
         playerViewController?.showsPlaybackControls = false
+        // Pull focus off the player so the panel (and Menu-to-close) is live at once.
+        playerViewController?.setNeedsFocusUpdate()
+        playerViewController?.updateFocusIfNeeded()
         // With "Reaguursels: Uit" no automatic fetch ran — load on demand.
         if !topCommentsFetched && topCommentFetchTask == nil {
             startCommentsFetch(for: currentVideo.id)
@@ -787,6 +818,8 @@ final class VideoPlayerViewModel {
             showResumeOverlay = true
             resumeDismissTask = Task { [weak self] in
                 try? await Task.sleep(for: .seconds(5))
+                guard !Task.isCancelled else { return }
+                self?.restorePlayerFocus()
                 self?.showResumeOverlay = false
             }
         }
@@ -795,6 +828,7 @@ final class VideoPlayerViewModel {
     func playFromBeginning() {
         resumeDismissTask?.cancel()
         resumeDismissTask = nil
+        restorePlayerFocus()
         showResumeOverlay = false
         player?.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
     }

@@ -4,6 +4,7 @@ struct EmptyStateView: View {
     let title: LocalizedStringKey
     let systemImage: String
     let description: LocalizedStringKey
+    var actionTitle: LocalizedStringKey = "Opnieuw proberen"
     var retryAction: (() -> Void)?
 
     @State private var iconPulse = false
@@ -33,7 +34,7 @@ struct EmptyStateView: View {
 
             if let retryAction {
                 Button(action: retryAction) {
-                    Text("Opnieuw proberen")
+                    Text(actionTitle)
                         .foregroundStyle(.white)
                 }
                 .padding(.top, 4)

@@ -2626,6 +2626,23 @@
         }
       }
     },
+    "Open Instellingen" : {
+      "comment" : "Button on the empty Toppers screen that jumps to the Settings tab",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Instellingen"
+          }
+        }
+      }
+    },
     "Opnieuw proberen" : {
       "comment" : "Retry button",
       "localizations" : {

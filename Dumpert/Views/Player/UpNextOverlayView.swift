@@ -85,6 +85,8 @@ struct UpNextOverlayView: View {
         .onAppear {
             focusedButton = .playNow
         }
+        // Menu = "no thanks": cancel the card, do not close the whole player.
+        .onExitCommand(perform: onCancel)
     }
 
 }

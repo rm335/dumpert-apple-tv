@@ -55,6 +55,7 @@ extension SearchView {
                 LazyHStack(spacing: 16) {
                     ForEach(repository.searchHistory) { entry in
                         Button {
+                            focusFirstResultFor = entry.query
                             viewModel.searchQuery = entry.query
                         } label: {
                             HStack(spacing: 10) {
@@ -95,6 +96,7 @@ extension SearchView {
                 LazyHStack(spacing: 16) {
                     ForEach(tags, id: \.self) { tag in
                         Button {
+                            focusFirstResultFor = tag
                             viewModel.searchQuery = tag
                         } label: {
                             HStack(spacing: 10) {
@@ -137,6 +139,7 @@ extension SearchView {
             ) {
                 ForEach(Self.categories, id: \.query) { category in
                     Button {
+                        focusFirstResultFor = category.query
                         viewModel.searchQuery = category.query
                     } label: {
                         HStack(spacing: 20) {

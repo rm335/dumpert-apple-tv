@@ -10,31 +10,46 @@ actor CloudKitService {
     private var isAvailable = false
 
     private static let zoneName = "DumpertZone"
-    private static let changeTokenKey = "cloudkit_change_token"
+    /// Legacy home of the token. It sat in UserDefaults, which survives a Caches
+    /// purge, while the cached user data it vouches for does not: every later
+    /// fetch was then a delta against an empty cache and the data never came back.
+    private static let legacyChangeTokenKey = "cloudkit_change_token"
+    private let tokenFileURL: URL
 
-    init() {
+    /// Same directory as the cached user data, so token and data share one fate.
+    nonisolated static var defaultTokenDirectory: URL {
+        FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("DumpertCache", isDirectory: true)
+    }
+
+    init(tokenDirectory: URL = CloudKitService.defaultTokenDirectory) {
         self.container = CKContainer.default()
         self.privateDB = container.privateCloudDatabase
         self.zoneID = CKRecordZone.ID(zoneName: Self.zoneName, ownerName: CKCurrentUserDefaultName)
+        self.tokenFileURL = tokenDirectory.appendingPathComponent("cloudkit_change_token")
+        // A token left in UserDefaults can outlive a Caches purge: drop it so the
+        // next fetch is a full one (one-time cost, then the file token takes over).
+        UserDefaults.standard.removeObject(forKey: Self.legacyChangeTokenKey)
         // Restore the persisted change token so a cold launch resumes delta sync
         // from where it left off — a tokenless fetch returns no deletion
         // tombstones, so without this records deleted elsewhere resurrect here.
-        self.changeToken = Self.loadPersistedChangeToken()
+        self.changeToken = Self.loadPersistedChangeToken(from: tokenFileURL)
     }
 
-    private static func loadPersistedChangeToken() -> CKServerChangeToken? {
-        guard let data = UserDefaults.standard.data(forKey: changeTokenKey) else { return nil }
+    private static func loadPersistedChangeToken(from url: URL) -> CKServerChangeToken? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
         return try? NSKeyedUnarchiver.unarchivedObject(ofClass: CKServerChangeToken.self, from: data)
     }
 
     private func persistChangeToken(_ token: CKServerChangeToken) {
         guard let data = try? NSKeyedArchiver.archivedData(withRootObject: token, requiringSecureCoding: true) else { return }
-        UserDefaults.standard.set(data, forKey: Self.changeTokenKey)
+        try? FileManager.default.createDirectory(at: tokenFileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: tokenFileURL, options: .atomic)
     }
 
     private func clearPersistedChangeToken() {
         changeToken = nil
-        UserDefaults.standard.removeObject(forKey: Self.changeTokenKey)
+        try? FileManager.default.removeItem(at: tokenFileURL)
     }
 
     // MARK: - Account Check

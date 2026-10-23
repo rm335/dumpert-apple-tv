@@ -192,7 +192,14 @@ actor DumpertAPIClient {
                     throw APIError.httpError(statusCode: statusCode)
                 }
 
-                let apiResponse = try decoder.decode(CommentsAPIResponse.self, from: data)
+                // A 200 with an unreadable body is not a transient fault: surface it
+                // as decodingError (an APIError, so the catch below does not retry it).
+                let apiResponse: CommentsAPIResponse
+                do {
+                    apiResponse = try decoder.decode(CommentsAPIResponse.self, from: data)
+                } catch {
+                    throw APIError.decodingError(error)
+                }
                 return DumpertComment.comments(from: apiResponse)
             } catch let error as APIError {
                 throw error

@@ -729,6 +729,9 @@ final class VideoRepository {
     func toggleWatched(videoId: String) {
         var progress = watchProgress[videoId] ?? WatchProgress(videoId: videoId)
         progress.isCompleted = !progress.isCompleted
+        // "Onbekeken" must also drop the saved position: a leftover ~100% would put
+        // the video on the "Verder kijken" shelf with a full progress bar.
+        if !progress.isCompleted { progress.watchedSeconds = 0 }
         progress.lastWatchedDate = Date()
         watchProgress[videoId] = progress
 

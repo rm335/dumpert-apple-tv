@@ -88,6 +88,11 @@ struct ClassicsSectionView: View {
                                     withAnimation(reduceMotion ? nil : .dumpiSelection) {
                                         proxy.scrollTo("top", anchor: .top)
                                     }
+                                    // Focus must follow the scroll, or the next swipe scrolls back down.
+                                    Task { @MainActor in
+                                        try? await Task.sleep(for: .milliseconds(350))
+                                        focusedItem = items.first?.id
+                                    }
                                 } label: {
                                     Label("Naar boven", systemImage: "arrow.up")
                                         .font(.callout)
@@ -102,6 +107,12 @@ struct ClassicsSectionView: View {
                     .refreshable {
                         await repository.refreshAll()
                     }
+                    .restoreFocusAfterPlayer(
+                        presentedID: selectedVideo?.id,
+                        ids: items.map(\.id),
+                        focus: $focusedItem,
+                        proxy: proxy
+                    )
                 }
             }
         }

@@ -57,6 +57,12 @@ final class PlaybackCoordinator {
         deepLinkTakeoverID += 1
     }
 
+    // MARK: - Focus restore
+
+    /// Id of the clip the player most recently started (follows autoplay). Browse
+    /// sections read it when the player closes to put focus back on the right card.
+    @ObservationIgnored var lastPlayedVideoID: String?
+
     // MARK: - Tag search hand-off
 
     /// Set when a context-menu "Zoek op tag" action wants the Zoeken tab to run

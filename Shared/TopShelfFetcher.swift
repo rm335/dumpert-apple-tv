@@ -9,11 +9,11 @@ enum TopShelfFetcher: Sendable {
 
     // MARK: - Minimal API models
 
-    private struct Response: Codable {
+    struct Response: Codable {
         let items: [Item]?
     }
 
-    private struct Item: Codable {
+    struct Item: Codable {
         let id: String
         let title: String
         let description: String?
@@ -43,8 +43,7 @@ enum TopShelfFetcher: Sendable {
         }
 
         var kudosTotal: Int? {
-            guard let stats else { return nil }
-            return (stats.kudos_positive ?? 0) - (stats.kudos_negative ?? 0)
+            stats?.kudos_total
         }
 
         var videoDuration: Int? {
@@ -56,17 +55,16 @@ enum TopShelfFetcher: Sendable {
         }
     }
 
-    private struct Stats: Codable {
-        let kudos_positive: Int?
-        let kudos_negative: Int?
+    struct Stats: Codable {
+        let kudos_total: Int?
     }
 
-    private struct Media: Codable {
+    struct Media: Codable {
         let variants: [Variant]?
         let duration: Int?
     }
 
-    private struct Variant: Codable {
+    struct Variant: Codable {
         let uri: String
         let version: String
     }

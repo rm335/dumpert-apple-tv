@@ -38,7 +38,7 @@ enum TopShelfDataStore: Sendable {
         defaults.synchronize()
     }
 
-    /// Returns true if cached data is older than the given interval (default 15 min).
+    /// True if the hotshiz list is older than 15 min (or missing).
     static var isStale: Bool {
         guard let defaults = UserDefaults(suiteName: appGroupIdentifier),
               let lastUpdated = defaults.object(forKey: lastUpdatedKey) as? Date else {
@@ -111,7 +111,8 @@ enum TopShelfDataStore: Sendable {
             let readBack = defaults.data(forKey: key)
             if readBack != nil {
                 logger.notice("Saved \(items.count) items to \(key) (\(data.count) bytes) — verified OK")
-                defaults.set(Date(), forKey: lastUpdatedKey)
+                // The clock describes the hotshiz list only (see `isStale`).
+                if key == hotshizKey { defaults.set(Date(), forKey: lastUpdatedKey) }
             } else {
                 logger.fault("Save FAILED for \(key) — wrote data but readback is nil")
             }

@@ -6,6 +6,10 @@ struct ToppersSectionView: View {
     @State private var selectedVideo: Video?
     @State private var selectedPhoto: Photo?
     @State private var toastMessage: String?
+    /// Row the tapped video came from, so Up Next follows the row being browsed.
+    /// nil (hero) means the hotshiz list.
+    @State private var playlistSource: [MediaItem]?
+    @SceneStorage("selectedTab") private var selectedTab = 0
     @State private var heroIndex = 0
     @FocusState private var focusedItem: String?
     @FocusState private var heroFocused: Bool
@@ -101,8 +105,11 @@ struct ToppersSectionView: View {
                 EmptyStateView(
                     title: "Geen video's met deze filters",
                     systemImage: "line.3.horizontal.decrease.circle",
-                    description: "Pas je filters aan in Instellingen om meer video's te zien"
-                )
+                    description: "Pas je filters aan in Instellingen om meer video's te zien",
+                    actionTitle: "Open Instellingen"
+                ) {
+                    selectedTab = 5
+                }
                 .transition(.opacity)
             } else {
                 ScrollView {
@@ -136,8 +143,14 @@ struct ToppersSectionView: View {
             }
         }
         .animation(reduceMotion ? nil : .dumpiStandard, value: repository.isLoading)
+        .restoreFocusAfterPlayer(
+            presentedID: selectedVideo?.id,
+            ids: [repository.topDay, repository.topWeek, repository.topMonth]
+                .flatMap { repository.filteredItems($0).map(\.id) },
+            focus: $focusedItem
+        )
         .fullScreenCover(item: $selectedVideo) { video in
-            let videoPlaylist = repository.filteredItems(repository.hotshiz).compactMap { item -> Video? in
+            let videoPlaylist = (playlistSource ?? repository.filteredItems(repository.hotshiz)).compactMap { item -> Video? in
                 if case .video(let v) = item { return v }
                 return nil
             }
@@ -221,6 +234,7 @@ struct ToppersSectionView: View {
                     LazyHStack(spacing: 50) {
                         ForEach(items) { item in
                             Button {
+                                playlistSource = items
                                 item.present(selectedVideo: $selectedVideo, selectedPhoto: $selectedPhoto)
                             } label: {
                                 VideoCardView(
@@ -243,6 +257,8 @@ struct ToppersSectionView: View {
                 }
                 .scrollClipDisabled()
             }
+            // Up/Down moves one row at a time, never skipping over a shorter row.
+            .focusSection()
         }
     }
 
@@ -251,6 +267,7 @@ struct ToppersSectionView: View {
     private func heroCarousel(items heroItems: [MediaItem]) -> some View {
         let safeHeroIndex = heroItems.isEmpty ? 0 : heroIndex % heroItems.count
         return Button {
+            playlistSource = nil
             heroItems[safeHeroIndex].present(selectedVideo: $selectedVideo, selectedPhoto: $selectedPhoto)
         } label: {
             ZStack(alignment: .bottomLeading) {

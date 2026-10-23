@@ -75,6 +75,14 @@ struct CategoriesSectionView: View {
             .padding(.vertical, 10)
         }
         .scrollClipDisabled()
+        .focusSection()
+        // Coming back up from the grid, the focus engine picks a pill by geometry
+        // (.defaultFocus is ignored on re-entry). Redirect to the selected pill so a
+        // stray click can not switch category by accident. Moves inside the bar
+        // (old != nil) are left alone.
+        .onChange(of: focusedPill) { old, new in
+            if old == nil, let new, new != selection { focusedPill = selection }
+        }
     }
 
     private func pillButton(for tab: CategoryTab) -> some View {

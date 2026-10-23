@@ -32,7 +32,7 @@ struct APIClientRetryTests {
         defer { URLProtocol.unregisterClass(Always500Protocol.self) }
         Always500Protocol.hits = 0
 
-        let client = DumpertAPIClient()
+        let client = DumpertAPIClient(protocolClasses: [Always500Protocol.self])
         let start = ContinuousClock.now
         _ = try? await client.fetchTopComments(for: "retrytest0_stub0000")
         let elapsed = ContinuousClock.now - start

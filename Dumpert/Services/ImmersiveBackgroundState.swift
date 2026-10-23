@@ -18,8 +18,9 @@ final class ImmersiveBackgroundState {
     /// instead of strobing one image per focus hop.
     func update(for item: MediaItem) {
         let url = item.thumbnailURL
-        guard url != currentImageURL else { return }
         debounceTask?.cancel()
+        // Back on the shown card: the cancelled hop must not land afterwards.
+        guard url != currentImageURL else { return }
         debounceTask = Task {
             try? await Task.sleep(for: .milliseconds(250))
             guard !Task.isCancelled else { return }

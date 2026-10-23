@@ -9,7 +9,9 @@ final class Always200Protocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var body = Data()
 
     override class func canInit(with request: URLRequest) -> Bool {
-        request.url?.absoluteString.contains(marker) == true
+        // Comments use "a/b", item info keeps the "a_b" id form.
+        let url = request.url?.absoluteString ?? ""
+        return url.contains(marker) || url.contains(marker.replacingOccurrences(of: "/", with: "_"))
     }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
     override func startLoading() {
@@ -34,7 +36,7 @@ struct APIClientDecodeRetryTests {
         Always200Protocol.hits = 0
         Always200Protocol.body = Data("<html>not json</html>".utf8)
 
-        let client = DumpertAPIClient()
+        let client = DumpertAPIClient(protocolClasses: [Always200Protocol.self])
         let start = ContinuousClock.now
         var thrown: Error?
         do { _ = try await client.fetchTopComments(for: "decodetest0_stub0000") } catch { thrown = error }
@@ -56,7 +58,7 @@ struct APIClientDecodeRetryTests {
         Always200Protocol.hits = 0
         Always200Protocol.body = Data("<html>not json</html>".utf8)
 
-        let client = DumpertAPIClient()
+        let client = DumpertAPIClient(protocolClasses: [Always200Protocol.self])
         var thrown: Error?
         do { _ = try await client.fetchItem(id: "decodetest0_stub0000") } catch { thrown = error }
 

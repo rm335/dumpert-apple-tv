@@ -107,6 +107,11 @@ struct WatchedSectionView: View {
                                     withAnimation(reduceMotion ? nil : .dumpiSelection) {
                                         proxy.scrollTo("top", anchor: .top)
                                     }
+                                    // Focus must follow the scroll, or the next swipe scrolls back down.
+                                    Task { @MainActor in
+                                        try? await Task.sleep(for: .milliseconds(350))
+                                        focusedItem = (continueWatching.first ?? earlier.first)?.id
+                                    }
                                 } label: {
                                     Label(
                                         String(localized: "Naar boven", comment: "Scroll to top button"),

@@ -26,8 +26,13 @@ enum APIEndpoint {
 
     private nonisolated(unsafe) static let dayFormatter: DateFormatter = pathFormatter("yyyy-MM-dd")
 
+    /// Dumpert reckons its top5 day/week/month tokens in Amsterdam time. A device in
+    /// another zone would otherwise ask for "tomorrow" and get zero items.
+    private static let amsterdam = TimeZone(identifier: "Europe/Amsterdam") ?? .current
+
     private static func pathFormatter(_ format: String) -> DateFormatter {
         let f = DateFormatter()
+        f.timeZone = amsterdam
         f.locale = Locale(identifier: "en_US_POSIX")
         f.calendar = Calendar(identifier: .gregorian)
         f.dateFormat = format
@@ -39,6 +44,7 @@ enum APIEndpoint {
         // (the week-numbering rules) stay what Calendar.current gave before.
         var calendar = Calendar(identifier: .gregorian)
         calendar.locale = Locale.current
+        calendar.timeZone = amsterdam
         let year = calendar.component(.yearForWeekOfYear, from: date)
         let week = calendar.component(.weekOfYear, from: date)
         return String(format: "%04d%02d", year, week)
